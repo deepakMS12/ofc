@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
 import { MessageSquare, Users } from "lucide-react";
-import SendMessageDialog from "@/components/dialogs/SendMessageDialog";
 
 export default function SendMessageOptions() {
   const [showSingleForm, setShowSingleForm] = useState(false);
-  const singleFormRef = useRef<HTMLDivElement | null>(null);
 
   const handleShowSingleForm = () => {
     setShowSingleForm(true);
@@ -171,16 +169,7 @@ export default function SendMessageOptions() {
           </Paper>
         </Box>
         
-        <Box>
-          {showSingleForm && (
-            <Box sx={{ width: "100%", mt: 0 }} ref={singleFormRef}>
-              <SendMessageDialog
-                open={showSingleForm}
-                onClose={() => setShowSingleForm(false)}
-              />
-            </Box>
-          )}
-        </Box>
+     
       </Box>
     </Box>
   );
