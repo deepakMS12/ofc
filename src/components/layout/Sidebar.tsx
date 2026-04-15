@@ -6,6 +6,7 @@ import { Box, Tooltip } from '@mui/material';
 import { LayoutDashboard, CodeXml, ArrowLeftRight, Settings } from 'lucide-react';
 
 import ApiDrawer from '@/components/dialogs/ApiDrawer';
+import { colors } from '@/utils/customColor';
 
 const navLinks = [
   { slug: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -84,12 +85,12 @@ export default function Sidebar() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: 2,
-                      backgroundColor: isActive ? '#0b996e' : 'transparent',
+                      backgroundColor: isActive ? colors.primary : 'transparent',
                       color: isActive ? 'white' : '#666',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       '&:hover': {
-                        backgroundColor: isActive ? '#0b996e' : '#f5f5f5',
+                        backgroundColor: isActive ? colors.primary : '#f5f5f5',
                         transform: 'scale(1.05)',
                       },
                     }}
@@ -117,12 +118,12 @@ export default function Sidebar() {
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 2,
-              backgroundColor: isSettingsActive ? '#0b996e' : 'transparent',
+              backgroundColor: isSettingsActive ? colors.primary : 'transparent',
               color: isSettingsActive ? 'white' : '#666',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               '&:hover': {
-                backgroundColor: isSettingsActive ? '#0b996e' : '#f5f5f5',
+                backgroundColor: isSettingsActive ? colors.primary : '#f5f5f5',
                 transform: 'scale(1.05)',
               },
             }}

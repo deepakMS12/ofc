@@ -4,6 +4,7 @@ import { Box, Skeleton } from "@mui/material";
 import { Header, Sidebar, Footer } from "@/components/layout";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setAuthenticated } from "@/store/slices/authSlice";
+import { colors } from "@/utils/customColor";
 
 export default function HomeLayout() {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function HomeLayout() {
           display: "flex",
           flexDirection: "column",
           minHeight: "100vh",
-          backgroundColor: "#fffdf5",
+          backgroundColor: colors.secondary,
        
         }}
       >
@@ -96,7 +97,7 @@ export default function HomeLayout() {
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        backgroundColor: "#fffdf5",
+        backgroundColor: colors.secondary,
         
       }}
     >

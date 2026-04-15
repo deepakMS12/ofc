@@ -14,6 +14,7 @@ import { EmailOutlined, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 import { AuthOrDivider, AuthSplitLayout, BRAND_GREEN, SocialAuthButtons } from "../components/auth/AuthUi";
+import { AuthActionButton } from "@/components/common";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [newsChecked, setNewsChecked] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
+  const canContinue = !!email.trim() && !!name.trim() && !!password && termsChecked;
 
   const handleSubmit = (event:any) => {
     event.preventDefault();
@@ -133,21 +135,7 @@ const SignUpPage = () => {
               }
             />
 
-            <Button
-              type="submit"
-              variant="text"
-              disabled={!email || !name || !password || !termsChecked}
-              sx={{
-                alignSelf: "flex-start",
-                p: 0,
-                minWidth: 0,
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#9ca3af",
-              }}
-            >
-              CONTINUE
-            </Button>
+            <AuthActionButton type="submit" isActive={canContinue} label="CONTINUE" />
           </Stack>
         )}
 

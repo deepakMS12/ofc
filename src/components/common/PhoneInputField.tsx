@@ -1,5 +1,6 @@
 "use client";
 
+import { colors } from "@/utils/customColor";
 import { Box } from "@mui/material";
 import { useState, useEffect } from "react";
 import { PhoneInput,defaultCountries, parseCountry } from 'react-international-phone';
@@ -47,13 +48,13 @@ export default function PhoneInputField({
     style.textContent = `
       /* Ensure button border matches input when input is focused */
       [data-phone-input-container]:focus-within button[type="button"] {
-        border-color: ${error ? '#d32f2f' : '#0b996e'} !important;
+        border-color: ${error ? '#d32f2f' : colors.primary} !important;
         border-width: 2px !important;
         border-right: none !important;
       }
       [data-phone-input-container]:focus-within input[type="tel"]:not(.search-input),
       [data-phone-input-container]:focus-within input[type="text"]:not(.search-input) {
-        border-color: ${error ? '#d32f2f' : '#0b996e'} !important;
+        border-color: ${error ? '#d32f2f' : colors.primary} !important;
         border-width: 2px !important;
         border-left-width: 1px !important;
       }
@@ -247,23 +248,23 @@ export default function PhoneInputField({
         // Focus state - when any element is focused, update both
         // Target with high specificity to override library styles
         '&:focus-within button[type="button"]': {
-          borderColor: error ? '#d32f2f' : '#0b996e',
+          borderColor: error ? '#d32f2f' : colors.primary,
           borderWidth: '2px',
           borderRight: 'none',
         },
         '&:focus-within input[type="tel"]:not(.search-input), &:focus-within input[type="text"]:not(.search-input)': {
-          borderColor: error ? '#d32f2f' : '#0b996e',
+          borderColor: error ? '#d32f2f' : colors.primary,
           borderWidth: '2px',
           borderLeftWidth: '1px'
         },
         // Individual focus states
         '& input[type="tel"]:focus:not(.search-input), & input[type="text"]:focus:not(.search-input)': {
-          borderColor: error ? '#d32f2f' : '#0b996e',
+          borderColor: error ? '#d32f2f' : colors.primary,
           borderWidth: '2px',
           borderLeftWidth: '1px',
         },
         '& button[type="button"]:focus': {
-          borderColor: error ? '#d32f2f' : '#0b996e',
+          borderColor: error ? '#d32f2f' : colors.primary,
           borderWidth: '2px',
           borderRight: 'none',
         },

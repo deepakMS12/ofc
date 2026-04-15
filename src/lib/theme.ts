@@ -1,16 +1,17 @@
 'use client';
 
+import { colors } from '@/utils/customColor';
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#0b996e', // Green color from the design
-      dark: '#025630',
-      light: '#028a4f',
+      main: colors.primary, // Green color from the design
+      dark: colors.primary,
+      light: colors.primary,
     },
     secondary: {
-      main: '#0b996e', // Green color
+      main: colors.primary, // Green color
     },
     background: {
       default: '#fffdf6', // Off-white background

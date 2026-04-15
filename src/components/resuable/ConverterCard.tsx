@@ -126,6 +126,7 @@ const ConverterCard = ({
         borderColor: "divider",
         bgcolor: "background.paper",
         opacity: disabled ? 0.55 : 1,
+        boxShadow: "0 2px 4px #1151a680",
         transition: "box-shadow 0.2s, border-color 0.2s, opacity 0.2s",
         "&:hover": disabled
           ? {}

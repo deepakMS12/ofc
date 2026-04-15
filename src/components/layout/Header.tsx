@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
 import { clearUser } from '@/store/slices/userSlice';
 import { dashboardApi } from '@/lib/api/dashboard';
+import { colors } from '@/utils/customColor';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ export default function Header() {
         elevation={0}
         sx={{
           backgroundColor: 'white',
-          borderBottom: '4px solid #0b996e',
+          borderBottom: `4px solid ${colors.primary}`,
           height: '4.625rem',
           zIndex: 1200,
         }}
@@ -73,7 +74,7 @@ export default function Header() {
           {/* Left Side - OFC Logo */}
           <Box
             sx={{
-              backgroundColor: '#0b996e',
+              backgroundColor: colors.primary,
               height: '4.625rem',
               display: 'flex',
               alignItems: 'center',
@@ -94,7 +95,7 @@ export default function Header() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#0b996e',
+                  color: colors.primary,
                   fontWeight: 'bold',
                   fontSize: '18px',
                 }}
@@ -129,7 +130,7 @@ export default function Header() {
                 height: 40,
                 borderRadius: 1.5,
                 bgcolor: '#e3f2fd',
-                color: '#0b996e',
+                color: colors.primary,
                 fontWeight: 600,
               }}
             >
@@ -158,12 +159,12 @@ export default function Header() {
                 height: '30px',
                 textTransform: 'none',
                 fontWeight: 600,
-                border: '2px solid #4caf50',
-                backgroundColor: planCode === 'free' || !planCode ? '#ffffff' : '#0b996e',
-                color: planCode === 'free' || !planCode ? '#4caf50' : '#ffffff',
+                border: `2px solid ${colors.primary}`,
+                backgroundColor: planCode === 'free' || !planCode ? '#ffffff' : colors.primary,
+                color: planCode === 'free' || !planCode ? colors.primary : '#ffffff',
                 borderRadius: 20,
                 '&:hover': {
-                  backgroundColor: planCode === 'free' || !planCode ? '#4caf50' : '#077655',
+                  backgroundColor: planCode === 'free' || !planCode ? colors.primary : colors.primary,
                   color: '#ffffff',
                 },
               }}

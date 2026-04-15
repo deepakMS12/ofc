@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import {
   Box,
-  Button,
   IconButton,
   InputAdornment,
   Link,
@@ -12,7 +11,13 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { AuthOrDivider, AuthSplitLayout, BRAND_GREEN, SocialAuthButtons } from "../components/auth/AuthUi";
+import {
+  AuthOrDivider,
+  AuthSplitLayout,
+  BRAND_GREEN,
+  SocialAuthButtons,
+} from "../components/auth/AuthUi";
+import { AuthActionButton } from "@/components/common";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loginUser } from "@/store/thunks/authThunks";
 import { useSnackbar } from "@/contexts/SnackbarContext";
@@ -35,16 +40,24 @@ const SignInPage = () => {
       showError(typeof err === "string" ? err : "Sign in failed.");
     }
   };
-
+  const hasCredentials = !!email.trim() && !!password;
   return (
     <AuthSplitLayout maxWidth={420}>
       <Stack sx={{ width: "100%", maxWidth: 420 }}>
-        <Typography sx={{ fontSize: 33, fontWeight: 700, mb: 1, color: "#404040" }}>
+        <Typography
+          sx={{ fontSize: 33, fontWeight: 700, mb: 1, color: "#404040" }}
+        >
           Welcome to OFC
         </Typography>
         <Typography sx={{ fontSize: 12, color: "#6b7280", mb: 1 }}>
           Demo mode: enter any email/username and password (no server). Example:{" "}
-          <Box component="span" sx={{ fontWeight: 700 }}>demo@ofc.local</Box> / <Box component="span" sx={{ fontWeight: 700 }}>demo123</Box>
+          <Box component="span" sx={{ fontWeight: 700 }}>
+            demo@ofc.local
+          </Box>{" "}
+          /{" "}
+          <Box component="span" sx={{ fontWeight: 700 }}>
+            demo123
+          </Box>
         </Typography>
 
         <Stack component="form" spacing={2} onSubmit={handleSubmit}>
@@ -81,7 +94,14 @@ const SignInPage = () => {
             }}
           />
 
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-end", mt: -0.5 }}>
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-end",
+              mt: -0.5,
+            }}
+          >
             <Link
               component={RouterLink}
               to="/forgot-password"
@@ -92,17 +112,18 @@ const SignInPage = () => {
             </Link>
           </Box>
 
-          <Button
+          <AuthActionButton
             type="submit"
-            variant="text"
-            disabled={isLoading}
-            sx={{ alignSelf: "flex-start", p: 0, minWidth: 0, color: "#5f6368", fontWeight: 700 }}
-          >
-            {isLoading ? "SIGNING IN…" : "SIGN IN"}
-          </Button>
+            isActive={hasCredentials}
+            isLoading={isLoading}
+            label="SIGN IN"
+            loadingLabel="SIGNING IN…"
+          />
         </Stack>
 
-        <Typography sx={{ mt: 2, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
+        <Typography
+          sx={{ mt: 2, fontSize: 12, color: "#6b7280", textAlign: "center" }}
+        >
           Don't have an OFC account?{" "}
           <Link
             component={RouterLink}
@@ -122,4 +143,3 @@ const SignInPage = () => {
 };
 
 export default SignInPage;
-

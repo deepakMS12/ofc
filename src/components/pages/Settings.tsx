@@ -25,6 +25,7 @@ import { useSnackbar } from "@/contexts/SnackbarContext";
 import { showConfirm, showSuccessAlert } from "@/lib/utils/sweetalert";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearUser, setUser } from "@/store/slices/userSlice";
+import { colors } from "@/utils/customColor";
 
 type SettingsTab = "personal" | "password" | "activity" | "delete";
 
@@ -35,12 +36,14 @@ const tabHashMap: Record<SettingsTab, string> = {
   delete: "delete-ac",
 };
 
-const hashToTabMap: Record<string, SettingsTab> = Object.entries(tabHashMap).reduce(
+const hashToTabMap: Record<string, SettingsTab> = Object.entries(
+  tabHashMap,
+).reduce(
   (acc, [tabKey, hashValue]) => {
     acc[hashValue.toLowerCase()] = tabKey as SettingsTab;
     return acc;
   },
-  {} as Record<string, SettingsTab>
+  {} as Record<string, SettingsTab>,
 );
 
 const getInitialTabFromHash = (): SettingsTab => {
@@ -64,7 +67,7 @@ const tabConfig: { key: SettingsTab; label: string; icon: React.ReactNode }[] =
   ];
 
 const deleteWarnings = [
-  "Your WhatsApp subscription and all connected numbers will be cancelled immediately.",
+  "Your OFC subscription and all connected numbers will be cancelled immediately.",
   "Any remaining balance or credits are non-refundable after deletion.",
   "All API integrations, webhooks, and QR/device sessions will be terminated.",
   "This email address cannot be reused to create a new OFC account.",
@@ -99,18 +102,19 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteChecklist, setDeleteChecklist] = useState(
-    () => deleteWarnings.map(() => false)
+  const [deleteChecklist, setDeleteChecklist] = useState(() =>
+    deleteWarnings.map(() => false),
   );
   const deletePasswordRef = useRef<HTMLInputElement | null>(null);
-  const [activityFilter, setActivityFilter] =
-    useState<"all" | "web" | "api">("all");
+  const [activityFilter, setActivityFilter] = useState<"all" | "web" | "api">(
+    "all",
+  );
   const [activityRange, setActivityRange] = useState<"7" | "30" | "90">("90");
   const [activityLogs, setActivityLogs] = useState<LoginActivityEntry[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityError, setActivityError] = useState<string | null>(null);
   const [activityLastLoaded, setActivityLastLoaded] = useState<string | null>(
-    null
+    null,
   );
 
   const allWarningsAcknowledged = deleteChecklist.every(Boolean);
@@ -207,10 +211,10 @@ export default function SettingsPage() {
           search: location.search,
           hash: hashValue ? `#${hashValue}` : "",
         },
-        { replace: true }
+        { replace: true },
       );
     },
-    [navigate, location.pathname, location.search]
+    [navigate, location.pathname, location.search],
   );
 
   const baseInputStyles = {
@@ -223,12 +227,21 @@ export default function SettingsPage() {
       borderColor: "#c0c0c0",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#0b996e",
+      borderColor: colors.primary,
     },
   };
 
   const renderPersonalForm = () => (
-    <Box sx={{ maxWidth: 700, display:"flex", flexDirection:"column", justifyContent:"center" , minHeight:"calc(100vh - 280px)", mx:"auto" }}>
+    <Box
+      sx={{
+        maxWidth: 700,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        minHeight: "calc(100vh - 280px)",
+        mx: "auto",
+      }}
+    >
       <Box sx={{ textAlign: "left", mb: 3 }}>
         <Typography sx={{ mb: 1, color: "#5c5c5c", fontWeight: 500 }}>
           Full Name
@@ -239,15 +252,13 @@ export default function SettingsPage() {
       </Box>
 
       <Box sx={{ textAlign: "left", mb: 3 }}>
-        <Typography sx={{ mb: 1, color: "#5c5c5c", fontWeight: 500 }}>
-          Email
-        </Typography>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
           <TextField
             fullWidth
+            variant="outlined"
             value={emailEditable ? emailInput : userProfile?.email || ""}
             onChange={(e) => setEmailInput(e.target.value)}
-            placeholder="name@example.com"
+            label="E-mail"
             InputProps={{
               sx: baseInputStyles,
               readOnly: !emailEditable,
@@ -267,7 +278,7 @@ export default function SettingsPage() {
               disabled={emailLoading}
               onClick={handleSendEmailVerification}
               sx={{
-                backgroundColor: "#0b996e",
+                backgroundColor: colors.primary,
                 color: "white",
                 textTransform: "none",
                 fontWeight: 600,
@@ -333,7 +344,7 @@ export default function SettingsPage() {
 
   const activitySummary = useMemo(() => {
     const success = activityLogs.filter(
-      (entry) => entry.status === "SUCCESS"
+      (entry) => entry.status === "SUCCESS",
     ).length;
     const total = activityLogs.length;
     const failed = total - success;
@@ -466,7 +477,7 @@ export default function SettingsPage() {
     try {
       const response = await authApi.requestEmailChange(trimmed);
       showSuccess(
-        response.message || "Verification link sent to the new email address."
+        response.message || "Verification link sent to the new email address.",
       );
       setEmailEditable(false);
       await fetchProfile();
@@ -496,48 +507,29 @@ export default function SettingsPage() {
             : "";
 
     return (
-      <Box sx={{  px: { xs: 3, md: 4 } }}>
+      <Box sx={{ px: { xs: 3, md: 4 } }}>
         <Box
           sx={{
-            display:"grid",
-            gridTemplateColumns:"1fr 1fr",
-            gap:8
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 8,
           }}
         >
-          <Paper elevation={0} >
-            <Typography
-              sx={{
-           
-                mb: 0.6,
-                color: "#5c5c5c",
-                fontWeight: 500,
-              }}
-            >
-              Current Password
-            </Typography>
+          <Paper elevation={0}>
             <TextField
               fullWidth
-              size="small"
               type="password"
+              label="Current Password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               InputProps={{ sx: baseInputStyles }}
               sx={{ mb: 2 }}
             />
-            <Typography
-              sx={{
-                textAlign: "left",
-                mb: 0.6,
-                color: "#5c5c5c",
-                fontWeight: 500,
-              }}
-            >
-              New Password
-            </Typography>
+
             <TextField
-               size="small"
               fullWidth
               type="password"
+              label="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               InputProps={{ sx: baseInputStyles }}
@@ -569,85 +561,74 @@ export default function SettingsPage() {
                 {strengthLabel}
               </Typography>
             </Box>
-            <Typography
-              sx={{
-                textAlign: "left",
-                mb: 0.6,
-                color: "#5c5c5c",
-                fontWeight: 500,
-              }}
-            >
-              Confirm Password
-            </Typography>
+
             <TextField
-               size="small"
               fullWidth
+              label="Confirm Password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               InputProps={{ sx: baseInputStyles }}
             />
-                  <Box
-          sx={{
-            mt: 3,
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "flex-start",
-          }}
-        >
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={handleResetPassword}
+            <Box
               sx={{
-                textTransform: "none",
-                px: 4,
-                borderColor: "#b0b0b0",
-                color: "#6b6b6b",
+                mt: 3,
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                flexWrap: "wrap",
+                justifyContent: "flex-start",
               }}
             >
-              Reset
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#0b996e",
-                textTransform: "uppercase",
-                fontWeight: 600,
-                letterSpacing: 1,
-                px: 5,
-                "&:hover": { backgroundColor: "#08855d" },
-              }}
-              disabled={
-                passwordLoading ||
-                !currentPassword ||
-                !newPassword ||
-                newPassword !== confirmPassword
-              }
-              onClick={handlePasswordSave}
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleResetPassword}
+                  sx={{
+                    textTransform: "none",
+                    px: 4,
+                    borderColor: "#b0b0b0",
+                    color: "#6b6b6b",
+                  }}
+                >
+                  Reset
+                </Button>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: colors.primary,
+                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    letterSpacing: 1,
+                    px: 5,
+                    "&:hover": { backgroundColor: colors.primary },
+                  }}
+                  disabled={
+                    passwordLoading ||
+                    !currentPassword ||
+                    !newPassword ||
+                    newPassword !== confirmPassword
+                  }
+                  onClick={handlePasswordSave}
+                >
+                  {passwordLoading ? "Saving..." : "Save"}
+                </Button>
+              </Box>
+            </Box>
+            <Typography
+              variant="caption"
+              sx={{ color: "#5c5c5c", display: "block", mt: 2 }}
             >
-              {passwordLoading ? "Saving..." : "Save"}
-            </Button>
-          </Box>
-        </Box>
-        <Typography
-          variant="caption"
-          sx={{ color: "#5c5c5c", display: "block", mt: 2 }}
-        >
-          Last password change: {lastPasswordChangeLabel}
-        </Typography>
-
+              Last password change: {lastPasswordChangeLabel}
+            </Typography>
           </Paper>
-               <Paper
+          <Paper
             elevation={0}
             sx={{
               p: 3,
-           flex: 1,
+              flex: 1,
               border: "1px solid #d7e3ff",
               backgroundColor: "#f1f6ff",
-       
             }}
           >
             <Typography sx={{ fontWeight: 600, color: "#1f3f72", mb: 0.6 }}>
@@ -669,18 +650,13 @@ export default function SettingsPage() {
               </li>
             </Box>
           </Paper>
-      
         </Box>
-
-      
-
-   
       </Box>
     );
   };
 
   const renderDeleteSection = () => (
-    <Box sx={{ maxWidth: 700, px:3 }}>
+    <Box sx={{ maxWidth: 700, px: 3 }}>
       <Paper
         elevation={0}
         sx={{
@@ -694,7 +670,9 @@ export default function SettingsPage() {
           mt: 2,
         }}
       >
-        <Typography sx={{ fontWeight: 600, mb: 1, fontSize: "1.25rem", color: "#d32f2f" }}>
+        <Typography
+          sx={{ fontWeight: 600, mb: 1, fontSize: "1.25rem", color: "#d32f2f" }}
+        >
           Before you proceed
         </Typography>
         <Box
@@ -717,13 +695,14 @@ export default function SettingsPage() {
           {deleteWarnings.map((warning, index) => (
             <Box component="li" key={warning}>
               <Checkbox
-                size="small"
                 checked={deleteChecklist[index]}
                 onChange={() => handleToggleWarning(index)}
                 disabled={deleteLoading}
                 color="error"
                 sx={{ p: 0.5 }}
-                inputProps={{ "aria-label": `Acknowledge warning ${index + 1}` }}
+                inputProps={{
+                  "aria-label": `Acknowledge warning ${index + 1}`,
+                }}
               />
               <Typography component="span">{warning}</Typography>
             </Box>
@@ -754,7 +733,9 @@ export default function SettingsPage() {
           <Button
             variant="contained"
             onClick={handleDeleteAccount}
-            disabled={!allWarningsAcknowledged || deleteLoading || !deletePassword}
+            disabled={
+              !allWarningsAcknowledged || deleteLoading || !deletePassword
+            }
             sx={{
               backgroundColor: "#f05444",
               textTransform: "uppercase",
@@ -772,14 +753,14 @@ export default function SettingsPage() {
   );
 
   const renderLoginActivity = () => (
-    <Box sx={{   }}>
+    <Box sx={{}}>
       <Box
         sx={{
           display: "flex",
           flexWrap: "wrap",
           gap: 2,
           mb: 2,
-          px:3,
+          px: 3,
           alignItems: "center",
         }}
       >
@@ -849,15 +830,27 @@ export default function SettingsPage() {
         >
           <Chip
             label={`Total: ${activitySummary.total}`}
-            sx={{ backgroundColor: "#e3f2fd", color: "#1565c0", fontWeight: 600 }}
+            sx={{
+              backgroundColor: "#e3f2fd",
+              color: "#1565c0",
+              fontWeight: 600,
+            }}
           />
           <Chip
             label={`Success: ${activitySummary.success}`}
-            sx={{ backgroundColor: "#e8f5e9", color: "#1b5e20", fontWeight: 600 }}
+            sx={{
+              backgroundColor: "#e8f5e9",
+              color: "#1b5e20",
+              fontWeight: 600,
+            }}
           />
           <Chip
             label={`Failed: ${activitySummary.failed}`}
-            sx={{ backgroundColor: "#ffebee", color: "#b71c1c", fontWeight: 600 }}
+            sx={{
+              backgroundColor: "#ffebee",
+              color: "#b71c1c",
+              fontWeight: 600,
+            }}
           />
         </Box>
 
@@ -968,12 +961,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <Box sx={{ p: 0, backgroundColor: "#fffdf5", minHeight: "calc(100vh - 164px)", overflow:"hidden" }}>
+    <Box
+      sx={{
+        p: 0,
+        backgroundColor: "#fffdf5",
+        minHeight: "calc(100vh - 164px)",
+        overflow: "hidden",
+      }}
+    >
       <Paper
         elevation={0}
         sx={{
-       
-       
           overflow: "hidden",
           backgroundColor: "white",
         }}
@@ -988,13 +986,17 @@ export default function SettingsPage() {
             "& .MuiTab-root": {
               textTransform: "none",
               fontWeight: 600,
-              py:2,
+              py: 2,
             },
             "& .Mui-selected": {
-              color: tab === "delete" ? "#ffdc6c !important" :  "#0b996e !important",
+              color:
+                tab === "delete"
+                  ? "#ffdc6c !important"
+                  : `${colors.primary} !important`,
             },
             "& .MuiTabs-indicator": {
-              backgroundColor: tab === "delete" ? "#ffdc6c" : "#0b996e",
+              backgroundColor:
+                tab === "delete" ? "#ffdc6c" : `${colors.primary}`,
               height: 3,
             },
           }}
@@ -1032,7 +1034,16 @@ export default function SettingsPage() {
           ))}
         </Tabs>
 
-        <Box sx={{ py: 3, maxHeight: "calc(100vh - 200px)", minHeight: "calc(100vh - 190px)", overflow: "auto", }}>{renderTabContent()}</Box>
+        <Box
+          sx={{
+            py: 3,
+            maxHeight: "calc(100vh - 200px)",
+            minHeight: "calc(100vh - 190px)",
+            overflow: "auto",
+          }}
+        >
+          {renderTabContent()}
+        </Box>
       </Paper>
     </Box>
   );

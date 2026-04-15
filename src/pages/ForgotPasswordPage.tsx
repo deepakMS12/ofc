@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthSplitLayout, BRAND_GREEN } from "../components/auth/AuthUi";
+import { AuthActionButton } from "@/components/common";
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const canContinue = !!email.trim();
 
   const handleSubmit = (event:any) => {
     event.preventDefault();
@@ -45,14 +47,7 @@ const ForgotPasswordPage = () => {
           >
             CANCEL
           </Button>
-          <Button
-            type="submit"
-            variant="text"
-            disabled={!email}
-            sx={{ color: "#9ca3af", fontSize: 12, fontWeight: 700 }}
-          >
-            CONTINUE
-          </Button>
+          <AuthActionButton type="submit" isActive={canContinue} label="CONTINUE" />
         </Stack>
       </Stack>
     </AuthSplitLayout>
