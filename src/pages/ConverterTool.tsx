@@ -1,19 +1,17 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
-import {
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import ArrowCircleRightOutlinedIcon from "@mui/icons-material/ArrowCircleRightOutlined";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import CloseIcon from "@mui/icons-material/Close";
 import { Link as RouterLink, useParams } from "react-router-dom";
-import { converters } from "../data/converters";
+import EmptyWorkspaceState from "@/components/converter/EmptyWorkspaceState";
+import FileTile from "@/components/converter/FileTile";
+import ImagePreviewCanvas from "@/components/converter/ImagePreviewCanvas";
+import PdfCanvasWorkspace from "@/components/converter/PdfCanvasWorkspace";
+import WorkspaceSidebar from "@/components/converter/WorkspaceSidebar";
+import type { ImageOutputFormat } from "@/components/converter/types";
+import { getWorkspaceVariant } from "@/components/converter/utils";
 import { colors } from "@/utils/customColor";
+import { converters } from "../data/converters";
 
 const ConverterTool = () => {
   const { slug } = useParams();
@@ -21,23 +19,216 @@ const ConverterTool = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [isConvertHovered, setIsConvertHovered] = useState(false);
+  const [activePageIndex, setActivePageIndex] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [rotation, setRotation] = useState(0);
+  const [imageResizePercent, setImageResizePercent] = useState(100);
+  const [imageCompressionQuality, setImageCompressionQuality] = useState(80);
+  const [imageOutputFormat, setImageOutputFormat] =
+    useState<ImageOutputFormat>("image/png");
 
   const sourceLabel = tool?.title?.split(" TO ")[0] || "File";
+  const targetLabel = tool?.title?.split(" TO ")[1] || "Output";
+  const workspaceVariant = useMemo(
+    () => getWorkspaceVariant(tool?.slug),
+    [tool?.slug]
+  );
+  const convertButtonLabel = useMemo(() => {
+    if (!tool) return "Convert";
+    if (tool.title.includes(" TO ")) return `Convert to ${targetLabel}`;
+    return tool.title;
+  }, [targetLabel, tool]);
 
-  const handlePickFiles = () => {
+  useEffect(() => {
+    if (!files.length) {
+      setActivePageIndex(0);
+      return;
+    }
+    if (activePageIndex >= files.length) {
+      setActivePageIndex(files.length - 1);
+    }
+  }, [activePageIndex, files.length]);
+
+  const handlePickFiles = useCallback(() => {
     fileInputRef.current?.click();
-  };
+  }, []);
 
-  const handleFilesSelected = (event: ChangeEvent<HTMLInputElement>) => {
-    const selected = event.target.files ? Array.from(event.target.files) : [];
-    if (!selected.length) return;
-    setFiles((prev) => [...prev, ...selected]);
-    event.target.value = "";
-  };
+  const handleFilesSelected = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const selected = event.target.files ? Array.from(event.target.files) : [];
+      if (!selected.length) return;
+      if (workspaceVariant === "resizer" || workspaceVariant === "compressor") {
+        setFiles([selected[0]]);
+      } else {
+        setFiles((prev) => [...prev, ...selected]);
+      }
+      event.target.value = "";
+    },
+    [workspaceVariant]
+  );
 
-  const handleRemoveFile = (indexToRemove: number) => {
+  const handleRemoveFile = useCallback((indexToRemove: number) => {
     setFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
+  }, []);
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel((prev) => Math.min(prev + 10, 170));
+  }, []);
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel((prev) => Math.max(prev - 10, 60));
+  }, []);
+  const handleRotate = useCallback(() => {
+    setRotation((prev) => (prev + 90) % 360);
+  }, []);
+
+  const miniCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const drawMiniCanvasPlaceholder = useCallback(
+    (title: string) => {
+      const canvas = miniCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+      ctx.fillStyle = "#1565c0";
+      ctx.fillRect(0, 0, w, Math.max(10, Math.floor(h * 0.07)));
+      ctx.fillStyle = "#111827";
+      ctx.font = "700 12px Arial";
+      ctx.fillText(title.slice(0, 18), 10, Math.max(18, Math.floor(h * 0.25)));
+    },
+    []
+  );
+
+  useEffect(() => {
+    const canvas = miniCanvasRef.current;
+    if (!canvas) return;
+    // Keep stable dimensions so inspect always shows the same canvas size.
+    canvas.width = 160;
+    canvas.height = 220;
+
+    if (!files.length) {
+      drawMiniCanvasPlaceholder("No file");
+      return;
+    }
+
+    if (workspaceVariant === "resizer" || workspaceVariant === "compressor") {
+      const file = files[0];
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const ratio =
+          workspaceVariant === "resizer" ? imageResizePercent / 100 : 1;
+        const targetW = Math.max(1, Math.floor(img.width * ratio));
+        const targetH = Math.max(1, Math.floor(img.height * ratio));
+
+        // Fit into the sidebar preview box.
+        const scale = Math.min(
+          canvas.width / targetW,
+          canvas.height / targetH
+        );
+        const drawW = Math.max(1, Math.floor(targetW * scale));
+        const drawH = Math.max(1, Math.floor(targetH * scale));
+        const dx = Math.floor((canvas.width - drawW) / 2);
+        const dy = Math.floor((canvas.height - drawH) / 2);
+        ctx.drawImage(img, dx, dy, drawW, drawH);
+
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
+      };
+      img.src = url;
+      return () => URL.revokeObjectURL(url);
+    }
+
+    // For other converters show a placeholder mini-canvas.
+    drawMiniCanvasPlaceholder(files[0]?.name ?? "File");
+  }, [
+    drawMiniCanvasPlaceholder,
+    files,
+    imageResizePercent,
+    workspaceVariant,
+  ]);
+
+  const renderWorkspace = () => {
+    if (workspaceVariant === "pdf-canvas") {
+      return (
+        <PdfCanvasWorkspace
+          files={files}
+          activePageIndex={activePageIndex}
+          zoomLevel={zoomLevel}
+          rotation={rotation}
+          onPickFiles={handlePickFiles}
+        />
+      );
+    }
+    if (workspaceVariant === "resizer" || workspaceVariant === "compressor") {
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            gap: 2,
+          }}
+        >
+          <ImagePreviewCanvas
+            mode={workspaceVariant}
+            files={files}
+            onPickFiles={handlePickFiles}
+            resizePercent={imageResizePercent}
+          />
+        </Box>
+      );
+    }
+
+    return (
+      <Box
+        sx={{
+          width: "100%",
+       
+          gap: 2,
+     
+        }}
+      >
+        <Box sx={{ display: "grid", placeItems: "center", minHeight: 320 }}>
+          {files.length ? (
+            <Stack
+              direction="row"
+              spacing={2}
+              flexWrap="wrap"
+              justifyContent="center"
+              sx={{ width: "100%" }}
+            >
+              {files.map((file, idx) => (
+                <FileTile
+                  key={`${file.name}-${idx}`}
+                  name={file.name}
+                  onRemove={() => handleRemoveFile(idx)}
+                />
+              ))}
+            </Stack>
+          ) : (
+            <EmptyWorkspaceState
+              sourceLabel={sourceLabel.toLowerCase()}
+              onPickFiles={handlePickFiles}
+            />
+          )}
+        </Box>
+      </Box>
+    );
   };
+
+ 
 
   return (
     <Box sx={{}}>
@@ -75,8 +266,38 @@ const ConverterTool = () => {
               {tool.title.replace(" TO ", " to ")}
             </Typography>
 
+            <Box
+              sx={{
+                px: { xs: 2, md: 3 },
+                py: 2,
+                flex: 1,
+                overflowY: "auto",
+              }}
+            >
+              <WorkspaceSidebar
+                workspaceVariant={workspaceVariant}
+                toolSlug={tool?.slug}
+                files={files}
+                miniCanvasRef={miniCanvasRef}
+                activePageIndex={activePageIndex}
+                zoomLevel={zoomLevel}
+                rotation={rotation}
+                imageResizePercent={imageResizePercent}
+                imageCompressionQuality={imageCompressionQuality}
+                imageOutputFormat={imageOutputFormat}
+                onZoomOut={handleZoomOut}
+                onZoomIn={handleZoomIn}
+                onRotate={handleRotate}
+                onRemoveFile={handleRemoveFile}
+                onImageResizePercentChange={setImageResizePercent}
+                onImageCompressionQualityChange={setImageCompressionQuality}
+                onImageOutputFormatChange={setImageOutputFormat}
+              />
+            </Box>
+
             <Button
               variant="contained"
+              disabled={!files.length}
               onMouseEnter={() => setIsConvertHovered(true)}
               onMouseLeave={() => setIsConvertHovered(false)}
               onFocus={() => setIsConvertHovered(true)}
@@ -105,7 +326,7 @@ const ConverterTool = () => {
               }}
               endIcon={<ArrowCircleRightOutlinedIcon />}
             >
-              Convert to PDF
+              {convertButtonLabel}
             </Button>
             <Box
               sx={{
@@ -164,117 +385,7 @@ const ConverterTool = () => {
                 justifyContent: "center",
               }}
             >
-              {files.length ? (
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  flexWrap="wrap"
-                  justifyContent="center"
-                  sx={{ width: "100%" }}
-                >
-                  {files.map((file, idx) => (
-                    <Paper
-                      key={`${file.name}-${idx}`}
-                      elevation={0}
-                      sx={{
-                        width: 144,
-                        border: "1px solid #ececf2",
-                        borderRadius: 2,
-                        p: 1.5,
-                        textAlign: "center",
-                        bgcolor: "#fff",
-                        position: "relative",
-                        transition:
-                          "border-color 0.2s ease, box-shadow 0.2s ease",
-                        "&:hover": {
-                          borderColor: "#57b746",
-                          boxShadow: "0 8px 16px rgba(0, 0, 0, 0.08)",
-                        },
-                        "&:hover .remove-file-btn": {
-                          opacity: 1,
-                          transform: "scale(1)",
-                        },
-                      }}
-                    >
-                      <IconButton
-                        className="remove-file-btn"
-                        size="small"
-                        onClick={() => handleRemoveFile(idx)}
-                        sx={{
-                          position: "absolute",
-                          top: 6,
-                          right: 6,
-                          width: 22,
-                          height: 22,
-                          bgcolor: "#fff",
-                          border: "1px solid #e5e7eb",
-                          color: "#ef4444",
-                          opacity: 0,
-                          transform: "scale(0.85)",
-                          transition: "all 0.2s ease",
-                          "&:hover": {
-                            bgcolor: "#fee2e2",
-                            borderColor: "#fecaca",
-                          },
-                        }}
-                      >
-                        <CloseIcon sx={{ fontSize: 14 }} />
-                      </IconButton>
-                      <Box
-                        sx={{
-                          width: 88,
-                          height: 116,
-                          mx: "auto",
-                          mb: 1.5,
-                          border: "1px solid #f0f0f5",
-                          borderRadius: 1,
-                          display: "grid",
-                          placeItems: "center",
-                          bgcolor: "#fafbff",
-                        }}
-                      >
-                        <DescriptionOutlinedIcon
-                          sx={{ color: "#1565c0", fontSize: 40 }}
-                        />
-                      </Box>
-                      <Typography
-                        noWrap
-                        sx={{ fontSize: 12, color: "#5f6368" }}
-                      >
-                        {file.name}
-                      </Typography>
-                    </Paper>
-                  ))}
-                </Stack>
-              ) : (
-                <Box
-                  onClick={handlePickFiles}
-                  sx={{
-                    width: 225,
-                    height: 270,
-                    border: "1px dashed #c7c7d8",
-                    borderRadius: 2,
-                    display: "grid",
-                    placeItems: "center",
-                    bgcolor: "#fff",
-                    cursor: "pointer",
-                    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-                    "&:hover": {
-                      borderColor: "#57b746",
-                      boxShadow: "0 0 0 3px rgba(87, 183, 70, 0.12)",
-                    },
-                  }}
-                >
-                  <Stack alignItems="center" spacing={1}>
-                    <DescriptionOutlinedIcon
-                      sx={{ color: "#1565c0", fontSize: 42 }}
-                    />
-                    <Typography sx={{ fontSize: 12, color: "#6b7280" }}>
-                      Select {sourceLabel} file
-                    </Typography>
-                  </Stack>
-                </Box>
-              )}
+              {renderWorkspace()}
             </Box>
           </Box>
         </Box>
@@ -290,6 +401,13 @@ const ConverterTool = () => {
         hidden
         type="file"
         multiple
+        accept={
+          workspaceVariant === "pdf-canvas"
+            ? ".pdf,application/pdf"
+            : workspaceVariant === "resizer" || workspaceVariant === "compressor"
+              ? "image/png,image/jpeg,image/webp"
+              : undefined
+        }
         onChange={handleFilesSelected}
       />
     </Box>

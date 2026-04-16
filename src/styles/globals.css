@@ -20,7 +20,7 @@ body {
 /* Media overlay lock */
 body.media-overlay-locked {
   overflow: hidden !important;
-  touch-action: none;
+
 }
 
 /* Ensure SweetAlert2 modals appear above drawers */
