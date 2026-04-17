@@ -29,6 +29,7 @@ const ConverterTool = () => {
 
   const sourceLabel = tool?.title?.split(" TO ")[0] || "File";
   const targetLabel = tool?.title?.split(" TO ")[1] || "Output";
+  const isPdfMergeTool = tool?.slug === "pdf-merge";
   const workspaceVariant = useMemo(
     () => getWorkspaceVariant(tool?.slug),
     [tool?.slug]
@@ -64,7 +65,7 @@ const ConverterTool = () => {
       }
       event.target.value = "";
     },
-    [workspaceVariant]
+    [isPdfMergeTool, workspaceVariant]
   );
 
   const handleRemoveFile = useCallback((indexToRemove: number) => {
@@ -164,13 +165,18 @@ const ConverterTool = () => {
   const renderWorkspace = () => {
     if (workspaceVariant === "pdf-canvas") {
       return (
-        <PdfCanvasWorkspace
-          files={files}
-          activePageIndex={activePageIndex}
-          zoomLevel={zoomLevel}
-          rotation={rotation}
-          onPickFiles={handlePickFiles}
-        />
+        <>
+          <PdfCanvasWorkspace
+            files={files}
+            activePageIndex={activePageIndex}
+            zoomLevel={zoomLevel}
+            rotation={rotation}
+            onPickFiles={handlePickFiles}
+            onRemoveFile={handleRemoveFile}
+          />
+         
+     
+        </>
       );
     }
     if (workspaceVariant === "resizer" || workspaceVariant === "compressor") {
@@ -256,7 +262,7 @@ const ConverterTool = () => {
           >
             <Typography
               sx={{
-                fontSize: 30,
+                fontSize: 22,
                 fontWeight: 700,
                 color: "#2f2f33",
                 borderBottom: "1px solid #ececf2",
@@ -268,14 +274,14 @@ const ConverterTool = () => {
 
             <Box
               sx={{
-                px: { xs: 2, md: 3 },
+                px: { xs: 0.5, md: 1 },
                 py: 2,
                 flex: 1,
                 overflowY: "auto",
               }}
             >
               <WorkspaceSidebar
-                workspaceVariant={workspaceVariant}
+                
                 toolSlug={tool?.slug}
                 files={files}
                 miniCanvasRef={miniCanvasRef}
@@ -297,13 +303,14 @@ const ConverterTool = () => {
 
             <Button
               variant="contained"
-              disabled={!files.length}
+              disabled={isPdfMergeTool ? files.length < 2 : !files.length}
               onMouseEnter={() => setIsConvertHovered(true)}
               onMouseLeave={() => setIsConvertHovered(false)}
               onFocus={() => setIsConvertHovered(true)}
               onBlur={() => setIsConvertHovered(false)}
               sx={{
-                m: { xs: 2, md: 3 },
+                mb: { xs: 2, md: 3 },
+                mx:{ xs: 2, md: 3 },
 
                 alignSelf: "stretch",
                 height: 56,
@@ -374,12 +381,12 @@ const ConverterTool = () => {
               position: "relative",
               p: { xs: 2, md: 3 },
               borderRight: { xs: "none", md: "1px solid #ececf2" },
-              minHeight: { xs: 380, md: "calc(100vh - 150px)" },
+              minHeight: { xs: 380, md: "calc(100vh - 120px)" },
             }}
           >
             <Box
               sx={{
-                minHeight: { xs: 340, md: "calc(100vh - 240px)" },
+                minHeight: { xs: 340, md: "calc(100vh - 200px)" },
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -400,7 +407,7 @@ const ConverterTool = () => {
         ref={fileInputRef}
         hidden
         type="file"
-        multiple
+        multiple={workspaceVariant !== "resizer" && workspaceVariant !== "compressor"}
         accept={
           workspaceVariant === "pdf-canvas"
             ? ".pdf,application/pdf"

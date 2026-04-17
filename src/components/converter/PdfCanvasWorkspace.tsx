@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
-import { Box, Paper } from "@mui/material";
+import { Box, IconButton, Paper, Typography } from "@mui/material";
 import EmptyWorkspaceState from "./EmptyWorkspaceState";
+import { Delete } from "@mui/icons-material";
 
 type PdfCanvasWorkspaceProps = {
   files: File[];
@@ -8,6 +9,7 @@ type PdfCanvasWorkspaceProps = {
   zoomLevel: number;
   rotation: number;
   onPickFiles: () => void;
+  onRemoveFile: (index: number) => void;
 };
 
 const PdfCanvasWorkspace = memo(
@@ -17,6 +19,7 @@ const PdfCanvasWorkspace = memo(
     zoomLevel,
     rotation,
     onPickFiles,
+    onRemoveFile,
   }: PdfCanvasWorkspaceProps) => {
     const fileCanvasIds = useMemo(
       () =>
@@ -29,7 +32,7 @@ const PdfCanvasWorkspace = memo(
         }),
       [files]
     );
-    const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const previewCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
 
     const drawPdfCanvas = useCallback(
       (canvas: HTMLCanvasElement, title: string, subtitle: string) => {
@@ -69,16 +72,13 @@ const PdfCanvasWorkspace = memo(
     );
 
     useEffect(() => {
-      const canvas = previewCanvasRef.current;
-      if (!canvas) return;
-      const selectedFile = files[activePageIndex] ?? files[0];
-      if (!selectedFile) return;
-      drawPdfCanvas(
-        canvas,
-        selectedFile.name.slice(0, 22),
-        `Preview page ${activePageIndex + 1}`
-      );
-    }, [activePageIndex, drawPdfCanvas, files]);
+      previewCanvasRefs.current = previewCanvasRefs.current.slice(0, files.length);
+      files.forEach((file, index) => {
+        const canvas = previewCanvasRefs.current[index];
+        if (!canvas) return;
+        drawPdfCanvas(canvas, file.name.slice(0, 22), `Preview page ${index + 1}`);
+      });
+    }, [drawPdfCanvas, files]);
 
     if (!files.length) {
       return <EmptyWorkspaceState sourceLabel="PDF" onPickFiles={onPickFiles} />;
@@ -89,52 +89,84 @@ const PdfCanvasWorkspace = memo(
         sx={{
           width: "100%",
           display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          maxHeight: "calc(100vh - 168px)",
+          overflowY: "auto",
+        
           gap: 2,
         }}
       >
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 2,
-            border: "1px solid #e5e7eb",
-            bgcolor: "#fff",
-            p: 1.5,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1.5,
-            m: "auto",
-          }}
-        >
-          <Box
-            className="file__canvas"
+        {files.map((file, index) => (
+          <Paper
+            key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
+            elevation={0}
             sx={{
-              width: { xs: 240, md: 220 },
-              height: { xs: 140, md: 240 },
-              borderRadius: 1,
-              overflow: "hidden",
-              border: "1px solid #e5e7eb",
-              boxShadow: "0 10px 24px rgba(0,0,0,0.1)",
-              transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-              transformOrigin: "center",
-              transition: "transform 0.2s ease",
+              borderRadius: 2,
+              border:
+                index === activePageIndex
+                  ? "1px solid #1d4ed8"
+                  : "1px solid #e5e7eb",
               bgcolor: "#fff",
+              p: 1.5,
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
             }}
           >
-            <canvas
-              id={`cover-${fileCanvasIds[activePageIndex]}`}
-              width={420}
-              height={594}
-              className="pdf pdf"
-              data-file={fileCanvasIds[activePageIndex]}
-              data-page={activePageIndex + 1}
-              dir="ltr"
-              data-width={595.28}
-              data-height={841.89}
-              style={{ backgroundImage: "none", display: "block" }}
-              ref={previewCanvasRef}
-            />
-          </Box>
-        </Paper>
+              <IconButton
+                size="small"
+                onClick={() => onRemoveFile(index)}
+                sx={{ alignSelf: "flex-end" }}
+              >
+                <Delete fontSize="small" color="error" />
+              </IconButton>
+            <Box
+              className="file__canvas"
+              sx={{
+                width: { xs: 240, md: 240 },
+                height: { xs: 140, md: 260 },
+                borderRadius: 1,
+                overflow: "hidden",
+                border: "1px solid #e5e7eb",
+                boxShadow: "0 10px 24px rgba(0,0,0,0.1)",
+                transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
+                transformOrigin: "center",
+                transition: "transform 0.2s ease",
+                bgcolor: "#fff",
+              }}
+            >
+              <canvas
+                id={`cover-${fileCanvasIds[index]}`}
+                width={420}
+                height={594}
+                className="pdf pdf"
+                data-file={fileCanvasIds[index]}
+                data-page={index + 1}
+                dir="ltr"
+                data-width={595.28}
+                data-height={841.89}
+                style={{ backgroundImage: "none", display: "block" }}
+                ref={(canvas) => {
+                  previewCanvasRefs.current[index] = canvas;
+                }}
+              />
+            </Box>
+            <Typography
+              title={file.name}
+              sx={{
+                maxWidth: 220,
+                fontSize: 14,
+                color: "#4b5563",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {file.name}
+            </Typography>
+          </Paper>
+        ))}
       </Box>
     );
   }

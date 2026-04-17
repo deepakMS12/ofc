@@ -6,18 +6,18 @@ import { converters } from "./converters";
  */
 export const converterSections = [
   {
-    id: "office",
-    title: "Office",
+    id: "pdf",
+    title: "PDF",
     converters: converters.slice(0, 8),
   },
   {
-    id: "office-2",
-    title: "Office 2",
+    id: "image",
+    title: "Image",
     converters: converters.slice(8, 16),
   },
   {
-    id: "office-3",
-    title: "Office 3",
+    id: "other",
+    title: "Other",
     converters: converters.slice(16),
   },
 ];
