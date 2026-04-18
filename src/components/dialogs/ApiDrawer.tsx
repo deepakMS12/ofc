@@ -15,7 +15,7 @@ import {
 import { Copy, RefreshCw, FileText, X, Key } from "lucide-react";
 import LaunchIcon from "@mui/icons-material/Launch";
 import { apiKeyApi } from "@/lib/api/apiKey";
-import { useSnackbar } from "@/contexts/SnackbarContext";
+import { useToast } from "@/contexts/ToastContext";
 import { showConfirm } from "@/lib/utils/sweetalert";
 import { colors } from "@/utils/customColor";
 
@@ -25,7 +25,7 @@ interface ApiDrawerProps {
 }
 
 export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
-  const { showSuccess, showError } = useSnackbar();
+  const { showSuccess, showError } = useToast();
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyEnabled, setApiKeyEnabled] = useState(true);
   const [createdAt, setCreatedAt] = useState<string | null>(null);

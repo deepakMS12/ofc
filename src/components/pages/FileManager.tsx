@@ -23,7 +23,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FolderIcon from '@mui/icons-material/Folder';
 import { Link as RouterLink } from 'react-router-dom';
 import { uploadApi, type UploadedFile } from '@/lib/api/upload';
-import { useSnackbar } from '@/contexts/SnackbarContext';
+import { useToast } from '@/contexts/ToastContext';
 import { showConfirm } from '@/lib/utils/sweetalert';
 
 function formatBytes(size: number) {
@@ -162,7 +162,7 @@ function getFileIcon(mimeType?: string, fileName?: string): string {
 }
 
 export default function FileManager() {
-  const { showError, showSuccess } = useSnackbar();
+  const { showError, showSuccess } = useToast();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);

@@ -20,13 +20,13 @@ import {
 import { AuthActionButton } from "@/components/common";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loginUser } from "@/store/thunks/authThunks";
-import { useSnackbar } from "@/contexts/SnackbarContext";
+import { useToast } from "@/contexts/ToastContext";
 
 const SignInPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((s) => s.auth.isLoading);
-  const { showError } = useSnackbar();
+  const { showError } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

@@ -14,11 +14,9 @@ import {
 import { Copy, RefreshCw, FileText } from 'lucide-react';
 import LaunchIcon from '@mui/icons-material/Launch';
 import { apiKeyApi } from '@/lib/api/apiKey';
-import { useSnackbar } from '@/contexts/SnackbarContext';
 import { showConfirm } from '@/lib/utils/sweetalert';
 
 export default function ApiPortal() {
-  const { showSuccess, showError } = useSnackbar();
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyEnabled, setApiKeyEnabled] = useState(true);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
@@ -44,7 +42,6 @@ export default function ApiPortal() {
       }
     } catch (error) {
       console.error('Failed to load API key:', error);
-      showError('Failed to load API key. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,11 +64,10 @@ export default function ApiPortal() {
       const response = await apiKeyApi.enableApiKey();
       if (response.status === 'success') {
         setApiKeyEnabled(true);
-        showSuccess('API key enabled successfully');
+   
       }
     } catch (error) {
       console.error('Failed to enable API key:', error);
-      showError('Failed to enable API key. Please try again.');
       setApiKeyEnabled(false);
     }
   };
@@ -81,11 +77,9 @@ export default function ApiPortal() {
       const response = await apiKeyApi.disableApiKey();
       if (response.status === 'success') {
         setApiKeyEnabled(false);
-        showSuccess('API key disabled successfully');
       }
     } catch (error) {
       console.error('Failed to disable API key:', error);
-      showError('Failed to disable API key. Please try again.');
       setApiKeyEnabled(true);
     }
   };
@@ -111,11 +105,9 @@ export default function ApiPortal() {
         if (response.createdAt) {
           setCreatedAt(response.createdAt);
         }
-        showSuccess('API key regenerated successfully');
       }
     } catch (error) {
       console.error('Failed to regenerate API key:', error);
-      showError('Failed to regenerate API key. Please try again.');
     } finally {
       setLoading(false);
     }

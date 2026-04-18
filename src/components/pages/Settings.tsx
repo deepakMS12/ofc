@@ -21,7 +21,7 @@ import {
 import { Activity, Edit2, User, LockKeyhole, Trash2 } from "lucide-react";
 import dayjs from "dayjs";
 import { authApi, type LoginActivityEntry } from "@/lib/api/auth";
-import { useSnackbar } from "@/contexts/SnackbarContext";
+import { useToast } from "@/contexts/ToastContext";
 import { showConfirm, showSuccessAlert } from "@/lib/utils/sweetalert";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearUser, setUser } from "@/store/slices/userSlice";
@@ -90,7 +90,7 @@ export default function SettingsPage() {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const userProfile = useAppSelector((state) => state.user.profile);
-  const { showSuccess, showError, showWarning } = useSnackbar();
+  const { showSuccess, showError, showWarning } = useToast();
   const [tab, setTab] = useState<SettingsTab>(getInitialTabFromHash);
   const [emailEditable, setEmailEditable] = useState(false);
   const [emailInput, setEmailInput] = useState("");

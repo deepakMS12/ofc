@@ -1,4 +1,5 @@
 import { memo } from "react";
+import type { RefObject } from "react";
 import {
   Box,
   Button,
@@ -16,10 +17,13 @@ import { colors } from "@/utils/customColor";
 import type { ImageOutputFormat } from "./types";
 import PDFCompress from "./PDFCompress";
 import PDFMerge from "./PDFMerge";
+import type { URLtoPDFHandle } from "./urlToPdfPayload";
 import URLtoPDF from "./URLtoPDF";
 
 type WorkspaceSidebarProps = {
   toolSlug?: string;
+  urlToPdfRef?: RefObject<URLtoPDFHandle | null>;
+  onUrlToPdfSourceChange?: (url: string) => void;
   files: File[];
   miniCanvasRef: React.RefObject<HTMLCanvasElement | null>;
   activePageIndex: number;
@@ -40,6 +44,8 @@ type WorkspaceSidebarProps = {
 const WorkspaceSidebar = memo(
   ({
     toolSlug,
+    urlToPdfRef,
+    onUrlToPdfSourceChange,
     files,
     activePageIndex,
     zoomLevel,
@@ -78,7 +84,12 @@ const WorkspaceSidebar = memo(
 
         {(toolSlug === "pdf-compressor" || toolSlug === "pdf-to-docx") && <PDFCompress />}
         {toolSlug === "pdf-merge" && <PDFMerge />}
-        {toolSlug === "url-to-pdf" && <URLtoPDF />}
+        {toolSlug === "url-to-pdf" && (
+          <URLtoPDF
+            ref={urlToPdfRef}
+            onSourceUrlChange={onUrlToPdfSourceChange}
+          />
+        )}
 
         {toolSlug === "pdf-canvas" && (
           <Stack spacing={1.2}>

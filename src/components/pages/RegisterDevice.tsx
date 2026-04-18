@@ -13,7 +13,7 @@ import {
   Skeleton,
 } from '@mui/material';
 import { devicesApi } from '@/lib/api/devices';
-import { useSnackbar } from '@/contexts/SnackbarContext';
+import { useToast } from '@/contexts/ToastContext';
 import { PhoneInputField } from '@/components/common';
 
 interface StepIndicatorProps {
@@ -107,7 +107,7 @@ function StepIndicator({ currentStep }: StepIndicatorProps) {
 
 export default function RegisterDevice() {
   const navigate = useNavigate();
-  const { showError, showWarning } = useSnackbar();
+  const { showError, showWarning } = useToast();
   const [step, setStep] = useState(1);
   const [deviceName, setDeviceName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
