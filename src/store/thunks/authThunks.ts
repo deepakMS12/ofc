@@ -82,7 +82,7 @@ export const loginUser = createAsyncThunk(
       const data = await postAuthV1Login({
         username,
         password,
-        force: true,
+        force: false,
       });
       const token = extractTokenFromLoginResponse(data);
       if (!token) {
