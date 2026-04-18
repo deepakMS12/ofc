@@ -3,7 +3,13 @@ import type { URLtoPDFHandle } from "@/components/converter/urlToPdfPayload";
 import { convertUrlToPdf } from "@/store/thunks/urlToPdfThunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { ChangeEvent } from "react";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 import ArrowCircleRightOutlinedIcon from "@mui/icons-material/ArrowCircleRightOutlined";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import EmptyWorkspaceState from "@/components/converter/EmptyWorkspaceState";
@@ -14,13 +20,18 @@ import { getWorkspaceVariant } from "@/components/converter/utils";
 import { colors } from "@/utils/customColor";
 import { converters } from "../data/converters";
 import { useToast } from "@/contexts/ToastContext";
+import UrlToPdfDownloadSuccess from "@/components/converter/DownloadSuccess";
 
 const ConverterTool = () => {
   const { slug } = useParams();
   const tool = converters.find((c) => c.slug === slug);
   const dispatch = useAppDispatch();
   const { showError, showSuccess } = useToast();
-  const urlToPdfLoading = useAppSelector((s) => s.urlToPdf.status === "loading");
+  const urlToPdfLoading = useAppSelector(
+    (s) => s.urlToPdf.status === "loading",
+  );
+  const [urlToPdfDownloadComplete, setUrlToPdfDownloadComplete] =
+    useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const urlToPdfRef = useRef<URLtoPDFHandle | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -64,6 +75,7 @@ const ConverterTool = () => {
 
   const handleUrlToPdfConvert = useCallback(async () => {
     if (!tool || tool.slug !== "url-to-pdf") return;
+    setUrlToPdfDownloadComplete(false);
     const handle = urlToPdfRef.current;
     if (!handle) {
       showError("Form is not ready.");
@@ -74,17 +86,18 @@ const ConverterTool = () => {
       showError("Enter a URL to convert.");
       return;
     }
-    let downloadFileName = handle.getOutputFileName().trim() || "url-convert.pdf";
+    let downloadFileName =
+      handle.getOutputFileName().trim() || "url-convert.pdf";
     if (!downloadFileName.toLowerCase().endsWith(".pdf")) {
       downloadFileName = `${downloadFileName}.pdf`;
     }
     try {
       const { queryType, body } = handle.getPayload();
-     
+
       const result = await dispatch(
         convertUrlToPdf({ queryType, body, downloadFileName }),
       ).unwrap();
-     
+
       const objectUrl = URL.createObjectURL(result.blob);
       const a = document.createElement("a");
       a.href = objectUrl;
@@ -92,10 +105,15 @@ const ConverterTool = () => {
       a.click();
       URL.revokeObjectURL(objectUrl);
       showSuccess("PDF download started.");
+      setUrlToPdfDownloadComplete(true);
     } catch (e: unknown) {
       showError(typeof e === "string" ? e : "Conversion failed.");
     }
   }, [dispatch, tool, showError, showSuccess]);
+
+  useEffect(() => {
+    setUrlToPdfDownloadComplete(false);
+  }, [slug, urlToPdfSource]);
 
   useEffect(() => {
     if (!files.length) {
@@ -208,8 +226,19 @@ const ConverterTool = () => {
     drawMiniCanvasPlaceholder(files[0]?.name ?? "File");
   }, [drawMiniCanvasPlaceholder, files, imageResizePercent, workspaceVariant]);
 
-  const renderWorkspace = () => {
-    if (slug === "url-to-pdf") return null;
+  const urlToPdfSuccessTitle =
+    tool?.title?.replace(" TO ", " to ") ?? "URL to PDF";
+
+  const renderWorkspace = useCallback(() => {
+    if (slug === "url-to-pdf") {
+      if (!urlToPdfDownloadComplete) return null;
+      return (
+        <UrlToPdfDownloadSuccess
+          title={urlToPdfSuccessTitle}
+          subtitle="Your PDF download has started. Check your downloads folder."
+        />
+      );
+    }
     // if (workspaceVariant === "pdf-canvas") {
     //   return (
     //     <>
@@ -277,7 +306,16 @@ const ConverterTool = () => {
         </Box>
       </Box>
     );
-  };
+  }, [
+    slug,
+    urlToPdfDownloadComplete,
+    urlToPdfSuccessTitle,
+    workspaceVariant,
+    files,
+    sourceLabel,
+    handlePickFiles,
+    handleRemoveFile,
+  ]);
 
   return (
     <Box sx={{}}>
@@ -378,47 +416,53 @@ const ConverterTool = () => {
                   opacity: 0.55,
                 },
               }}
-              endIcon={<ArrowCircleRightOutlinedIcon />}
+              endIcon={!urlToPdfLoading && <ArrowCircleRightOutlinedIcon />}
             >
-              {convertButtonLabel}
+              {urlToPdfLoading ? (
+                <CircularProgress size={20} />
+              ) : (
+                convertButtonLabel
+              )}
             </Button>
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 50,
-                left: "0%",
+            {!urlToPdfLoading && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 50,
+                  left: "0%",
 
-                width: "100%",
-                height: 0,
-                borderRadius: "50%",
-                zIndex: 10,
-                // transform: "translateX(-50%)",
-                pointerEvents: "none",
-                opacity: isConvertHovered ? 0 : 1,
-                animation: isConvertHovered
-                  ? "none"
-                  : "btnFloatShadow 3.2s ease infinite",
-                transition: "opacity 0.18s ease",
-                "@keyframes btnFloatShadow": {
-                  "0%": {
-                    WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
-                    boxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                  width: "100%",
+                  height: 0,
+                  borderRadius: "50%",
+                  zIndex: 10,
+                  // transform: "translateX(-50%)",
+                  pointerEvents: "none",
+                  opacity: isConvertHovered ? 0 : 1,
+                  animation: isConvertHovered
+                    ? "none"
+                    : "btnFloatShadow 3.2s ease infinite",
+                  transition: "opacity 0.18s ease",
+                  "@keyframes btnFloatShadow": {
+                    "0%": {
+                      WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                      boxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                    },
+                    "30%": {
+                      WebkitBoxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                      boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                    },
+                    "40%": {
+                      WebkitBoxShadow: "0 0 0 60px rgba(17,86,166,0.1)",
+                      boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                    },
+                    "100%": {
+                      WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
+                      boxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
+                    },
                   },
-                  "30%": {
-                    WebkitBoxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                    boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                  },
-                  "40%": {
-                    WebkitBoxShadow: "0 0 0 60px rgba(17,86,166,0.1)",
-                    boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                  },
-                  "100%": {
-                    WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
-                    boxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            )}
           </Box>
           <Box
             sx={{
