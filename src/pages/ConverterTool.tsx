@@ -20,6 +20,7 @@ import { getWorkspaceVariant } from "@/components/converter/utils";
 import { colors } from "@/utils/customColor";
 import { converters } from "../data/converters";
 import { useToast } from "@/contexts/ToastContext";
+import ConverterLoadingWorkspace from "@/components/converter/ConverterLoadingWorkspace";
 import UrlToPdfDownloadSuccess from "@/components/converter/DownloadSuccess";
 
 const ConverterTool = () => {
@@ -231,6 +232,14 @@ const ConverterTool = () => {
 
   const renderWorkspace = useCallback(() => {
     if (slug === "url-to-pdf") {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
       if (!urlToPdfDownloadComplete) return null;
       return (
         <UrlToPdfDownloadSuccess
@@ -308,8 +317,11 @@ const ConverterTool = () => {
     );
   }, [
     slug,
+    urlToPdfLoading,
     urlToPdfDownloadComplete,
     urlToPdfSuccessTitle,
+    sourceLabel,
+    targetLabel,
     workspaceVariant,
     files,
     sourceLabel,

@@ -4,3 +4,5 @@ export { default as SimpleErrorBoundary } from './SimpleErrorBoundary';
 export { default as ScrollToTop } from './ScrollToTop';
 export { default as PhoneInputField } from './PhoneInputField';
 export { default as AuthActionButton } from './AuthActionButton';
+export { default as ProtectedRoute } from './ProtectedRoute';
+export { default as ConfirmDialog } from './ConfirmDialog';

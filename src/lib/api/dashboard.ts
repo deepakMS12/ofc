@@ -26,9 +26,6 @@ export const dashboardApi = {
     return response.data;
   },
 
-  getPlan: async (): Promise<PlanDetails> => {
-    const response = await apiClient.get<PlanDetails>('/web/dashboard/plan');
-    return response.data;
-  },
+
 };
 

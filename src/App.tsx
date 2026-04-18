@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
-import { ErrorBoundary, ScrollToTop,  } from '@/components/common';
+import { ErrorBoundary, ProtectedRoute, ScrollToTop } from '@/components/common';
 import HomeLayout from '@/pages/HomeLayout';
 import TermsPage from '@/pages/TermsPage';
 import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
@@ -43,7 +43,14 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/verify-email-change" element={<VerifyEmailChangePage />} />
-            <Route path="/home" element={<HomeLayout />}>
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <HomeLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="converter" element={<ConverterPage />} />
