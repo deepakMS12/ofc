@@ -1007,11 +1007,16 @@ export default function SettingsPage() {
               value={item.key}
               iconPosition="start"
               icon={
-                <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Box sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}>
                   {item.icon}
                 </Box>
               }
-              label={item.label}
+              label={
+                <Box sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}>
+                  {item.label}
+                </Box>
+              }
+         
               sx={{
                 gap: 1,
                 "& svg": { color: "inherit" },
