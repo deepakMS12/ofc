@@ -339,7 +339,7 @@ const ConverterTool = () => {
             minHeight: { xs: "auto", md: "calc(100vh - 120px)" },
             border: "1px solid #ececf2",
             borderRadius: 1,
-            overflow: "hidden",
+            overflow: "visible",
             bgcolor: "#fff",
           }}
         >
@@ -351,6 +351,8 @@ const ConverterTool = () => {
               minHeight: { xs: 220, md: "calc(100vh - 120px)" },
               borderRight: "1px solid #ececf2",
               position: "relative",
+              zIndex: 2,
+              overflow: "visible",
             }}
           >
             <Typography
@@ -359,7 +361,9 @@ const ConverterTool = () => {
                 fontWeight: 700,
                 color: "#2f2f33",
                 borderBottom: "1px solid #ececf2",
-                p: { xs: 2, md: 3 },
+                px: { xs: 2, md: 3 },
+                pb: { xs: 2, md: 3 },
+                pt: { xs: 3, md: 4 },
               }}
             >
               {tool.title.replace(" TO ", " to ")}
@@ -395,86 +399,89 @@ const ConverterTool = () => {
               />
             </Box>
 
-            <Button
-              variant="contained"
-              disabled={convertDisabled}
-              onClick={() => {
-                if (tool?.slug === "url-to-pdf") void handleUrlToPdfConvert();
-              }}
-              onMouseEnter={() => setIsConvertHovered(true)}
-              onMouseLeave={() => setIsConvertHovered(false)}
-              onFocus={() => setIsConvertHovered(true)}
-              onBlur={() => setIsConvertHovered(false)}
+            <Box
               sx={{
-                mb: { xs: 2, md: 3 },
-                mx: { xs: 2, md: 3 },
-
+                position: "relative",
                 alignSelf: "stretch",
-                height: 56,
-                borderRadius: 2,
-                textTransform: "none",
-                fontSize: 18,
-                fontWeight: 700,
-                bgcolor: colors.primary,
-                boxShadow: "none",
-
-                "&:hover": {
-                  bgcolor: "rgba(17,86,166,0.9)",
-                  boxShadow: "none",
-                },
-                "&.Mui-disabled": {
-                  bgcolor: "rgba(17,86,166,0.35)",
-                  color: "#fff",
-                  opacity: 0.55,
-                },
+                mx: { xs: 2, md: 3 },
+                mb: { xs: 2, md: 3 },
               }}
-              endIcon={!urlToPdfLoading && <ArrowCircleRightOutlinedIcon />}
             >
-              {urlToPdfLoading ? (
-                <CircularProgress size={20} />
-              ) : (
-                convertButtonLabel
-              )}
-            </Button>
-            {!urlToPdfLoading && (
-              <Box
+              <Button
+                variant="contained"
+                disabled={convertDisabled}
+                onClick={() => {
+                  if (tool?.slug === "url-to-pdf") void handleUrlToPdfConvert();
+                }}
+                onMouseEnter={() => setIsConvertHovered(true)}
+                onMouseLeave={() => setIsConvertHovered(false)}
+                onFocus={() => setIsConvertHovered(true)}
+                onBlur={() => setIsConvertHovered(false)}
                 sx={{
-                  position: "absolute",
-                  bottom: 50,
-                  left: "0%",
-
+                  position: "relative",
+                  zIndex: 1,
                   width: "100%",
-                  height: 0,
-                  borderRadius: "50%",
-                  zIndex: 10,
-                  // transform: "translateX(-50%)",
-                  pointerEvents: "none",
-                  opacity: isConvertHovered ? 0 : 1,
-                  animation: isConvertHovered
-                    ? "none"
-                    : "btnFloatShadow 3.2s ease infinite",
-                  transition: "opacity 0.18s ease",
-                  "@keyframes btnFloatShadow": {
-                    "0%": {
-                      WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
-                      boxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
-                    },
-                    "30%": {
-                      WebkitBoxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                      boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                    },
-                    "40%": {
-                      WebkitBoxShadow: "0 0 0 60px rgba(17,86,166,0.1)",
-                      boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                    },
-                    "100%": {
-                      WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
-                      boxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
-                    },
+                  height: 56,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontSize: 18,
+                  fontWeight: 700,
+                  bgcolor: colors.primary,
+                  boxShadow: "none",
+
+                  "&:hover": {
+                    bgcolor: "rgba(17,86,166,0.9)",
+                    boxShadow: "none",
+                  },
+                  "&.Mui-disabled": {
+                    bgcolor: "rgba(17,86,166,0.35)",
+                    color: "#fff",
+                    opacity: 0.55,
                   },
                 }}
-              />
-            )}
+                endIcon={!urlToPdfLoading && <ArrowCircleRightOutlinedIcon />}
+              >
+                {urlToPdfLoading ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  convertButtonLabel
+                )}
+              </Button>
+              {!urlToPdfLoading && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: 2,
+                    zIndex: 0,
+                    pointerEvents: "none",
+                    opacity: isConvertHovered ? 0 : 1,
+                    animation: isConvertHovered
+                      ? "none"
+                      : "btnFloatShadow 3.2s ease infinite",
+                    transition: "opacity 0.18s ease",
+                    "@keyframes btnFloatShadow": {
+                      "0%": {
+                        WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                        boxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                      },
+                      "30%": {
+                        WebkitBoxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                        boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                      },
+                      "40%": {
+                        WebkitBoxShadow: "0 0 0 60px rgba(17,86,166,0.1)",
+                        boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                      },
+                      "100%": {
+                        WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
+                        boxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
+                      },
+                    },
+                  }}
+                />
+              )}
+            </Box>
           </Box>
           <Box
             sx={{
