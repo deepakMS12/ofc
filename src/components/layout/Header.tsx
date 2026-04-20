@@ -7,10 +7,10 @@ import { Clock, User, LogOut, Bell } from 'lucide-react';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import NotificationsDrawer from '@/components/dialogs/NotificationsDrawer';
+import { ConfirmDialog } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
 import { clearUser } from '@/store/slices/userSlice';
-import { dashboardApi } from '@/lib/api/dashboard';
 import { colors } from '@/utils/customColor';
 
 export default function Header() {
@@ -19,8 +19,9 @@ export default function Header() {
   const user = useAppSelector((state) => state.user.profile);
   const [time, setTime] = useState('--:--:--');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
-  const [planCode, setPlanCode] = useState<string | null>(null);
+  const [planCode] = useState<string | null>(null);
 
   useEffect(() => {
 
@@ -39,22 +40,12 @@ export default function Header() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const fetchPlan = async () => {
-      try {
-        const planDetails = await dashboardApi.getPlan();
-        setPlanCode(planDetails.planCode ?? null);
-      } catch (error) {
-        console.error('Failed to fetch plan info', error);
-        setPlanCode(null);
-      }
-    };
-    fetchPlan();
-  }, []);
+ 
 
   const handleLogout = () => {
     dispatch(logout());
     dispatch(clearUser());
+    setLogoutConfirmOpen(false);
     navigate('/login', { replace: true });
   };
 
@@ -206,7 +197,7 @@ export default function Header() {
             {/* Logout Button */}
             <Tooltip title="Logout">
               <IconButton
-                onClick={handleLogout}
+                onClick={() => setLogoutConfirmOpen(true)}
                 sx={{
                   color: '#666',
                   ml: { xs: 0, sm: 3, md: 3 },
@@ -227,6 +218,17 @@ export default function Header() {
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
         onNotificationCountChange={setNotificationCount}
+      />
+
+      <ConfirmDialog
+        open={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        onConfirm={handleLogout}
+        title="Log out?"
+        description="You will need to sign in again to use OFC."
+        confirmText="Log out"
+        cancelText="Stay signed in"
+        confirmColor="error"
       />
     </>
   );

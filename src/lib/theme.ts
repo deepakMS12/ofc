@@ -14,7 +14,7 @@ const theme = createTheme({
       main: colors.primary, // Green color
     },
     background: {
-      default: '#fffdf6', // Off-white background
+      default: '#ffffff', // Off-white background
       paper: '#ffffff',
     },
   },
@@ -39,9 +39,9 @@ const theme = createTheme({
         },
         contained: {
           boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0 8px 20px rgba(1, 103, 65, 0.35)',
-          },
+          // '&:hover': {
+          //   boxShadow: '0 8px 20px rgba(1, 103, 65, 0.35)',
+          // },
         },
       },
     },

@@ -1,10 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { authReducer, userReducer } from './slices';
+import { authReducer, userReducer, urlToPdfReducer } from './slices';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
+    urlToPdf: urlToPdfReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

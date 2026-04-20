@@ -1,23 +1,42 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { URLtoPDFHandle } from "@/components/converter/urlToPdfPayload";
+import { convertUrlToPdf } from "@/store/thunks/urlToPdfThunks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { ChangeEvent } from "react";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 import ArrowCircleRightOutlinedIcon from "@mui/icons-material/ArrowCircleRightOutlined";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import EmptyWorkspaceState from "@/components/converter/EmptyWorkspaceState";
 import FileTile from "@/components/converter/FileTile";
-import ImagePreviewCanvas from "@/components/converter/ImagePreviewCanvas";
-import PdfCanvasWorkspace from "@/components/converter/PdfCanvasWorkspace";
 import WorkspaceSidebar from "@/components/converter/WorkspaceSidebar";
 import type { ImageOutputFormat } from "@/components/converter/types";
 import { getWorkspaceVariant } from "@/components/converter/utils";
 import { colors } from "@/utils/customColor";
 import { converters } from "../data/converters";
+import { useToast } from "@/contexts/ToastContext";
+import ConverterLoadingWorkspace from "@/components/converter/ConverterLoadingWorkspace";
+import UrlToPdfDownloadSuccess from "@/components/converter/DownloadSuccess";
 
 const ConverterTool = () => {
   const { slug } = useParams();
   const tool = converters.find((c) => c.slug === slug);
+  const dispatch = useAppDispatch();
+  const { showError, showSuccess } = useToast();
+  const urlToPdfLoading = useAppSelector(
+    (s) => s.urlToPdf.status === "loading",
+  );
+  const [urlToPdfDownloadComplete, setUrlToPdfDownloadComplete] =
+    useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const urlToPdfRef = useRef<URLtoPDFHandle | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [urlToPdfSource, setUrlToPdfSource] = useState("");
   const [isConvertHovered, setIsConvertHovered] = useState(false);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -30,15 +49,72 @@ const ConverterTool = () => {
   const sourceLabel = tool?.title?.split(" TO ")[0] || "File";
   const targetLabel = tool?.title?.split(" TO ")[1] || "Output";
   const isPdfMergeTool = tool?.slug === "pdf-merge";
+  const isUrlToPdfTool = tool?.slug === "url-to-pdf";
   const workspaceVariant = useMemo(
     () => getWorkspaceVariant(tool?.slug),
-    [tool?.slug]
+    [tool?.slug],
   );
   const convertButtonLabel = useMemo(() => {
     if (!tool) return "Convert";
     if (tool.title.includes(" TO ")) return `Convert to ${targetLabel}`;
     return tool.title;
   }, [targetLabel, tool]);
+
+  const convertDisabled = useMemo(() => {
+    if (!tool) return true;
+    if (isPdfMergeTool) return files.length < 2;
+    if (isUrlToPdfTool) return !urlToPdfSource.trim() || urlToPdfLoading;
+    return !files.length;
+  }, [
+    tool,
+    isPdfMergeTool,
+    isUrlToPdfTool,
+    files.length,
+    urlToPdfSource,
+    urlToPdfLoading,
+  ]);
+
+  const handleUrlToPdfConvert = useCallback(async () => {
+    if (!tool || tool.slug !== "url-to-pdf") return;
+    setUrlToPdfDownloadComplete(false);
+    const handle = urlToPdfRef.current;
+    if (!handle) {
+      showError("Form is not ready.");
+      return;
+    }
+    const rawUrl = handle.getSourceUrl().trim();
+    if (!rawUrl) {
+      showError("Enter a URL to convert.");
+      return;
+    }
+    let downloadFileName =
+      handle.getOutputFileName().trim() || "url-convert.pdf";
+    if (!downloadFileName.toLowerCase().endsWith(".pdf")) {
+      downloadFileName = `${downloadFileName}.pdf`;
+    }
+    try {
+      const { queryType, body } = handle.getPayload();
+
+      const result = await dispatch(
+        convertUrlToPdf({ queryType, body, downloadFileName }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showSuccess("PDF download started.");
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showError(typeof e === "string" ? e : "Conversion failed.");
+    }
+  }, [dispatch, tool, showError, showSuccess]);
+
+  useEffect(() => {
+    setUrlToPdfDownloadComplete(false);
+  }, [slug, urlToPdfSource]);
 
   useEffect(() => {
     if (!files.length) {
@@ -65,7 +141,7 @@ const ConverterTool = () => {
       }
       event.target.value = "";
     },
-    [isPdfMergeTool, workspaceVariant]
+    [isPdfMergeTool, workspaceVariant],
   );
 
   const handleRemoveFile = useCallback((indexToRemove: number) => {
@@ -83,28 +159,25 @@ const ConverterTool = () => {
 
   const miniCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const drawMiniCanvasPlaceholder = useCallback(
-    (title: string) => {
-      const canvas = miniCanvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = "#e5e7eb";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
-      ctx.fillStyle = "#1565c0";
-      ctx.fillRect(0, 0, w, Math.max(10, Math.floor(h * 0.07)));
-      ctx.fillStyle = "#111827";
-      ctx.font = "700 12px Arial";
-      ctx.fillText(title.slice(0, 18), 10, Math.max(18, Math.floor(h * 0.25)));
-    },
-    []
-  );
+  const drawMiniCanvasPlaceholder = useCallback((title: string) => {
+    const canvas = miniCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+    ctx.fillStyle = "#1565c0";
+    ctx.fillRect(0, 0, w, Math.max(10, Math.floor(h * 0.07)));
+    ctx.fillStyle = "#111827";
+    ctx.font = "700 12px Arial";
+    ctx.fillText(title.slice(0, 18), 10, Math.max(18, Math.floor(h * 0.25)));
+  }, []);
 
   useEffect(() => {
     const canvas = miniCanvasRef.current;
@@ -135,10 +208,7 @@ const ConverterTool = () => {
         const targetH = Math.max(1, Math.floor(img.height * ratio));
 
         // Fit into the sidebar preview box.
-        const scale = Math.min(
-          canvas.width / targetW,
-          canvas.height / targetH
-        );
+        const scale = Math.min(canvas.width / targetW, canvas.height / targetH);
         const drawW = Math.max(1, Math.floor(targetW * scale));
         const drawH = Math.max(1, Math.floor(targetH * scale));
         const dx = Math.floor((canvas.width - drawW) / 2);
@@ -155,55 +225,68 @@ const ConverterTool = () => {
 
     // For other converters show a placeholder mini-canvas.
     drawMiniCanvasPlaceholder(files[0]?.name ?? "File");
-  }, [
-    drawMiniCanvasPlaceholder,
-    files,
-    imageResizePercent,
-    workspaceVariant,
-  ]);
+  }, [drawMiniCanvasPlaceholder, files, imageResizePercent, workspaceVariant]);
 
-  const renderWorkspace = () => {
-    if (workspaceVariant === "pdf-canvas") {
-      return (
-        <>
-          <PdfCanvasWorkspace
-            files={files}
-            activePageIndex={activePageIndex}
-            zoomLevel={zoomLevel}
-            rotation={rotation}
-            onPickFiles={handlePickFiles}
-            onRemoveFile={handleRemoveFile}
+  const urlToPdfSuccessTitle =
+    tool?.title?.replace(" TO ", " to ") ?? "URL to PDF";
+
+  const renderWorkspace = useCallback(() => {
+    if (slug === "url-to-pdf") {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
           />
-         
-     
-        </>
+        );
+      }
+      if (!urlToPdfDownloadComplete) return null;
+      return (
+        <UrlToPdfDownloadSuccess
+          title={urlToPdfSuccessTitle}
+          subtitle="Your PDF download has started. Check your downloads folder."
+        />
       );
     }
-    if (workspaceVariant === "resizer" || workspaceVariant === "compressor") {
-      return (
-        <Box
-          sx={{
-            width: "100%",
-            gap: 2,
-          }}
-        >
-          <ImagePreviewCanvas
-            mode={workspaceVariant}
-            files={files}
-            onPickFiles={handlePickFiles}
-            resizePercent={imageResizePercent}
-          />
-        </Box>
-      );
-    }
+    // if (workspaceVariant === "pdf-canvas") {
+    //   return (
+    //     <>
+    //       <PdfCanvasWorkspace
+    //         files={files}
+    //         activePageIndex={activePageIndex}
+    //         zoomLevel={zoomLevel}
+    //         rotation={rotation}
+    //         onPickFiles={handlePickFiles}
+    //         onRemoveFile={handleRemoveFile}
+    //       />
+
+    //     </>
+    //   );
+    // }
+    // if (workspaceVariant === "resizer" || workspaceVariant === "compressor") {
+    //   return (
+    //     <Box
+    //       sx={{
+    //         width: "100%",
+    //         gap: 2,
+    //       }}
+    //     >
+    //       <ImagePreviewCanvas
+    //         mode={workspaceVariant}
+    //         files={files}
+    //         onPickFiles={handlePickFiles}
+    //         resizePercent={imageResizePercent}
+    //       />
+    //     </Box>
+    //   );
+    // }
 
     return (
       <Box
         sx={{
           width: "100%",
-       
+
           gap: 2,
-     
         }}
       >
         <Box sx={{ display: "grid", placeItems: "center", minHeight: 320 }}>
@@ -232,9 +315,19 @@ const ConverterTool = () => {
         </Box>
       </Box>
     );
-  };
-
- 
+  }, [
+    slug,
+    urlToPdfLoading,
+    urlToPdfDownloadComplete,
+    urlToPdfSuccessTitle,
+    sourceLabel,
+    targetLabel,
+    workspaceVariant,
+    files,
+    sourceLabel,
+    handlePickFiles,
+    handleRemoveFile,
+  ]);
 
   return (
     <Box sx={{}}>
@@ -281,8 +374,9 @@ const ConverterTool = () => {
               }}
             >
               <WorkspaceSidebar
-                
                 toolSlug={tool?.slug}
+                urlToPdfRef={urlToPdfRef}
+                onUrlToPdfSourceChange={setUrlToPdfSource}
                 files={files}
                 miniCanvasRef={miniCanvasRef}
                 activePageIndex={activePageIndex}
@@ -303,14 +397,17 @@ const ConverterTool = () => {
 
             <Button
               variant="contained"
-              disabled={isPdfMergeTool ? files.length < 2 : !files.length}
+              disabled={convertDisabled}
+              onClick={() => {
+                if (tool?.slug === "url-to-pdf") void handleUrlToPdfConvert();
+              }}
               onMouseEnter={() => setIsConvertHovered(true)}
               onMouseLeave={() => setIsConvertHovered(false)}
               onFocus={() => setIsConvertHovered(true)}
               onBlur={() => setIsConvertHovered(false)}
               sx={{
                 mb: { xs: 2, md: 3 },
-                mx:{ xs: 2, md: 3 },
+                mx: { xs: 2, md: 3 },
 
                 alignSelf: "stretch",
                 height: 56,
@@ -331,49 +428,53 @@ const ConverterTool = () => {
                   opacity: 0.55,
                 },
               }}
-              endIcon={<ArrowCircleRightOutlinedIcon />}
+              endIcon={!urlToPdfLoading && <ArrowCircleRightOutlinedIcon />}
             >
-              {convertButtonLabel}
+              {urlToPdfLoading ? (
+                <CircularProgress size={20} />
+              ) : (
+                convertButtonLabel
+              )}
             </Button>
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 50,
-                left: "0%",
+            {!urlToPdfLoading && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 50,
+                  left: "0%",
 
-                width: "100%",
-                height: 0,
-                borderRadius: "50%",
-                zIndex: 10,
-                // transform: "translateX(-50%)",
-                pointerEvents: "none",
-                opacity: isConvertHovered ? 0 : 1,
-                animation: isConvertHovered
-                  ? "none"
-                  : "btnFloatShadow 3.2s ease infinite",
-                transition: "opacity 0.18s ease",
-                "@keyframes btnFloatShadow": {
-                  "0%": {
-                    WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
-                    boxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                  width: "100%",
+                  height: 0,
+                  borderRadius: "50%",
+                  zIndex: 10,
+                  // transform: "translateX(-50%)",
+                  pointerEvents: "none",
+                  opacity: isConvertHovered ? 0 : 1,
+                  animation: isConvertHovered
+                    ? "none"
+                    : "btnFloatShadow 3.2s ease infinite",
+                  transition: "opacity 0.18s ease",
+                  "@keyframes btnFloatShadow": {
+                    "0%": {
+                      WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                      boxShadow: "0 0 0 0 rgba(17,86,166,0.20)",
+                    },
+                    "30%": {
+                      WebkitBoxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                      boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                    },
+                    "40%": {
+                      WebkitBoxShadow: "0 0 0 60px rgba(17,86,166,0.1)",
+                      boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
+                    },
+                    "100%": {
+                      WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
+                      boxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
+                    },
                   },
-                  "30%": {
-                  
-                    WebkitBoxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                    boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                   
-                  },
-                  "40%": {
-                    WebkitBoxShadow: "0 0 0 60px rgba(17,86,166,0.1)",
-                    boxShadow: "0 0 0 80px rgba(17,86,166,0.1)",
-                  },
-                  "100%": {
-                    WebkitBoxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
-                    boxShadow: "0 0 0 0 rgba(17,86,166,0.1)",
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            )}
           </Box>
           <Box
             sx={{
@@ -407,11 +508,14 @@ const ConverterTool = () => {
         ref={fileInputRef}
         hidden
         type="file"
-        multiple={workspaceVariant !== "resizer" && workspaceVariant !== "compressor"}
+        multiple={
+          workspaceVariant !== "resizer" && workspaceVariant !== "compressor"
+        }
         accept={
           workspaceVariant === "pdf-canvas"
             ? ".pdf,application/pdf"
-            : workspaceVariant === "resizer" || workspaceVariant === "compressor"
+            : workspaceVariant === "resizer" ||
+                workspaceVariant === "compressor"
               ? "image/png,image/jpeg,image/webp"
               : undefined
         }

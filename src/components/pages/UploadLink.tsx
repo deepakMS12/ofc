@@ -26,7 +26,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Link as RouterLink } from 'react-router-dom';
 import { uploadApi, type UploadResponse, type UploadedFile } from '@/lib/api/upload';
-import { useSnackbar } from '@/contexts/SnackbarContext';
+import { useToast } from '@/contexts/ToastContext';
 import { showConfirm } from '@/lib/utils/sweetalert';
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -224,7 +224,7 @@ function getFileIcon(mimeType?: string, fileName?: string): string {
 
 export default function UploadLink() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { showError, showSuccess } = useSnackbar();
+  const { showError, showSuccess } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import {
   AuthOrDivider,
   AuthSplitLayout,
@@ -20,13 +20,14 @@ import {
 import { AuthActionButton } from "@/components/common";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loginUser } from "@/store/thunks/authThunks";
-import { useSnackbar } from "@/contexts/SnackbarContext";
+import { useToast } from "@/contexts/ToastContext";
 
 const SignInPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((s) => s.auth.isLoading);
-  const { showError } = useSnackbar();
+  const { showError } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +36,11 @@ const SignInPage = () => {
     event.preventDefault();
     try {
       await dispatch(loginUser({ username: email.trim(), password })).unwrap();
-      navigate("/home", { replace: true });
+      const from =
+        (location.state as { from?: string } | null)?.from ?? "/home/dashboard";
+      navigate(from.startsWith("/") ? from : "/home/dashboard", {
+        replace: true,
+      });
     } catch (err) {
       showError(typeof err === "string" ? err : "Sign in failed.");
     }
@@ -50,14 +55,7 @@ const SignInPage = () => {
           Welcome to OFC
         </Typography>
         <Typography sx={{ fontSize: 12, color: "#6b7280", mb: 1 }}>
-          Demo mode: enter any email/username and password (no server). Example:{" "}
-          <Box component="span" sx={{ fontWeight: 700 }}>
-            demo@ofc.local
-          </Box>{" "}
-          /{" "}
-          <Box component="span" sx={{ fontWeight: 700 }}>
-            demo123
-          </Box>
+          Sign in with your OFC account email and password.
         </Typography>
 
         <Stack component="form" spacing={2} onSubmit={handleSubmit}>

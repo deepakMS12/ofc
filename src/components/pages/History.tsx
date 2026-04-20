@@ -21,10 +21,10 @@ import type { GridColDef } from '@mui/x-data-grid';
 import { RefreshCw, Search, History as HistoryIcon } from 'lucide-react';
 import { historyApi } from '@/lib/api/history';
 import type { MessageHistory } from '@/lib/api/history';
-import { useSnackbar } from '@/contexts/SnackbarContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function History() {
-  const { showError } = useSnackbar();
+  const { showError } = useToast();
   const [messages, setMessages] = useState<MessageHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<string>('0');
