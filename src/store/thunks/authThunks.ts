@@ -4,18 +4,56 @@ import type { LoginCredentials, SignupCredentials, UserProfilePayload } from '@/
 import { postAuthV1Login } from '@/lib/api/authV1Login';
 
 
+type AnyRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): AnyRecord | null {
+  return value && typeof value === 'object' ? (value as AnyRecord) : null;
+}
+
+function pickFirstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim().length > 0) return value.trim();
+  }
+  return undefined;
+}
+
+function normalizeToken(rawToken: string): string {
+  return rawToken.replace(/^Bearer\s+/i, '').trim();
+}
+
+function decodeJwtPayload(token: string): AnyRecord | null {
+  const segments = token.split('.');
+  if (segments.length < 2) return null;
+  const base64 = segments[1]!.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = `${base64}${'='.repeat((4 - (base64.length % 4)) % 4)}`;
+  try {
+    const binary = atob(padded);
+    try {
+      // Fast path for ASCII payloads.
+      return asRecord(JSON.parse(binary));
+    } catch {
+      // UTF-8 fallback for non-ASCII payloads.
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      const text = new TextDecoder().decode(bytes);
+      return asRecord(JSON.parse(text));
+    }
+  } catch {
+    return null;
+  }
+}
+
 function extractTokenFromLoginResponse(data: unknown): string | null {
   if (!data || typeof data !== 'object') return null;
   const d = data as Record<string, unknown>;
-  if (typeof d.token === 'string') return d.token;
-  if (typeof d.accessToken === 'string') return d.accessToken;
-  if (typeof d.access_token === 'string') return d.access_token;
+  if (typeof d.token === 'string') return normalizeToken(d.token);
+  if (typeof d.accessToken === 'string') return normalizeToken(d.accessToken);
+  if (typeof d.access_token === 'string') return normalizeToken(d.access_token);
   const nested = d.data;
   if (nested && typeof nested === 'object') {
     const n = nested as Record<string, unknown>;
-    if (typeof n.token === 'string') return n.token;
-    if (typeof n.accessToken === 'string') return n.accessToken;
-    if (typeof n.access_token === 'string') return n.access_token;
+    if (typeof n.token === 'string') return normalizeToken(n.token);
+    if (typeof n.accessToken === 'string') return normalizeToken(n.accessToken);
+    if (typeof n.access_token === 'string') return normalizeToken(n.access_token);
   }
   return null;
 }
@@ -23,39 +61,87 @@ function extractTokenFromLoginResponse(data: unknown): string | null {
 function extractProfileFromLoginResponse(
   data: unknown,
   username: string,
+  token: string,
 ): UserProfilePayload {
-  if (data && typeof data === 'object') {
-    const d = data as Record<string, unknown>;
-    const raw =
-      (d.profile as UserProfilePayload | undefined) ||
-      (d.user as UserProfilePayload | undefined) ||
-      (typeof d.data === 'object' && d.data !== null
-        ? ((d.data as Record<string, unknown>).profile as UserProfilePayload | undefined) ||
-          ((d.data as Record<string, unknown>).user as UserProfilePayload | undefined)
-        : undefined);
-    if (raw && typeof raw === 'object' && 'username' in raw) {
-      return {
-        username: String(raw.username),
-        name: String(raw.name ?? raw.username),
-        email: raw.email != null ? String(raw.email) : undefined,
-        pendingEmail: raw.pendingEmail ?? null,
-        pendingEmailRequestedAt: raw.pendingEmailRequestedAt ?? null,
-        lastPasswordChange: raw.lastPasswordChange ?? null,
-        lastEmailChange: raw.lastEmailChange ?? null,
-        lastLogin: raw.lastLogin != null ? String(raw.lastLogin) : new Date().toISOString(),
-      };
-    }
+  const root = asRecord(data);
+  const nested = asRecord(root?.data);
+  const profile =
+    asRecord(root?.profile) ??
+    asRecord(root?.user) ??
+    asRecord(nested?.profile) ??
+    asRecord(nested?.user);
+  const claims = decodeJwtPayload(token);
+  const claimsProfile = asRecord(claims?.profile);
+  const claimsUid = pickFirstString(claims?.uID, claims?.uid, claims?.userId);
+  const claimsName = pickFirstString(
+    claimsProfile?.name,
+    claimsProfile?.fullName,
+    claimsProfile?.displayName,
+  );
+  const claimsEmail = pickFirstString(claimsProfile?.email);
+
+  // When JWT carries profile claims, trust claims over sparse response fields.
+  if (claimsUid || claimsName || claimsEmail) {
+    const tokenUsername = claimsUid ?? username;
+    return {
+      username: tokenUsername,
+      name:
+        claimsName ??
+        (tokenUsername.includes('@') ? tokenUsername.split('@')[0] : tokenUsername) ??
+        'User',
+      email: claimsEmail ?? (tokenUsername.includes('@') ? tokenUsername : undefined),
+      pendingEmail: (profile?.pendingEmail as string | null | undefined) ?? null,
+      pendingEmailRequestedAt:
+        (profile?.pendingEmailRequestedAt as string | null | undefined) ?? null,
+      lastPasswordChange: (profile?.lastPasswordChange as string | null | undefined) ?? null,
+      lastEmailChange: (profile?.lastEmailChange as string | null | undefined) ?? null,
+      lastLogin:
+        pickFirstString(
+          profile?.lastLogin,
+          claims?.iat != null ? new Date(Number(claims.iat) * 1000).toISOString() : undefined,
+        ) ?? new Date().toISOString(),
+    };
   }
-  const displayName = username.includes('@') ? username.split('@')[0]! : username;
+
+  const resolvedUsername =
+    pickFirstString(
+      profile?.username,
+      profile?.userName,
+      root?.uID,
+      nested?.uID,
+      claims?.uID,
+      username,
+    ) ?? 'user';
+
+  const displayName =
+    pickFirstString(
+      claimsProfile?.name,
+      claimsProfile?.fullName,
+      claimsProfile?.displayName,
+      profile?.name,
+      profile?.fullName,
+      profile?.displayName,
+      resolvedUsername.includes('@') ? resolvedUsername.split('@')[0] : resolvedUsername,
+    ) ?? 'User';
+
+  const email = pickFirstString(
+    claimsProfile?.email,
+    profile?.email,
+    resolvedUsername.includes('@') ? resolvedUsername : undefined,
+  );
+
   return {
-    username,
-    name: displayName || 'User',
-    email: username.includes('@') ? username : undefined,
-    pendingEmail: null,
-    pendingEmailRequestedAt: null,
-    lastPasswordChange: null,
-    lastEmailChange: null,
-    lastLogin: new Date().toISOString(),
+    username: resolvedUsername,
+    name: displayName,
+    email,
+    pendingEmail: (profile?.pendingEmail as string | null | undefined) ?? null,
+    pendingEmailRequestedAt:
+      (profile?.pendingEmailRequestedAt as string | null | undefined) ?? null,
+    lastPasswordChange: (profile?.lastPasswordChange as string | null | undefined) ?? null,
+    lastEmailChange: (profile?.lastEmailChange as string | null | undefined) ?? null,
+    lastLogin:
+      pickFirstString(profile?.lastLogin, claims?.iat != null ? new Date(Number(claims.iat) * 1000).toISOString() : undefined) ??
+      new Date().toISOString(),
   };
 }
 
@@ -88,7 +174,7 @@ export const loginUser = createAsyncThunk(
       if (!token) {
         return rejectWithValue('Invalid response: no token from server.');
       }
-      const profile = extractProfileFromLoginResponse(data, username);
+      const profile = extractProfileFromLoginResponse(data, username, token);
       return { token, profile };
     } catch (error: unknown) {
       return rejectWithValue(getLoginErrorMessage(error));
