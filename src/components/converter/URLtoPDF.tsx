@@ -122,12 +122,13 @@ const DEFAULT_CUSTOM_CSS = `body { font-family: Arial; }
 .sidebar { display: none; }`;
 
 type URLtoPDFProps = {
-  onSourceUrlChange?: (url: string) => void;
+  sourceType?: "url" | "html" | "html-file";
+  onSourceChange?: (value: string) => void;
 };
 
 const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
-  function URLtoPDF({ onSourceUrlChange }, ref) {
-  const [sourceUrl, setSourceUrl] = useState("");
+  function URLtoPDF({ sourceType = "url", onSourceChange }, ref) {
+  const [sourceValue, setSourceValue] = useState("");
   const [isPreview, setIsPreview] = useState(true);
   const [outputFileName, setOutputFileName] = useState("");
   const [alignment, setAlignment] = useState("web");
@@ -279,7 +280,8 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
 
   const collectFormState = useCallback((): UrlToPdfFormState => {
     return {
-      sourceUrl,
+      sourceValue,
+      sourceType,
       isPreview,
       alignment,
       pageFormat,
@@ -316,7 +318,8 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
       rightsRestrictions: rightsRestrictions as UrlToPdfFormState["rightsRestrictions"],
     };
   }, [
-    sourceUrl,
+    sourceValue,
+    sourceType,
     isPreview,
     alignment,
     pageFormat,
@@ -356,17 +359,17 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
   useImperativeHandle(
     ref,
     () => ({
-      getSourceUrl: () => sourceUrl,
+      getSourceValue: () => sourceValue,
       getOutputFileName: () => outputFileName,
       getPayload: () => buildUrlToPdfPayload(collectFormState()),
     }),
-    [collectFormState, sourceUrl, outputFileName],
+    [collectFormState, sourceValue, outputFileName],
   );
 
-  const handleSourceUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleSourceChange = (event: ChangeEvent<HTMLInputElement>) => {
     const v = event.target.value;
-    setSourceUrl(v);
-    onSourceUrlChange?.(v);
+    setSourceValue(v);
+    onSourceChange?.(v);
   };
 
   const isCustomFormat = pageFormat === "custom";
@@ -379,6 +382,10 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
     setPageWidth(preset.width);
     setPageHeight(preset.height);
   }, [pageFormat, isLandscape]);
+
+  const sourceLabel = sourceType === "url" ? "URL" : "HTML code";
+  const sourcePlaceholder =
+    sourceType === "url" ? "https://" : "<!DOCTYPE html>";
 
   return (
     <Box
@@ -400,31 +407,35 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
           pb: 1,
         }}
       >
-        <SettingsAccordion
-          id="pdf-settings-source"
-          title="Source"
-          defaultExpanded
-        >
-          <SettingsOutlinedField
-            id="url-to-pdf-source-url"
-            label="URL"
-            fullWidth
-            placeholder="https://"
-            value={sourceUrl}
-            onChange={handleSourceUrlChange}
-          />
-          <FormControlLabel
-            sx={{ mt: 1, ml: 0, alignItems: "center" }}
-            control={
-              <Checkbox
-                color="primary"
-                checked={isPreview}
-                onChange={(_, checked) => setIsPreview(checked)}
-              />
-            }
-            label="Preview"
-          />
-        </SettingsAccordion>
+        {sourceType !== "html-file" && (
+          <SettingsAccordion
+            id="pdf-settings-source"
+            title="Source"
+            defaultExpanded
+          >
+            <SettingsOutlinedField
+              id="url-to-pdf-source-url"
+              label={sourceLabel}
+              fullWidth
+              multiline={sourceType === "html"}
+              minRows={sourceType === "html" ? 6 : undefined}
+              placeholder={sourcePlaceholder}
+              value={sourceValue}
+              onChange={handleSourceChange}
+            />
+            <FormControlLabel
+              sx={{ mt: 1, ml: 0, alignItems: "center" }}
+              control={
+                <Checkbox
+                  color="primary"
+                  checked={isPreview}
+                  onChange={(_, checked) => setIsPreview(checked)}
+                />
+              }
+              label="Preview"
+            />
+          </SettingsAccordion>
+        )}
         <SettingsAccordion
           id="pdf-settings-page-size"
           title={"Page size & orientation"}
@@ -1021,30 +1032,7 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
             />
           </Box>
 
-          <Box
-            sx={{
-              mb: 2,
-              p: 1.5,
-              borderRadius: 1,
-              border: "1px solid",
-              borderColor: "primary.light",
-              bgcolor: "action.hover",
-            }}
-          >
-            <Typography sx={{ fontSize: 12, color: "text.secondary", mb: 1 }}>
-              <strong>User vs owner password:</strong> The user password is
-              required to open the PDF. The owner password controls who can
-              change encryption and permissions.
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: "text.secondary", mb: 1 }}>
-              <strong>Disallow annotation:</strong> Stops adding or changing
-              comments, highlights, and notes.
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-              <strong>Disable editing PDF:</strong> Restricts changing page
-              content and assembling pages.
-            </Typography>
-          </Box>
+     
 
           <Box
             sx={{

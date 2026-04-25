@@ -19,11 +19,16 @@ import PDFCompress from "./PDFCompress";
 import PDFMerge from "./PDFMerge";
 import type { URLtoPDFHandle } from "./urlToPdfPayload";
 import URLtoPDF from "./URLtoPDF";
+import HtmlVariableToPDF, { type HtmlVariableToPdfHandle } from "./HtmlVariableToPDF";
+import DocxToPDF, { type DocxToPdfHandle } from "./DocxToPDF";
+import TemplateFillToPDF from "./TemplateFillToPDF";
 
 type WorkspaceSidebarProps = {
   toolSlug?: string;
   urlToPdfRef?: RefObject<URLtoPDFHandle | null>;
-  onUrlToPdfSourceChange?: (url: string) => void;
+  htmlVariableToPdfRef?: RefObject<HtmlVariableToPdfHandle | null>;
+  docxToPdfRef?: RefObject<DocxToPdfHandle | null>;
+  onUrlToPdfSourceChange?: (value: string) => void;
   files: File[];
   miniCanvasRef: React.RefObject<HTMLCanvasElement | null>;
   activePageIndex: number;
@@ -45,6 +50,8 @@ const WorkspaceSidebar = memo(
   ({
     toolSlug,
     urlToPdfRef,
+    htmlVariableToPdfRef,
+    docxToPdfRef,
     onUrlToPdfSourceChange,
     files,
     activePageIndex,
@@ -84,12 +91,30 @@ const WorkspaceSidebar = memo(
 
         {(toolSlug === "pdf-compressor" || toolSlug === "pdf-to-docx") && <PDFCompress />}
         {toolSlug === "pdf-merge" && <PDFMerge />}
-        {toolSlug === "url-to-pdf" && (
+        {(toolSlug === "url-to-pdf" ||
+          toolSlug === "html-code-to-pdf" ||
+          toolSlug === "HTML code to PDF" ||
+          toolSlug === "html-file-to-pdf") && (
           <URLtoPDF
             ref={urlToPdfRef}
-            onSourceUrlChange={onUrlToPdfSourceChange}
+            sourceType={
+              toolSlug === "html-code-to-pdf" ||
+              toolSlug === "HTML code to PDF"
+                ? "html"
+                : toolSlug === "html-file-to-pdf"
+                  ? "html-file"
+                  : "url"
+            }
+            onSourceChange={onUrlToPdfSourceChange}
           />
         )}
+        {toolSlug === "html-variable-to-pdf" && (
+          <HtmlVariableToPDF ref={htmlVariableToPdfRef} />
+        )}
+        {toolSlug === "docx-to-pdf" && (
+          <DocxToPDF ref={docxToPdfRef} selectedFile={files[0] ?? null} />
+        )}
+        {toolSlug === "template-fill-to-pdf" && <TemplateFillToPDF />}
 
         {toolSlug === "pdf-canvas" && (
           <Stack spacing={1.2}>

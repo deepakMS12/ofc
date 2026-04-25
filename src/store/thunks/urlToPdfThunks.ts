@@ -8,8 +8,9 @@ import { urlToPdfClient } from "@/lib/api/urlToPdfClient";
 
 export type ConvertUrlToPdfArg = {
   queryType: UrlToPdfQueryType;
-  body: UrlToPdfRequestBody;
+  body: UrlToPdfRequestBody | FormData;
   downloadFileName: string;
+  sourceType?: "url" | "html" | "html-file" | "html-variable" | "docx-file";
 };
 
 export type ConvertUrlToPdfResult = {
@@ -89,11 +90,19 @@ export const convertUrlToPdf = createAsyncThunk<
   { rejectValue: string }
 >("urlToPdf/convert", async (arg, { rejectWithValue }) => {
   try {
+    const endpoint =
+      arg.sourceType === "url"
+        ? "/convert/url"
+        : arg.sourceType === "docx-file"
+          ? "/convert/docx"
+        : arg.sourceType === "html-variable"
+          ? "/convert/html/variable"
+          : "/convert/html";
     const response = await urlToPdfClient.post<Blob>(
-      "/convert/url",
+      endpoint,
       arg.body,
       {
-        params: { type: arg.queryType },
+        params: arg.sourceType === "docx-file" ? undefined : { type: arg.queryType },
         responseType: "blob",
         headers: { Accept: "*/*" },
       },

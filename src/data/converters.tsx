@@ -1,4 +1,4 @@
-// import HtmlOutlined from "@mui/icons-material/HtmlOutlined";
+import HtmlOutlined from "@mui/icons-material/HtmlOutlined";
 import HttpIcon from '@mui/icons-material/Http';
 // import ImageOutlined from "@mui/icons-material/ImageOutlined";
 // import DataObjectOutlined from "@mui/icons-material/DataObjectOutlined";
@@ -7,7 +7,7 @@ import HttpIcon from '@mui/icons-material/Http';
 // import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 // import TableChartOutlined from "@mui/icons-material/TableChartOutlined";
 // import TextSnippetOutlined from "@mui/icons-material/TextSnippetOutlined";
-// import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
+import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
 // import AudiotrackOutlined from "@mui/icons-material/AudiotrackOutlined";
 // import GridOnOutlined from "@mui/icons-material/GridOnOutlined";
 // import SlideshowOutlined from "@mui/icons-material/SlideshowOutlined";
@@ -27,6 +27,42 @@ export const converters = [
     layout: "to-pdf",
     SourceIcon: HttpIcon,
     sourceColor: "#e65100",
+  },
+  {
+    slug: "html-code-to-pdf",
+    title: "HTML CODE TO PDF",
+    description:
+      "Easily convert URL files to high-quality PDFs with our tool. Preserve layouts, styles, and graphics while generating professional, easily shareable documents.",
+    layout: "to-pdf",
+    SourceIcon: HtmlOutlined,
+    sourceColor: "#e65100",
+  },
+  {
+    slug: "html-file-to-pdf",
+    title: "HTML FILE TO PDF",
+    description:
+      "Convert local HTML files to high-quality PDFs while preserving layout, styles, and graphics for professional sharing.",
+    layout: "to-pdf",
+    SourceIcon: HtmlOutlined,
+    sourceColor: "#e65100",
+  },
+  {
+    slug: "html-variable-to-pdf",
+    title: "HTML VARIABLE TO PDF",
+    description:
+      "Generate PDF from HTML template placeholders using variables and tables JSON in one structured conversion flow.",
+    layout: "to-pdf",
+    SourceIcon: HtmlOutlined,
+    sourceColor: "#e65100",
+  },
+  {
+    slug: "template-fill-to-pdf",
+    title: "TEMPLATE FILL TO PDF",
+    description:
+      "Fill DOCX template placeholders with variables and table rows, then generate a final PDF.",
+    layout: "to-pdf",
+    SourceIcon: ArticleOutlined,
+    sourceColor: "#1565c0",
   },
   // {
   //   slug: "html-to-pdf",
@@ -78,16 +114,15 @@ export const converters = [
   //   SourceIcon: MicOutlined,
   //   sourceColor: "#00838f",
   // },
-  // {
-  //   slug: "docx-to-pdf",
-  //   type: "docx-to-pdf",
-  //   title: "DOCX TO PDF",
-  //   description:
-  //     "Convert Word documents to PDF while preserving headings, tables, and formatting. Ideal for sharing finalized documents that look the same on any device.",
-  //   layout: "to-pdf",
-  //   SourceIcon: ArticleOutlined,
-  //   sourceColor: "#1565c0",
-  // },
+  {
+    slug: "docx-to-pdf",
+    title: "DOCX TO PDF",
+    description:
+      "Convert Word documents to PDF while preserving headings, tables, and formatting. Ideal for sharing finalized documents that look the same on any device.",
+    layout: "to-pdf",
+    SourceIcon: ArticleOutlined,
+    sourceColor: "#1565c0",
+  },
   // {
   //   slug: "xlsx-to-pdf",
   //   type: "xlsx-to-pdf",

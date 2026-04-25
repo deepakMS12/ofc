@@ -2,7 +2,9 @@ import axios from "axios";
 import { clearDemoAuthStorage, isDemoAuthSession } from "@/lib/demoAuth";
 import { getGlobalToast } from "@/contexts/ToastContext";
 
-const API_BASE_URL = "http://localhost:3002/"; //"https://wa-connect.apisite.in/api";
+const API_BASE_URL = (
+  import.meta.env.VITE_URL_TO_PDF_API_BASE 
+).replace(/\/$/, "");
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

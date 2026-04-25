@@ -35,7 +35,8 @@ export type UrlToPdfQueryType = "d" | "p";
 export type UrlToPdfRequestBody = Record<string, unknown>;
 
 export type UrlToPdfFormState = {
-  sourceUrl: string;
+  sourceValue: string;
+  sourceType: "url" | "html" | "html-file";
   /** When true → `?type=d`; when false → `?type=p`. */
   isPreview: boolean;
   alignment: string;
@@ -191,8 +192,9 @@ export function buildUrlToPdfPayload(state: UrlToPdfFormState): {
   const pageFormatApi =
     state.pageFormat === "custom" ? "custom" : state.pageFormat;
 
+  const sourceKey = state.sourceType === "url" ? "url" : "html";
   const common: UrlToPdfRequestBody = {
-    url: state.sourceUrl.trim(),
+    [sourceKey]: state.sourceValue.trim(),
     pageFormat: pageFormatApi,
     orientation,
     unit: state.dimensionUnit,
@@ -253,13 +255,13 @@ export function buildUrlToPdfPayload(state: UrlToPdfFormState): {
   return { queryType: "p", body };
 }
 
-export const DEFAULT_URL_TO_PDF_API_BASE = "https://hostinger.doceditor.online";
+export const DEFAULT_URL_TO_PDF_API_BASE = "https://hostinger.apiportal.online";
 
 export type URLtoPDFHandle = {
   getPayload: () => {
     queryType: UrlToPdfQueryType;
     body: UrlToPdfRequestBody;
   };
-  getSourceUrl: () => string;
+  getSourceValue: () => string;
   getOutputFileName: () => string;
 };
