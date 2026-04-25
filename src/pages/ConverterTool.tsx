@@ -41,7 +41,6 @@ const ConverterTool = () => {
   const docxToPdfRef = useRef<DocxToPdfHandle | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [urlToPdfSource, setUrlToPdfSource] = useState("");
-  const [isConvertHovered, setIsConvertHovered] = useState(false);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [rotation, setRotation] = useState(0);
@@ -679,10 +678,6 @@ const ConverterTool = () => {
                     void handleUrlToPdfConvert();
                   }
                 }}
-                onMouseEnter={() => setIsConvertHovered(true)}
-                onMouseLeave={() => setIsConvertHovered(false)}
-                onFocus={() => setIsConvertHovered(true)}
-                onBlur={() => setIsConvertHovered(false)}
                 sx={{
                   position: "relative",
                   zIndex: 1,
