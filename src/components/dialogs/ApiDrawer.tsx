@@ -42,15 +42,14 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
     setLoading(true);
     try {
       const data = await apiKeyApi.getApiKey();
-      if (data.apiKey) {
-        setApiKey(data.apiKey);
+      if (!data.success) {
+        showToast(data.message || "Failed to load API key. Please try again.", "error");
+        return;
       }
-      if (data.enabled !== undefined) {
-        setApiKeyEnabled(data.enabled);
-      }
-      if (data.createdAt) {
-        setCreatedAt(data.createdAt);
-      }
+      setApiKey(data.apiKey || null);
+      setApiKeyEnabled(data.enabled ?? false);
+      setCreatedAt(data.createdAt || null);
+      if (data.message) showToast(data.message, "success");
     } catch (error) {
       console.error("Failed to load API key:", error);
       showToast("Failed to load API key. Please try again.", "error");
@@ -72,30 +71,46 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
   };
 
   const handleEnable = async () => {
+    setLoading(true);
     try {
       const response = await apiKeyApi.enableApiKey();
-      if (response.status === "success") {
+      if (response.success) {
         setApiKeyEnabled(true);
-        showToast("API key enabled successfully", "success");
+        if (response.apiKey) setApiKey(response.apiKey);
+        if (response.createdAt) setCreatedAt(response.createdAt);
+        showToast(response.message || "API key enabled successfully", "success");
+      } else {
+        setApiKeyEnabled(false);
+        showToast(response.message || "Failed to enable API key. Please try again.", "error");
       }
     } catch (error) {
       console.error("Failed to enable API key:", error);
       showToast("Failed to enable API key. Please try again.", "error");
       setApiKeyEnabled(false);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDisable = async () => {
+    setLoading(true);
     try {
       const response = await apiKeyApi.disableApiKey();
-      if (response.status === "success") {
+      if (response.success) {
         setApiKeyEnabled(false);
-        showToast("API key disabled successfully", "success");
+        if (response.apiKey) setApiKey(response.apiKey);
+        if (response.createdAt) setCreatedAt(response.createdAt);
+        showToast(response.message || "API key disabled successfully", "success");
+      } else {
+        setApiKeyEnabled(true);
+        showToast(response.message || "Failed to disable API key. Please try again.", "error");
       }
     } catch (error) {
       console.error("Failed to disable API key:", error);
       showToast("Failed to disable API key. Please try again.", "error" );
       setApiKeyEnabled(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,13 +133,14 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
     setLoading(true);
     try {
       const response = await apiKeyApi.regenerateApiKey();
-      if (response.status === "success" && response.apiKey) {
+      if (response.success && response.apiKey) {
         setApiKey(response.apiKey);
         if (response.createdAt) {
           setCreatedAt(response.createdAt);
         }
-        showToast("API key regenerated successfully", "success");
-
+        showToast(response.message || "API key regenerated successfully", "success");
+      } else {
+        showToast(response.message || "Failed to regenerate API key. Please try again.", "error");
       }
     } catch (error) {
       console.error("Failed to regenerate API key:", error);

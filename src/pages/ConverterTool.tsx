@@ -374,7 +374,6 @@ const ConverterTool = () => {
                 px: { xs: 0.5, md: 1 },
                 py: 2,
                 flex: 1,
-                overflowY: "auto",
               }}
             >
               <WorkspaceSidebar

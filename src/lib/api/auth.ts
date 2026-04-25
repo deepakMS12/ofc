@@ -55,8 +55,17 @@ export interface ResetPasswordRequest {
 }
 
 export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
+  current: string;
+  password: string;
+}
+
+export interface ChangePasswordResponse {
+  status: string;
+  success: boolean;
+  message: string;
+  data?: {
+    logout?: boolean;
+  };
 }
 
 export interface DeleteAccountRequest {
@@ -76,7 +85,8 @@ export interface ConfirmEmailChangeRequest {
 
 export interface ProfileResponse {
   status: string;
-  profile: UserProfilePayload;
+  success?: boolean;
+  data?: Partial<UserProfilePayload>;
 }
 
 export interface LoginActivityParams {
@@ -108,6 +118,8 @@ export interface LoginActivityResponse {
   };
 }
 
+let inFlightProfileRequest: Promise<ProfileResponse> | null = null;
+
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>('/web/auth/login', credentials);
@@ -138,8 +150,8 @@ export const authApi = {
     return response.data;
   },
 
-  changePassword: async (data: ChangePasswordRequest): Promise<{ status: string; message: string }> => {
-    const response = await apiClient.post('/web/auth/change-password', data);
+  changePassword: async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    const response = await apiClient.patch<ChangePasswordResponse>('/api/v1/ac/change/password', data);
     return response.data;
   },
 
@@ -159,8 +171,16 @@ export const authApi = {
   },
 
   getProfile: async (): Promise<ProfileResponse> => {
-    const response = await apiClient.get<ProfileResponse>('/web/auth/profile');
-    return response.data;
+    if (inFlightProfileRequest) {
+      return inFlightProfileRequest;
+    }
+    inFlightProfileRequest = apiClient
+      .get<ProfileResponse>('/api/v1/ac/profile')
+      .then((response) => response.data)
+      .finally(() => {
+        inFlightProfileRequest = null;
+      });
+    return inFlightProfileRequest;
   },
 
   getLoginActivity: async (params: LoginActivityParams = {}): Promise<LoginActivityResponse> => {

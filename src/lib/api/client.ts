@@ -1,7 +1,7 @@
 import axios from "axios";
 import { clearDemoAuthStorage, isDemoAuthSession } from "@/lib/demoAuth";
 
-const API_BASE_URL = "https://wa-connect.apisite.in/api"; //"http://localhost:3000/api"; //"https://wa-connect.apisite.in/api";
+const API_BASE_URL = "http://localhost:3002/"; //"https://wa-connect.apisite.in/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

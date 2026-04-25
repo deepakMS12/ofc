@@ -138,13 +138,43 @@ export default function SettingsPage() {
   const fetchProfile = useCallback(async () => {
     try {
       const response = await authApi.getProfile();
-      if (response.profile) {
-        dispatch(setUser(response.profile));
+      if (response.success && response.data) {
+        const cachedUser =
+          typeof window !== "undefined"
+            ? (JSON.parse(localStorage.getItem("user") || "null") as {
+                username?: string;
+                name?: string;
+                email?: string;
+                pendingEmail?: string | null;
+                pendingEmailRequestedAt?: string | null;
+                lastPasswordChange?: string | null;
+                lastEmailChange?: string | null;
+                lastLogin?: string | null;
+              } | null)
+            : null;
+
+        dispatch(
+          setUser({
+            username: response.data.username || cachedUser?.username || "",
+            name: response.data.name || cachedUser?.name || "",
+            email: response.data.email || cachedUser?.email || "",
+            pendingEmail: response.data.pendingEmail ?? cachedUser?.pendingEmail ?? null,
+            pendingEmailRequestedAt:
+              response.data.pendingEmailRequestedAt ??
+              cachedUser?.pendingEmailRequestedAt ??
+              null,
+            lastPasswordChange:
+              response.data.lastPasswordChange ?? cachedUser?.lastPasswordChange ?? null,
+            lastEmailChange:
+              response.data.lastEmailChange ?? cachedUser?.lastEmailChange ?? null,
+            lastLogin: response.data.lastLogin ?? cachedUser?.lastLogin ?? null,
+          }),
+        );
       }
     } catch (error) {
       showToast("Failed to load user profile. Please try again.", "error");
     }
-  }, [dispatch]);
+  }, [dispatch, showToast]);
 
   useEffect(() => {
     fetchProfile();
@@ -348,20 +378,31 @@ export default function SettingsPage() {
       showToast("New password and confirmation do not match.", "info");
       return;
     }
-    if (newPassword.length < 6) {
-      showToast("New password must be at least 6 characters long.", "info");
+    if (newPassword.length < 8) {
+      showToast("New password must be at least 8 characters long.", "info");
       return;
     }
 
     setPasswordLoading(true);
     try {
-      await authApi.changePassword({
-        currentPassword,
-        newPassword,
+      const response = await authApi.changePassword({
+        current: currentPassword,
+        password: newPassword,
       });
+
+      if (!response.success) {
+        showToast(
+          response.message || "Unable to change password. Please try again.",
+          "error",
+        );
+        return;
+      }
+
       showSuccessAlert({
         title: "Password updated successfully",
-        text: "For security reasons, please log in again with your new password.",
+        text:
+          response.message ||
+          "For security reasons, please log in again with your new password.",
         showConfirmButton: true,
       });
       dispatch(clearUser());

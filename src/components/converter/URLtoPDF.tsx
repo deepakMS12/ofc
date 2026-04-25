@@ -385,7 +385,7 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: 400,
+        height: "calc(100vh - 340px)",
         maxHeight: "100%",
         minHeight: 0,
         width: "100%",
