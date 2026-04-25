@@ -12,17 +12,13 @@ import {
   Typography,
   type SlideProps,
 } from "@mui/material";
-import { forwardRef, useEffect, useMemo, useState } from "react";
+import { forwardRef } from "react";
 
 type ToasterSnackbarProps = {
-  error?: unknown;
-  isError?: boolean;
+  isOpen?: boolean;
   message?: string;
-  type?: "error" | "success" | "info";
-  title?: string;
-  open?: boolean;
-  autoHideDuration?: number;
-  fallbackMessage?: string;
+  type?: "success" | "error" | "info";
+  onClose?: () => void;
 };
 
 const TransitionDown = forwardRef(function TransitionDown(
@@ -31,42 +27,6 @@ const TransitionDown = forwardRef(function TransitionDown(
 ) {
   return <Slide {...props} direction="down" ref={ref} />;
 });
-
-const getApiErrorMessage = (
-  error: unknown,
-  fallbackMessage: string,
-): string => {
-  if (!error) return fallbackMessage;
-
-  if (typeof error === "string") return error;
-
-  if (typeof error === "object") {
-    const apiError = error as {
-      error?: string;
-      message?: string;
-      data?: unknown;
-    };
-
-    if (typeof apiError.data === "string") return apiError.data;
-
-    if (apiError.data && typeof apiError.data === "object") {
-      const data = apiError.data as {
-        message?: string;
-        error?: string;
-        detail?: string;
-      };
-
-      if (data.message) return data.message;
-      if (data.error) return data.error;
-      if (data.detail) return data.detail;
-    }
-
-    if (apiError.message) return apiError.message;
-    if (apiError.error) return apiError.error;
-  }
-
-  return fallbackMessage;
-};
 
 const SNACKBAR_VARIANT_CONFIG: Record<
   NonNullable<ToasterSnackbarProps["type"]>,
@@ -98,70 +58,29 @@ const SNACKBAR_VARIANT_CONFIG: Record<
 };
 
 const ToasterSnackbar = ({
-  error,
-  isError = true,
+  isOpen,
   message,
-  type = "error",
-  title,
-  open,
-  autoHideDuration = 4000,
-  fallbackMessage,
+  type = "success",
+  onClose,
 }: ToasterSnackbarProps) => {
-  const [isOpen, setIsOpen] = useState(false);
   const variant = SNACKBAR_VARIANT_CONFIG[type];
   const Icon = variant.icon;
-
-  const resolvedMessage = useMemo(
-    () =>
-      message ??
-      (type === "error"
-        ? getApiErrorMessage(
-            error,
-            fallbackMessage ?? SNACKBAR_VARIANT_CONFIG.error.message,
-          )
-        : (fallbackMessage ?? variant.message)),
-    [error, fallbackMessage, message, type],
-  );
-
-  const shouldOpen =
-    typeof open === "boolean"
-      ? open
-      : type === "error"
-        ? Boolean(isError && error)
-        : Boolean(message);
-
-  useEffect(() => {
-    if (typeof open === "boolean") {
-      setIsOpen(open);
-      return;
-    }
-
-    if (shouldOpen) {
-      setIsOpen(true);
-    } else {
-      setIsOpen(false);
-    }
-  }, [open, shouldOpen]);
-
-  if (!shouldOpen && !isOpen) return null;
 
   return (
     <Snackbar
       open={isOpen}
-      autoHideDuration={autoHideDuration}
+      autoHideDuration={5000}
       TransitionComponent={TransitionDown}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      onClose={(_, reason) => {
-        if (reason === "clickaway") return;
-        setIsOpen(false);
-      }}
+      onClose={onClose}
+      key={"top" + "center"}
     >
       <Box
         sx={{
           width: { xs: "calc(100vw - 32px)", sm: 400 },
           maxWidth: "100%",
-          bgcolor: "#ffffff",
-          color: "#000000",
+          bgcolor: "#202835",
+          color: "#f1f5ff",
           borderRadius: 3,
           border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 14px 36px rgba(0,0,0,0.45)",
@@ -204,29 +123,19 @@ const ToasterSnackbar = ({
           <Typography
             sx={{ fontSize: 15, lineHeight: 1.2, fontWeight: 600, mb: 0.5 }}
           >
-            {title ?? variant.title}
-          </Typography>
-          <Typography
-            sx={{
-              color: "rgb(78, 78, 78)",
-              fontSize: 12,
-              lineHeight: 1.4,
-              overflowWrap: "anywhere",
-            }}
-          >
-            {resolvedMessage}
+            {message}
           </Typography>
         </Box>
         <IconButton
-          onClick={() => setIsOpen(false)}
+          onClick={() => onClose?.()}
           size="small"
           aria-label="Close snackbar"
           sx={{
             position: "absolute",
             top: 10,
             right: 10,
-               color: "rgb(78, 78, 78)",
-            "&:hover": { color: "#ffffff", bgcolor: "rgba(0,0,0,0.08)" },
+            color: "rgba(210,220,236,0.7)",
+            "&:hover": { color: "#ffffff", bgcolor: "rgba(255,255,255,0.08)" },
           }}
         >
           <CloseRounded fontSize="small" />

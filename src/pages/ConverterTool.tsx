@@ -19,15 +19,15 @@ import type { ImageOutputFormat } from "@/components/converter/types";
 import { getWorkspaceVariant } from "@/components/converter/utils";
 import { colors } from "@/utils/customColor";
 import { converters } from "../data/converters";
-import { useToast } from "@/contexts/ToastContext";
 import ConverterLoadingWorkspace from "@/components/converter/ConverterLoadingWorkspace";
 import UrlToPdfDownloadSuccess from "@/components/converter/DownloadSuccess";
+import { useToast } from "@/hooks/useToast";
 
 const ConverterTool = () => {
   const { slug } = useParams();
   const tool = converters.find((c) => c.slug === slug);
   const dispatch = useAppDispatch();
-  const { showError, showSuccess } = useToast();
+  const { showToast } = useToast();
   const urlToPdfLoading = useAppSelector(
     (s) => s.urlToPdf.status === "loading",
   );
@@ -79,12 +79,12 @@ const ConverterTool = () => {
     setUrlToPdfDownloadComplete(false);
     const handle = urlToPdfRef.current;
     if (!handle) {
-      showError("Form is not ready.");
+      showToast("Form is not ready.", "error");
       return;
     }
     const rawUrl = handle.getSourceUrl().trim();
     if (!rawUrl) {
-      showError("Enter a URL to convert.");
+      showToast("Enter a URL to convert.", "info");
       return;
     }
     let downloadFileName =
@@ -105,12 +105,12 @@ const ConverterTool = () => {
       a.download = result.downloadFileName;
       a.click();
       URL.revokeObjectURL(objectUrl);
-      showSuccess("PDF download started.");
+      showToast("PDF download started.", "success");
       setUrlToPdfDownloadComplete(true);
     } catch (e: unknown) {
-      showError(typeof e === "string" ? e : "Conversion failed.");
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
     }
-  }, [dispatch, tool, showError, showSuccess]);
+  }, [dispatch, tool, showToast]);
 
   useEffect(() => {
     setUrlToPdfDownloadComplete(false);

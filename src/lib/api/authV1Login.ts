@@ -10,6 +10,6 @@ export type AuthV1LoginBody = {
 export async function postAuthV1Login(
   body: AuthV1LoginBody,
 ): Promise<unknown> {
-  const { data } = await authApiClient.post("/api/v1/auth/login", body);
-  return data;
+  const response = await authApiClient.post("/api/v1/auth/login", body);
+  return response;
 }

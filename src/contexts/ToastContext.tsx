@@ -1,80 +1,56 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
 import ToasterSnackbar from "@/components/resuable/ToasterSnackbar";
+import { createContext, useEffect, useState, type ReactNode } from "react";
 
-export type ToastVariant = "success" | "error" | "info";
+
+
+type ToastType = "success" | "error" | "info";
+type ShowToastFn = (msg: string, type?: ToastType) => void;
 
 export type ToastContextValue = {
-  showToast: (message: string, type?: ToastVariant) => void;
-  showError: (message: string) => void;
-  showSuccess: (message: string) => void;
-  showWarning: (message: string) => void;
+  showToast: ShowToastFn;
 };
 
-const ToastContext = createContext<ToastContextValue | null>(null);
+export const ToastCreateContext = createContext<ToastContextValue | undefined>(undefined);
 
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toast, setToast] = useState<{
-    key: number;
-    message: string;
-    type: ToastVariant;
-  } | null>(null);
 
-  const showToast = useCallback((message: string, type: ToastVariant = "success") => {
-    setToast((prev) => ({
-      key: (prev?.key ?? 0) + 1,
-      message,
-      type,
-    }));
+let globalShowToast: ShowToastFn | null = null;
+
+export const getGlobalToast = () => {
+  return globalShowToast;
+};
+
+export const ToastContext = ({ children }: { children: ReactNode }) => {
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<ToastType>("success");
+
+  const showToast: ShowToastFn = (msg, type = "success") => {
+    setToastMessage(msg);
+    setToastType(type);
+    setToastOpen(true);
+  };
+
+  
+  useEffect(() => {
+    globalShowToast = showToast;
+    return () => {
+      globalShowToast = null;
+    };
   }, []);
 
-  const showError = useCallback(
-    (message: string) => showToast(message, "error"),
-    [showToast],
-  );
-  const showSuccess = useCallback(
-    (message: string) => showToast(message, "success"),
-    [showToast],
-  );
-  const showWarning = useCallback(
-    (message: string) => showToast(message, "info"),
-    [showToast],
-  );
-
-  const value = useMemo(
-    () => ({
-      showToast,
-      showError,
-      showSuccess,
-      showWarning,
-    }),
-    [showToast, showError, showSuccess, showWarning],
-  );
+  const handleToastClose = () => {
+    setToastOpen(false);
+  };
 
   return (
-    <ToastContext.Provider value={value}>
+    <ToastCreateContext.Provider value={{ showToast }}>
       {children}
-      {toast !== null ? (
-        <ToasterSnackbar
-          key={toast.key}
-          message={toast.message}
-          type={toast.type}
-        />
-      ) : null}
-    </ToastContext.Provider>
+      <ToasterSnackbar
+        isOpen={toastOpen}
+        message={toastMessage}
+        type={toastType}
+        onClose={handleToastClose}
+      />
+    </ToastCreateContext.Provider>
   );
-}
-
-export function useToast(): ToastContextValue {
-  const ctx = useContext(ToastContext);
-  if (!ctx) {
-    throw new Error("useToast must be used within a ToastProvider");
-  }
-  return ctx;
-}
+};

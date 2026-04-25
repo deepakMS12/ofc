@@ -6,3 +6,8 @@ export { default as PhoneInputField } from './PhoneInputField';
 export { default as AuthActionButton } from './AuthActionButton';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as ConfirmDialog } from './ConfirmDialog';
+export {
+  ValidatedSelectField,
+  ValidatedTextAreaField,
+  ValidatedTextField,
+} from "./ValidatedFields";

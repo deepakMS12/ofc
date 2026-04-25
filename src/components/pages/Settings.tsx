@@ -21,11 +21,11 @@ import {
 import { Activity, Edit2, User, LockKeyhole, Trash2 } from "lucide-react";
 import dayjs from "dayjs";
 import { authApi, type LoginActivityEntry } from "@/lib/api/auth";
-import { useToast } from "@/contexts/ToastContext";
 import { showConfirm, showSuccessAlert } from "@/lib/utils/sweetalert";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearUser, setUser } from "@/store/slices/userSlice";
 import { colors } from "@/utils/customColor";
+import { useToast } from "@/hooks/useToast";
 
 type SettingsTab = "personal" | "password" | "activity" | "delete";
 
@@ -90,7 +90,7 @@ export default function SettingsPage() {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const userProfile = useAppSelector((state) => state.user.profile);
-  const { showSuccess, showError, showWarning } = useToast();
+  const { showToast } = useToast();
   const [tab, setTab] = useState<SettingsTab>(getInitialTabFromHash);
   const [emailEditable, setEmailEditable] = useState(false);
   const [emailInput, setEmailInput] = useState("");
@@ -142,7 +142,7 @@ export default function SettingsPage() {
         dispatch(setUser(response.profile));
       }
     } catch (error) {
-      console.error("Failed to refresh profile data", error);
+      showToast("Failed to load user profile. Please try again.", "error");
     }
   }, [dispatch]);
 
@@ -159,18 +159,6 @@ export default function SettingsPage() {
     }, 5000);
     return () => clearInterval(interval);
   }, [pendingEmail, fetchProfile]);
-
-  // useEffect(() => {
-  //   const normalized = (location.hash || "").replace(/^#/, "").toLowerCase();
-  //   if (!normalized && tab !== "personal") {
-  //     setTab("personal");
-  //     return;
-  //   }
-  //   const matchedTab = hashToTabMap[normalized];
-  //   if (matchedTab && matchedTab !== tab) {
-  //     setTab(matchedTab);
-  //   }
-  // }, [location.hash, tab]);
 
   const loadLoginActivity = useCallback(async () => {
     if (tab !== "activity") {
@@ -353,15 +341,15 @@ export default function SettingsPage() {
 
   const handlePasswordSave = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      showWarning("Please fill in all password fields.");
+      showToast("Please fill in all password fields.", "info");
       return;
     }
     if (newPassword !== confirmPassword) {
-      showWarning("New password and confirmation do not match.");
+      showToast("New password and confirmation do not match.", "info");
       return;
     }
     if (newPassword.length < 6) {
-      showWarning("New password must be at least 6 characters long.");
+      showToast("New password must be at least 6 characters long.", "info");
       return;
     }
 
@@ -387,7 +375,7 @@ export default function SettingsPage() {
       const message =
         error.response?.data?.message ||
         "Unable to change password. Please try again.";
-      showError(message);
+      showToast(message, "error");
     } finally {
       setPasswordLoading(false);
     }
@@ -395,7 +383,7 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async () => {
     if (!deletePassword) {
-      showWarning("Please enter your password to confirm.");
+      showToast("Please enter your password to confirm.", "info");
       return;
     }
 
@@ -419,7 +407,7 @@ export default function SettingsPage() {
       const response = await authApi.deleteAccount({
         password: deletePassword,
       });
-      showSuccess(response.message || "Account deleted successfully.");
+      showToast(response.message || "Account deleted successfully.");
       setDeletePassword("");
       setDeleteChecklist(deleteWarnings.map(() => false));
       localStorage.clear();
@@ -432,7 +420,7 @@ export default function SettingsPage() {
       const message =
         error.response?.data?.message ||
         "Unable to delete account. Please try again.";
-      showError(message);
+      showToast(message, "error");
     } finally {
       setDeleteLoading(false);
     }
@@ -461,22 +449,22 @@ export default function SettingsPage() {
   const handleSendEmailVerification = async () => {
     const trimmed = emailInput.trim();
     if (!trimmed) {
-      showWarning("Please enter a new email address.");
+      showToast("Please enter a new email address.", "info");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      showWarning("Please enter a valid email address.");
+      showToast("Please enter a valid email address.", "info");
       return;
     }
     if (trimmed.toLowerCase() === (userProfile?.email || "").toLowerCase()) {
-      showWarning("Please enter a different email address.");
+      showToast("Please enter a different email address.", "info");
       return;
     }
 
     setEmailLoading(true);
     try {
       const response = await authApi.requestEmailChange(trimmed);
-      showSuccess(
+      showToast(
         response.message || "Verification link sent to the new email address.",
       );
       setEmailEditable(false);
@@ -484,7 +472,7 @@ export default function SettingsPage() {
     } catch (error: any) {
       const message =
         error.response?.data?.message || "Unable to send verification email.";
-      showError(message);
+      showToast(message, "error");
     } finally {
       setEmailLoading(false);
     }
@@ -1007,16 +995,19 @@ export default function SettingsPage() {
               value={item.key}
               iconPosition="start"
               icon={
-                <Box sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}
+                >
                   {item.icon}
                 </Box>
               }
               label={
-                <Box sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}
+                >
                   {item.label}
                 </Box>
               }
-         
               sx={{
                 gap: 1,
                 "& svg": { color: "inherit" },

@@ -15,9 +15,9 @@ import {
 import { Copy, RefreshCw, FileText, X, Key } from "lucide-react";
 import LaunchIcon from "@mui/icons-material/Launch";
 import { apiKeyApi } from "@/lib/api/apiKey";
-import { useToast } from "@/contexts/ToastContext";
 import { showConfirm } from "@/lib/utils/sweetalert";
 import { colors } from "@/utils/customColor";
+import { useToast } from "@/hooks/useToast";
 
 interface ApiDrawerProps {
   open: boolean;
@@ -25,7 +25,7 @@ interface ApiDrawerProps {
 }
 
 export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
-  const { showSuccess, showError } = useToast();
+ const { showToast } = useToast();
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyEnabled, setApiKeyEnabled] = useState(true);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
       }
     } catch (error) {
       console.error("Failed to load API key:", error);
-      showError("Failed to load API key. Please try again.");
+      showToast("Failed to load API key. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -76,11 +76,11 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
       const response = await apiKeyApi.enableApiKey();
       if (response.status === "success") {
         setApiKeyEnabled(true);
-        showSuccess("API key enabled successfully");
+        showToast("API key enabled successfully", "success");
       }
     } catch (error) {
       console.error("Failed to enable API key:", error);
-      showError("Failed to enable API key. Please try again.");
+      showToast("Failed to enable API key. Please try again.", "error");
       setApiKeyEnabled(false);
     }
   };
@@ -90,11 +90,11 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
       const response = await apiKeyApi.disableApiKey();
       if (response.status === "success") {
         setApiKeyEnabled(false);
-        showSuccess("API key disabled successfully");
+        showToast("API key disabled successfully", "success");
       }
     } catch (error) {
       console.error("Failed to disable API key:", error);
-      showError("Failed to disable API key. Please try again.");
+      showToast("Failed to disable API key. Please try again.", "error" );
       setApiKeyEnabled(true);
     }
   };
@@ -123,11 +123,12 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
         if (response.createdAt) {
           setCreatedAt(response.createdAt);
         }
-        showSuccess("API key regenerated successfully");
+        showToast("API key regenerated successfully", "success");
+
       }
     } catch (error) {
       console.error("Failed to regenerate API key:", error);
-      showError("Failed to regenerate API key. Please try again.");
+      showToast("Failed to regenerate API key. Please try again.", "error");
     } finally {
       setLoading(false);
     }
