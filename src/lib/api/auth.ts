@@ -184,7 +184,7 @@ export const authApi = {
   },
 
   getLoginActivity: async (params: LoginActivityParams = {}): Promise<LoginActivityResponse> => {
-    const response = await apiClient.get<LoginActivityResponse>('/web/auth/login-activity', {
+    const response = await apiClient.get<LoginActivityResponse>('/api/v1/ac/activity', {
       params,
     });
     return response.data;

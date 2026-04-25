@@ -21,10 +21,10 @@ import type { GridColDef } from '@mui/x-data-grid';
 import { RefreshCw, Search, History as HistoryIcon } from 'lucide-react';
 import { historyApi } from '@/lib/api/history';
 import type { MessageHistory } from '@/lib/api/history';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/hooks/useToast';
 
 export default function History() {
-  const { showError } = useToast();
+  const { showToast } = useToast();
   const [messages, setMessages] = useState<MessageHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<string>('0');
@@ -68,7 +68,7 @@ export default function History() {
       setMessages(formattedMessages);
     } catch (error: any) {
       console.error('Failed to load history:', error);
-      showError(error.response?.data?.message || 'Failed to load message history');
+      showToast(error.response?.data?.message || 'Failed to load message history', 'error');
       setMessages([]);
     } finally {
       setLoading(false);

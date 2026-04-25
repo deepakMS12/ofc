@@ -1,5 +1,6 @@
 import axios from "axios";
 import { clearDemoAuthStorage, isDemoAuthSession } from "@/lib/demoAuth";
+import { getGlobalToast } from "@/contexts/ToastContext";
 
 const API_BASE_URL = "http://localhost:3002/"; //"https://wa-connect.apisite.in/api";
 
@@ -66,14 +67,35 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url || "";
       const isAuthAttempt = requestUrl.includes("/web/auth/login");
+      const shouldLogout = error.response?.data?.data?.logout === true;
+      const sessionExpiredMessage =
+        error.response?.data?.message || "Your session has expired. Please login again.";
 
       if (!isAuthAttempt && typeof window !== "undefined") {
+        // If backend explicitly asks logout, enforce logout for all sessions.
+        if (shouldLogout) {
+          const showToast = getGlobalToast();
+          if (showToast) {
+            showToast(sessionExpiredMessage, "error");
+          }
+          clearDemoAuthStorage();
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("keepSignedIn");
+          sessionStorage.clear();
+          window.location.href = "/login";
+          return Promise.reject(error);
+        }
+
         // Local demo token is not valid on the server — APIs return 401; do not log out.
         if (isDemoAuthSession()) {
           return Promise.reject(error);
         }
         clearDemoAuthStorage();
+        localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("keepSignedIn");
+        sessionStorage.clear();
         window.location.href = "/login";
       }
     }

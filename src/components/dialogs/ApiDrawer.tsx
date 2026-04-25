@@ -230,7 +230,7 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
                 >
                   <Box
                     component="img"
-                    src="/assets/assets/images/icon/api_key.svg"
+                    src="/api.webp"
                     alt="API Key"
                     sx={{ width: "100%", height: "100%", objectFit: "contain" }}
                   />

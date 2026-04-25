@@ -26,7 +26,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Link as RouterLink } from 'react-router-dom';
 import { uploadApi, type UploadResponse, type UploadedFile } from '@/lib/api/upload';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/hooks/useToast';
 import { showConfirm } from '@/lib/utils/sweetalert';
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -224,7 +224,7 @@ function getFileIcon(mimeType?: string, fileName?: string): string {
 
 export default function UploadLink() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { showError, showSuccess } = useToast();
+  const { showToast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -269,7 +269,7 @@ export default function UploadLink() {
 
     // Validate file type
     if (!isValidFileType(file)) {
-      showError('File type not allowed. Allowed types: images, PDF, Excel, Word, ZIP, TXT');
+      showToast('File type not allowed. Allowed types: images, PDF, Excel, Word, ZIP, TXT', 'error');
       event.target.value = ''; // Reset input
       setSelectedFile(null);
       return;
@@ -282,15 +282,15 @@ export default function UploadLink() {
 
   const validateFile = () => {
     if (!selectedFile) {
-      showError('Please choose a file to upload.');
+      showToast('Please choose a file to upload.', 'error');
       return false;
     }
     if (selectedFile.size > MAX_FILE_SIZE) {
-      showError('Maximum allowed size is 25MB.');
+      showToast('Maximum allowed size is 25MB.', 'error');
       return false;
     }
     if (!isValidFileType(selectedFile)) {
-      showError('File type not allowed. Allowed types: images, PDF, Excel, Word, ZIP, TXT');
+      showToast('File type not allowed. Allowed types: images, PDF, Excel, Word, ZIP, TXT', 'error');
       return false;
     }
     return true;
@@ -312,7 +312,7 @@ export default function UploadLink() {
       );
       setUploaded(response);
      setUploadProgress(0);
-      showSuccess('Upload successful.');
+      showToast('Upload successful.', 'success');
       
       // Reload files immediately after upload
       try {
@@ -339,7 +339,7 @@ export default function UploadLink() {
       }, 1000); // Small delay to show success message
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Unable to upload file.';
-      showError(message);
+      showToast(message, 'error');
           setUploadProgress(0);
     } finally {
       setUploading(false);
@@ -349,9 +349,9 @@ export default function UploadLink() {
   const handleCopyFileUrl = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
-      showSuccess('Link copied to clipboard.');
+      showToast('Link copied to clipboard.', 'success');
     } catch {
-      showError('Unable to copy link.');
+      showToast('Unable to copy link.', 'error');
     }
   };
 
@@ -374,7 +374,7 @@ export default function UploadLink() {
     try {
       setDeletingFile(file.fileUid);
       await uploadApi.deleteFile(file.fileUid);
-      showSuccess('File deleted');
+      showToast('File deleted', 'success');
       
       // Reload recent files after deletion
       const files = await uploadApi.listFiles();
@@ -387,7 +387,7 @@ export default function UploadLink() {
       setRecentFiles(recent);
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Unable to delete file.';
-      showError(message);
+      showToast(message, 'error');
     } finally {
       setDeletingFile(null);
     }

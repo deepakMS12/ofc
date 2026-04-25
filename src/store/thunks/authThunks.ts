@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '@/lib/api/auth';
-import type { LoginCredentials, SignupCredentials, UserProfilePayload } from '@/lib/api/auth';
+import type { LoginCredentials, SignupCredentials } from '@/lib/api/auth';
 import { postAuthV1Login } from '@/lib/api/authV1Login';
 
 

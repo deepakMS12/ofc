@@ -23,7 +23,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FolderIcon from '@mui/icons-material/Folder';
 import { Link as RouterLink } from 'react-router-dom';
 import { uploadApi, type UploadedFile } from '@/lib/api/upload';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/hooks/useToast';
 import { showConfirm } from '@/lib/utils/sweetalert';
 
 function formatBytes(size: number) {
@@ -162,7 +162,7 @@ function getFileIcon(mimeType?: string, fileName?: string): string {
 }
 
 export default function FileManager() {
-  const { showError, showSuccess } = useToast();
+  const { showToast } = useToast();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -174,7 +174,7 @@ export default function FileManager() {
       setFiles(data);
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Failed to load files.';
-      showError(message);
+      showToast(message, 'error');
     } finally {
       setLoading(false);
     }
@@ -203,11 +203,11 @@ export default function FileManager() {
     try {
       setDeleting(file.fileUid);
       await uploadApi.deleteFile(file.fileUid);
-      showSuccess('File deleted');
+      showToast('File deleted', 'success');
       await loadFiles();
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Unable to delete file.';
-      showError(message);
+      showToast(message, 'error');
     } finally {
       setDeleting(null);
     }
@@ -216,9 +216,9 @@ export default function FileManager() {
   const handleCopy = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
-      showSuccess('Link copied');
+      showToast('Link copied', 'success');
     } catch {
-      showError('Unable to copy link.');
+      showToast('Unable to copy link.', 'error');
     }
   };
 
