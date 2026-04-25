@@ -104,6 +104,9 @@ const EmptyWorkspaceState = memo(
                 overflow: "hidden",
                 border: "1px solid #e8eaf0",
                 bgcolor: "#fff",
+                position: "relative",
+                display: "grid",
+                placeItems: "center",
               }}
             >
               <canvas
@@ -116,12 +119,27 @@ const EmptyWorkspaceState = memo(
                 dir="ltr"
                 data-width={595.28}
                 data-height={841.89}
-                style={{ backgroundImage: "none", display: "block" }}
+                style={{ backgroundImage: "none", display: "block", width: 98, height: 140 }}
+              />
+              <Box
+                component="img"
+                src="/assets/images/upload.svg"
+                alt="Upload"
+                sx={{
+                  width: 100,
+                  height: 100,
+                  opacity: 0.95,
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  pointerEvents: "none",
+                }}
               />
             </Box>
-            <Typography sx={{ fontWeight: 700, color: "#1f2937" }}>
+            {/* <Typography sx={{ fontWeight: 700, color: "#1f2937" }}>
               Upload {sourceLabel} files to start canvas editor
-            </Typography>
+            </Typography> */}
 
             <Button
               onClick={onPickFiles}
@@ -136,7 +154,7 @@ const EmptyWorkspaceState = memo(
                 "&:hover": { bgcolor: "rgba(17,86,166,0.9)" },
               }}
             >
-              Select {sourceLabel} files
+              Choose {sourceLabel}
             </Button>
           </>
         )}

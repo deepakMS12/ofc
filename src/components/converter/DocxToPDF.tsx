@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
 import { SettingsAccordion } from "./pdfSettings/SettingsAccordion";
 import { SettingsOutlinedField } from "./pdfSettings/SettingsOutlinedField";
 
@@ -69,18 +69,19 @@ const DocxToPDF = forwardRef<DocxToPdfHandle, DocxToPDFProps>(function DocxToPDF
               fullWidth
             />
 
-            <ToggleButtonGroup
-              size="small"
-              color="primary"
-              exclusive
-              value={mode}
-              onChange={(_, value) => {
-                if (value) setMode(value);
-              }}
-            >
-              <ToggleButton value="download">Download</ToggleButton>
-              <ToggleButton value="preview">Preview</ToggleButton>
-            </ToggleButtonGroup>
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Checkbox
+                  color="primary"
+                  checked={mode === "preview"}
+                  onChange={(_, checked) =>
+                    setMode(checked ? "preview" : "download")
+                  }
+                />
+              }
+              label="Preview"
+            />
           </Stack>
         </SettingsAccordion>
       </Box>

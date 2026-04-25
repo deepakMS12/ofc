@@ -101,10 +101,7 @@ const ToasterSnackbar = ({
           borderRadius: 3,
           border: "1px solid",
           borderColor: variant.borderColor,
-          boxShadow:
-            type === "success"
-              ? "0 4px 8px 0 var(--shadow-card-depth2), 0 0 1px 0 var(--shadow-card-depth1)"
-              : "0 4px 12px rgba(15, 23, 42, 0.12)",
+          boxShadow: "0 4px 8px 0 rgba(53, 73, 118, 0.12), 0 0 1px 0 rgba(53, 73, 118, 0.12)",
           display: "flex",
           alignItems: "center",
           position: "relative",

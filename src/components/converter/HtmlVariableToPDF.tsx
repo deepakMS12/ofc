@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { Box, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, Stack } from "@mui/material";
 import { SettingsAccordion } from "./pdfSettings/SettingsAccordion";
 import { SettingsOutlinedField } from "./pdfSettings/SettingsOutlinedField";
 import { HtmlGhostTextField } from "./pdfSettings/HtmlGhostTextField";
@@ -129,18 +129,19 @@ const HtmlVariableToPDF = forwardRef<HtmlVariableToPdfHandle>(function HtmlVaria
               type="password"
               fullWidth
             />
-            <ToggleButtonGroup
-              size="small"
-              color="primary"
-              exclusive
-              value={mode}
-              onChange={(_, value) => {
-                if (value) setMode(value);
-              }}
-            >
-              <ToggleButton value="download">Download</ToggleButton>
-              <ToggleButton value="preview">Preview</ToggleButton>
-            </ToggleButtonGroup>
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Checkbox
+                  color="primary"
+                  checked={mode === "preview"}
+                  onChange={(_, checked) =>
+                    setMode(checked ? "preview" : "download")
+                  }
+                />
+              }
+              label="Preview"
+            />
           </Stack>
         </SettingsAccordion>
 
