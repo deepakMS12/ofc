@@ -73,26 +73,13 @@ export default function TemplateFillToPDF() {
         </SettingsAccordion>
 
         <SettingsAccordion id="template-fill-variables" title="Variables" defaultExpanded>
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 1.5,
-              border: "1px solid #dbe2ee",
-              bgcolor: "#f7f9fc",
-              mb: 2,
-            }}
-          >
-            <Typography sx={{ fontSize: 13, color: "#334155", lineHeight: 1.5 }}>
-              One variable per line: <strong>TOKEN_NAME = value</strong>
-            </Typography>
-          </Box>
           <HtmlGhostTextField
             id="template-fill-variables-lines"
             label="Variables"
             value={variableLines}
             onChange={setVariableLines}
             defaultHtml={DEFAULT_VARIABLE_LINES}
-     
+              textareaResize="none"
           />
         </SettingsAccordion>
 

@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { SettingsAccordion } from "./pdfSettings/SettingsAccordion";
 import { SettingsOutlinedField } from "./pdfSettings/SettingsOutlinedField";
 import { HtmlGhostTextField } from "./pdfSettings/HtmlGhostTextField";
@@ -102,20 +102,7 @@ const HtmlVariableToPDF = forwardRef<HtmlVariableToPdfHandle>(function HtmlVaria
     >
       <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pb: 1 }}>
         <SettingsAccordion id="template-output" title="Template + output" defaultExpanded>
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 1.5,
-              border: "1px solid #dbe2ee",
-              bgcolor: "#f7f9fc",
-              mb: 2,
-            }}
-          >
-            <Typography sx={{ fontSize: 13, color: "#334155", lineHeight: 1.5 }}>
-              Sample template: <strong>sample-invoice.html</strong> (auto-seeded by server startup
-              and preserved under files/htmlTemplates).
-            </Typography>
-          </Box>
+          
           <Stack spacing={1.6}>
             <Box
               sx={{
@@ -129,7 +116,7 @@ const HtmlVariableToPDF = forwardRef<HtmlVariableToPdfHandle>(function HtmlVaria
                 label="Template file name"
                 value={templateFileName}
                 onChange={(e) => setTemplateFileName(e.target.value)}
-                placeholder="sample-invoice.html"
+                placeholder="Doc ID"
                 fullWidth
               />
             </Box>
@@ -158,51 +145,26 @@ const HtmlVariableToPDF = forwardRef<HtmlVariableToPdfHandle>(function HtmlVaria
         </SettingsAccordion>
 
         <SettingsAccordion id="variables-json" title="Variables JSON" >
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 1.5,
-              border: "1px solid #dbe2ee",
-              bgcolor: "#f7f9fc",
-              mb: 2,
-            }}
-          >
-            <Typography sx={{ fontSize: 13, color: "#334155", lineHeight: 1.5 }}>
-              Object where key = placeholder token name (without braces). Example token in
-              template: {"{{customerName}}"}.
-            </Typography>
-          </Box>
           <HtmlGhostTextField
             id="variables-json"
             label="Variables JSON"
             value={variablesJson}
             onChange={setVariablesJson}
             defaultHtml={DEFAULT_VARIABLES_JSON}
+            textareaResize="none"
       
           />
         </SettingsAccordion>
 
         <SettingsAccordion id="tables-json" title="Tables JSON" >
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 1.5,
-              border: "1px solid #dbe2ee",
-              bgcolor: "#f7f9fc",
-              mb: 2,
-            }}
-          >
-            <Typography sx={{ fontSize: 13, color: "#334155", lineHeight: 1.5 }}>
-              Array (or single object) of table specs. placeholder maps to token like
-              {"{{itemsTable}}"}. Rows can be object-by-header or array-by-index.
-            </Typography>
-          </Box>
           <HtmlGhostTextField
             id="tables-json"
             label="Tables JSON"
             value={tablesJson}
             onChange={setTablesJson}
             defaultHtml={DEFAULT_TABLES_JSON}
+            textareaResize="none"
+            
          
           />
         </SettingsAccordion>

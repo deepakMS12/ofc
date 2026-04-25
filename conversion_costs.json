@@ -1,0 +1,398 @@
+{
+  "version": 2,
+  "note": "Keys are txn codes passed as query parameter r=.... Billing rate is read from plan.<tier>.perPage and multiplied by output page count (or 1 for non-PDF). Paths must match request URL path exactly.",
+  "conversions": {
+    "0001": {
+      "txnType": "url_pdf",
+      "paths": ["/convert/url"],
+      "endpoint": "POST /convert/url",
+      "uiHint": "Web URL → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.60", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.60", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0002": {
+      "txnType": "html_pdf",
+      "paths": ["/convert/html"],
+      "endpoint": "POST /convert/html",
+      "uiHint": "HTML string → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.60", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.60", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0003": {
+      "txnType": "html_file_pdf",
+      "paths": ["/convert/html-file"],
+      "endpoint": "POST /convert/html-file",
+      "uiHint": "Upload HTML file → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.58", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.58", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0004": {
+      "txnType": "docx_pdf",
+      "paths": ["/convert/docx", "/libreoffice/docx_pdf"],
+      "endpoint": "POST /convert/docx",
+      "uiHint": "Upload DOC/DOCX → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.62", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.62", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0005": {
+      "txnType": "docx_url_pdf",
+      "paths": ["/convert/docx-url", "/libreoffice/docx_url_pdf"],
+      "endpoint": "POST /convert/docx-url",
+      "uiHint": "DOC/DOCX URL → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.61", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.61", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0006": {
+      "txnType": "docx_template_pdf",
+      "paths": ["/convert/docx-template", "/libreoffice/docx_template_pdf"],
+      "endpoint": "POST /convert/docx-template",
+      "uiHint": "Fill DOCX template → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.63", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.63", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0007": {
+      "txnType": "pdf_url_pdf",
+      "paths": ["/convert/pdf-url"],
+      "endpoint": "POST /convert/pdf-url",
+      "uiHint": "PDF URL → download or lock",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.48", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.48", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0008": {
+      "txnType": "pdf_unlock_url",
+      "paths": ["/convert/pdf-unlock-url"],
+      "endpoint": "POST /convert/pdf-unlock-url",
+      "uiHint": "PDF URL → unlock",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.52", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.52", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0009": {
+      "txnType": "pdf_unlock_upload",
+      "paths": ["/convert/pdf-unlock"],
+      "endpoint": "POST /convert/pdf-unlock",
+      "uiHint": "Upload PDF → unlock",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.52", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.52", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0010": {
+      "txnType": "merge_pdf",
+      "paths": ["/convert/merge-pdf"],
+      "endpoint": "POST /convert/merge-pdf",
+      "uiHint": "Merge multiple PDFs",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.55", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.55", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0011": {
+      "txnTypes": ["images_pdf", "images_pdf_zip"],
+      "paths": ["/convert/images-pdf"],
+      "endpoint": "POST /convert/images-pdf",
+      "uiHint": "PNG/JPEG → PDF or ZIP of PDFs",
+      "output": "pdf|zip",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.56", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.56", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0012": {
+      "txnTypes": ["pdf_jpg", "pdf_jpg_zip"],
+      "paths": ["/convert/pdf-jpg"],
+      "endpoint": "POST /convert/pdf-jpg",
+      "uiHint": "PDF → JPG / PNG / WebP (ZIP if multi-page)",
+      "output": "image|zip",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.54", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.54", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0013": {
+      "txnType": "pdf_doc",
+      "paths": ["/convert/pdf-doc"],
+      "endpoint": "POST /convert/pdf-doc",
+      "uiHint": "PDF → Word (.docx)",
+      "output": "docx",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.57", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.57", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0014": {
+      "txnType": "excel_pdf",
+      "paths": ["/convert/excel-pdf"],
+      "endpoint": "POST /convert/excel-pdf",
+      "uiHint": "Excel (.xlsx) → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.58", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.58", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0015": {
+      "txnType": "pdf_excel",
+      "paths": ["/convert/pdf-excel"],
+      "endpoint": "POST /convert/pdf-excel",
+      "uiHint": "PDF → Excel (.xlsx)",
+      "output": "xlsx",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.59", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.59", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0016": {
+      "txnType": "pdf_html",
+      "paths": ["/convert/pdf-html"],
+      "endpoint": "POST /convert/pdf-html",
+      "uiHint": "PDF → HTML",
+      "output": "html",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.53", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.53", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0017": {
+      "txnType": "qr_code",
+      "paths": ["/convert/qr-code"],
+      "endpoint": "POST /convert/qr-code",
+      "uiHint": "Text → QR",
+      "output": "png|jpeg|gif|svg|eps",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.15", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.15", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0018": {
+      "txnType": "barcode",
+      "paths": ["/convert/barcode"],
+      "endpoint": "POST /convert/barcode",
+      "uiHint": "Text → Barcode",
+      "output": "png|jpeg|gif|svg|eps",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.15", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.15", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0019": {
+      "txnType": "compress_pdf",
+      "paths": ["/convert/compress-pdf"],
+      "endpoint": "POST /convert/compress-pdf",
+      "uiHint": "Compress PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.50", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.50", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0020": {
+      "txnType": "excel_lock",
+      "paths": ["/convert/excel-lock"],
+      "endpoint": "POST /convert/excel-lock",
+      "uiHint": "Lock Excel sheets",
+      "output": "xlsx",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.45", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.45", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0021": {
+      "txnType": "excel_unlock",
+      "paths": ["/convert/excel-unlock"],
+      "endpoint": "POST /convert/excel-unlock",
+      "uiHint": "Unlock Excel sheets",
+      "output": "xlsx",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.45", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.45", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0028": {
+      "txnType": "html_variable_pdf",
+      "paths": ["/convert/html-variable"],
+      "endpoint": "POST /convert/html-variable",
+      "uiHint": "HTML template variables → PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.70", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.70", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0022": {
+      "txnType": "wkhtml_url_pdf",
+      "paths": ["/wkhtmltopdf/url_pdf"],
+      "endpoint": "POST /wkhtmltopdf/url_pdf",
+      "uiHint": "Web URL → PDF (wkhtmltopdf)",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.64", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.64", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0023": {
+      "txnType": "wkhtml_html_pdf",
+      "paths": ["/wkhtmltopdf/html_pdf"],
+      "endpoint": "POST /wkhtmltopdf/html_pdf",
+      "uiHint": "HTML string → PDF (wkhtmltopdf)",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.59", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.59", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0024": {
+      "txnType": "wkhtml_htmlfile_pdf",
+      "paths": ["/wkhtmltopdf/htmlfile_pdf"],
+      "endpoint": "POST /wkhtmltopdf/htmlfile_pdf",
+      "uiHint": "Upload HTML → PDF (wkhtmltopdf)",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.57", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.57", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0025": {
+      "txnType": "lo_html_doc",
+      "paths": ["/libreoffice/html_doc"],
+      "endpoint": "POST /libreoffice/html_doc",
+      "uiHint": "Upload HTML → Word (LibreOffice)",
+      "output": "docx",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.50", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.50", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0026": {
+      "txnType": "lo_html_excel",
+      "paths": ["/libreoffice/html_excel"],
+      "endpoint": "POST /libreoffice/html_excel",
+      "uiHint": "Upload HTML (tables) → Excel (LibreOffice)",
+      "output": "xlsx",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.50", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.50", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    },
+    "0027": {
+      "txnType": "scan_qr_barcode",
+      "paths": ["/convert/scan-qr-barcode"],
+      "endpoint": "POST /convert/scan-qr-barcode",
+      "uiHint": "Scan QR / barcode from image or URL",
+      "output": "json",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.15", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.15", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
+    }
+  }
+}

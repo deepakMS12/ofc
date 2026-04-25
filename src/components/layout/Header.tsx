@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, IconButton, Badge, Tooltip, Avatar, Divider, Button } from '@mui/material';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Box, AppBar, Toolbar, Typography, IconButton, Badge, Tooltip, Avatar, Divider, Chip } from '@mui/material';
 import { Clock, User, LogOut, Bell } from 'lucide-react';
-import UpgradeIcon from '@mui/icons-material/Upgrade';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import SearchIcon from '@mui/icons-material/Search';
 import NotificationsDrawer from '@/components/dialogs/NotificationsDrawer';
 import { ConfirmDialog } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -15,13 +14,14 @@ import { colors } from '@/utils/customColor';
 
 export default function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user.profile);
   const [time, setTime] = useState('--:--:--');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
-  const [planCode] = useState<string | null>(null);
+  const isConverterPage = location.pathname.startsWith('/home/converter');
 
   useEffect(() => {
 
@@ -48,6 +48,27 @@ export default function Header() {
     setLogoutConfirmOpen(false);
     navigate('/login', { replace: true });
   };
+
+  const triggerConverterSearch = () => {
+    if (isConverterPage) {
+      window.dispatchEvent(new Event('open-converter-search'));
+      return;
+    }
+    sessionStorage.setItem('openConverterSearchOnLoad', '1');
+    navigate('/home/converter');
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        triggerConverterSearch();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isConverterPage]);
 
   return (
     <>
@@ -135,33 +156,47 @@ export default function Header() {
                 {user?.name || 'User'}
               </Typography>
             </Box>
-            <Button
-              size="small"
-              startIcon={
-                planCode === 'free' || !planCode ? (
-                  <UpgradeIcon fontSize="small" />
-                ) : (
-                  <ArrowDownwardIcon fontSize="small" />
-                )
-              }
-              onClick={() => navigate('/home/plans')}
+            <Box
+              onClick={triggerConverterSearch}
               sx={{
-                margin: '10px 0 0 80px',
-                height: '30px',
-                textTransform: 'none',
-                fontWeight: 600,
-                border: `2px solid ${colors.primary}`,
-                backgroundColor: planCode === 'free' || !planCode ? '#ffffff' : colors.primary,
-                color: planCode === 'free' || !planCode ? colors.primary : '#ffffff',
-                borderRadius: 20,
-                '&:hover': {
-                  backgroundColor: planCode === 'free' || !planCode ? colors.primary : colors.primary,
-                  color: '#ffffff',
-                },
+                margin: '0 0 0 40px',
+                height: 36,
+                minWidth: 210,
+                px: 1.5,
+                borderRadius: 3,
+                border: '1px solid #d1d5db',
+                backgroundColor: '#f3f4f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                color: '#6b7280',
+                cursor: 'pointer',
+                alignSelf: 'center',
               }}
             >
-              {planCode === 'free' || !planCode ? 'Upgrade' : 'Downgrade'}
-            </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SearchIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
+                <Typography variant="body2" sx={{ fontSize: 15, color: '#6b7280', lineHeight: 1 }}>
+                  Search...
+                </Typography>
+              </Box>
+              <Chip
+                label="Ctrl+K"
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  triggerConverterSearch();
+                }}
+                sx={{
+                  height: 24,
+                  borderRadius: 2,
+                  fontWeight: 700,
+                  backgroundColor: '#e5e7eb',
+                  color: '#374151',
+                  '& .MuiChip-label': { px: 1 },
+                }}
+              />
+            </Box>
           </Box>
 
           {/* Right Side - Notifications, Clock */}

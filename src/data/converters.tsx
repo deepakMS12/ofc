@@ -21,7 +21,7 @@ export const converters = [
   // ——— To PDF ———
    {
     slug: "url-to-pdf",
-    title: "URL TO PDF",
+    title: "URL → PDF",
     description:
       "Easily convert URL files to high-quality PDFs with our tool. Preserve layouts, styles, and graphics while generating professional, easily shareable documents.",
     layout: "to-pdf",
@@ -30,7 +30,7 @@ export const converters = [
   },
   {
     slug: "html-code-to-pdf",
-    title: "HTML CODE TO PDF",
+    title: "HTML CODE → PDF",
     description:
       "Easily convert URL files to high-quality PDFs with our tool. Preserve layouts, styles, and graphics while generating professional, easily shareable documents.",
     layout: "to-pdf",
@@ -39,7 +39,7 @@ export const converters = [
   },
   {
     slug: "html-file-to-pdf",
-    title: "HTML FILE TO PDF",
+    title: "HTML FILE → PDF",
     description:
       "Convert local HTML files to high-quality PDFs while preserving layout, styles, and graphics for professional sharing.",
     layout: "to-pdf",
@@ -48,7 +48,7 @@ export const converters = [
   },
   {
     slug: "html-variable-to-pdf",
-    title: "HTML VARIABLE TO PDF",
+    title: "HTML VARIABLE → PDF",
     description:
       "Generate PDF from HTML template placeholders using variables and tables JSON in one structured conversion flow.",
     layout: "to-pdf",
@@ -57,7 +57,7 @@ export const converters = [
   },
   {
     slug: "template-fill-to-pdf",
-    title: "TEMPLATE FILL TO PDF",
+    title: "TEMPLATE FILL → PDF",
     description:
       "Fill DOCX template placeholders with variables and table rows, then generate a final PDF.",
     layout: "to-pdf",
@@ -116,7 +116,7 @@ export const converters = [
   // },
   {
     slug: "docx-to-pdf",
-    title: "DOCX TO PDF",
+    title: "DOCX → PDF",
     description:
       "Convert Word documents to PDF while preserving headings, tables, and formatting. Ideal for sharing finalized documents that look the same on any device.",
     layout: "to-pdf",

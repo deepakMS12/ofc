@@ -29,7 +29,35 @@ interface NotificationsDrawerProps {
     onNotificationCountChange?: (count: number) => void;
 }
 
-const sampleNotifications: Notification[] = [];
+const sampleNotifications: Notification[] = [
+    {
+        id: 'n-1',
+        type: 'ticket',
+        title: 'Plan Updated Successfully',
+        description: 'Your subscription has been moved to SILVER. New limits are now active.',
+        date: '2 min ago',
+        priority: 'HIGH',
+        unread: true,
+    },
+    {
+        id: 'n-2',
+        type: 'feedback',
+        title: 'Weekly Usage Report Ready',
+        description: 'You consumed 124 conversion credits this week across 18 tools.',
+        date: '1 hour ago',
+        priority: 'MEDIUM',
+        unread: true,
+    },
+    {
+        id: 'n-3',
+        type: 'email',
+        title: 'Delivery Failure Detected',
+        description: '3 email notifications failed due to SMTP timeout. Please retry.',
+        date: 'Today, 10:42 AM',
+        priority: 'LOW',
+        unread: false,
+    },
+];
 
 const rotation = keyframes`
     0% {
@@ -43,6 +71,7 @@ const rotatingClass = 'notifyRotation';
 
 export default function NotificationsDrawer({ open, onClose, onNotificationCountChange }: NotificationsDrawerProps) {
     const [activeTab, setActiveTab] = useState(0);
+    const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
 
     useEffect(() => {
         if (open) {
@@ -59,8 +88,12 @@ export default function NotificationsDrawer({ open, onClose, onNotificationCount
         };
     }, [open]);
 
-    const unreadNotifications = sampleNotifications.filter((n) => n.unread);
-    const emailFailureNotifications: Notification[] = []; // Empty for now
+    const unreadNotifications = notifications.filter((n) => n.unread);
+    const emailFailureNotifications = notifications.filter((n) => n.type === 'email');
+
+    const handleMarkAllAsRead = () => {
+        setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })));
+    };
 
     // Update notification count when it changes
     useEffect(() => {
@@ -94,7 +127,7 @@ export default function NotificationsDrawer({ open, onClose, onNotificationCount
         }
     };
 
-    const notificationsToShow = activeTab === 0 ? unreadNotifications : emailFailureNotifications;
+    const notificationsToShow = activeTab === 0 ? notifications : emailFailureNotifications;
 
     return (
         <Drawer
@@ -128,9 +161,31 @@ export default function NotificationsDrawer({ open, onClose, onNotificationCount
                             Notifications
                         </Typography>
                     </Box>
-                    <IconButton onClick={onClose} size="small" sx={{ color: '#666' }}>
-                        <X size={20} />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        {unreadNotifications.length > 0 && (
+                            <Typography
+                                variant="body2"
+                                onClick={handleMarkAllAsRead}
+                                sx={{
+                                    color: '#1976d2',
+                                    fontWeight: 600,
+                                    letterSpacing: '0.05em',
+                                    right: 20,
+                                    position: 'relative',
+                                    fontSize: '10px',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                        textDecoration: 'underline',
+                                    },
+                                }}
+                            >
+                                Mark all as Read
+                            </Typography>
+                        )}
+                        <IconButton onClick={onClose} size="small" sx={{ color: '#666' }}>
+                            <X size={20} />
+                        </IconButton>
+                    </Box>
                 </Box>
 
                 {/* Tabs */}
@@ -256,8 +311,9 @@ export default function NotificationsDrawer({ open, onClose, onNotificationCount
                                         display: 'flex',
                                         gap: 2,
                                         cursor: 'pointer',
+                                        backgroundColor: notification.unread ? '#eef6ff' : 'transparent',
                                         '&:hover': {
-                                            backgroundColor: '#fffdf5',
+                                            backgroundColor: notification.unread ? '#e3f0ff' : '#fffdf5',
                                         },
                                     }}
                                 >

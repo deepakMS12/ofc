@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Box, Tooltip } from '@mui/material';
 import { LayoutDashboard, CodeXml, ArrowLeftRight, Settings } from 'lucide-react';
+import UpgradeIcon from '@mui/icons-material/Upgrade';
 
 import ApiDrawer from '@/components/dialogs/ApiDrawer';
 import { colors } from '@/utils/customColor';
@@ -19,6 +20,7 @@ export default function Sidebar() {
   const { pathname } = useLocation();
   const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
   const isSettingsActive = pathname?.includes('settings');
+  const isPlansActive = pathname?.includes('plans');
 
   return (
     <Box
@@ -107,31 +109,58 @@ export default function Sidebar() {
       {/* Drawers */}
       <ApiDrawer open={apiDrawerOpen} onClose={() => setApiDrawerOpen(false)} />
 
-      {/* Settings Icon at Bottom */}
-      <Tooltip title="Settings" placement="right" arrow>
-        <Link to="/home/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 2,
-              backgroundColor: isSettingsActive ? colors.primary : 'transparent',
-              color: isSettingsActive ? 'white' : '#666',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                backgroundColor: isSettingsActive ? colors.primary : '#f5f5f5',
-                transform: 'scale(1.05)',
-              },
-            }}
-          >
-            <Settings size={24} />
-          </Box>
-        </Link>
-      </Tooltip>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+        <Tooltip title="Upgrade Plan" placement="right" arrow>
+          <Link to="/home/plans" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 2,
+                backgroundColor: isPlansActive ? colors.primary : 'transparent',
+                color: isPlansActive ? 'white' : '#666',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: isPlansActive ? colors.primary : '#f5f5f5',
+                  transform: 'scale(1.05)',
+                },
+              }}
+            >
+              <UpgradeIcon fontSize="medium" />
+            </Box>
+          </Link>
+        </Tooltip>
+
+        {/* Settings Icon at Bottom */}
+        <Tooltip title="Settings" placement="right" arrow>
+          <Link to="/home/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 2,
+                backgroundColor: isSettingsActive ? colors.primary : 'transparent',
+                color: isSettingsActive ? 'white' : '#666',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: isSettingsActive ? colors.primary : '#f5f5f5',
+                  transform: 'scale(1.05)',
+                },
+              }}
+            >
+              <Settings size={24} />
+            </Box>
+          </Link>
+        </Tooltip>
+      </Box>
     </Box>
   );
 }

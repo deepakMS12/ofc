@@ -1,4 +1,5 @@
 import { Box, TextField } from "@mui/material";
+import type { CSSProperties } from "react";
 
 export type HtmlGhostTextFieldProps = {
   id: string;
@@ -7,6 +8,7 @@ export type HtmlGhostTextFieldProps = {
   onChange: (next: string) => void;
   defaultHtml: string;
   rows?: number;
+  textareaResize?: CSSProperties["resize"];
 };
 
 /** Multiline field with non-selectable placeholder “ghost” until the user types. */
@@ -17,6 +19,7 @@ export function HtmlGhostTextField({
   onChange,
   defaultHtml,
   rows = 1,
+  textareaResize = "vertical",
 }: HtmlGhostTextFieldProps) {
   const showGhost = value.trim() === "";
 
@@ -75,7 +78,7 @@ export function HtmlGhostTextField({
           }),
           "& textarea": {
             display: "block",
-            resize: "vertical",
+            resize: textareaResize,
             minHeight: 120,
             fontFamily:
               "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
