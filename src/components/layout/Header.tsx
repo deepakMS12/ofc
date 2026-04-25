@@ -159,7 +159,7 @@ export default function Header() {
             <Box
               onClick={triggerConverterSearch}
               sx={{
-                margin: '0 0 0 40px',
+                margin: '0 0 0 200px',
                 height: 36,
                 minWidth: 210,
                 px: 1.5,

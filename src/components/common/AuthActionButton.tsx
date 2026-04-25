@@ -25,6 +25,10 @@ export default function AuthActionButton({
       disabled={isDisabled}
       sx={{
         "&&": {
+        "@keyframes authShineSweep": {
+          "0%": { transform: "translateX(-140%) skewX(-20deg)" },
+          "100%": { transform: "translateX(240%) skewX(-20deg)" },
+        },
         alignSelf: "flex-start",
         minWidth: 116,
         height: 52,
@@ -36,10 +40,24 @@ export default function AuthActionButton({
         transition: "all 0.2s ease",
         ...(isActive
           ? {
+              position: "relative",
+              overflow: "hidden",
               backgroundColor: "#57b746 !important",
               color: "#ffffff !important",
               borderColor: "#57b746 !important",
               boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "38%",
+                height: "100%",
+                background:
+                  "linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.65) 50%, rgba(255,255,255,0.2) 55%, transparent 100%)",
+                pointerEvents: "none",
+                animation: "authShineSweep 2.2s linear infinite",
+              },
               "&:hover": {
                 backgroundColor: "#4da53f !important",
                 borderColor: "#4da53f !important",

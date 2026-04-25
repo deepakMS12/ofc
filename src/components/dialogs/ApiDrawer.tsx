@@ -12,7 +12,7 @@ import {
   Skeleton,
   Switch,
 } from "@mui/material";
-import { Copy, RefreshCw, FileText, X, Key } from "lucide-react";
+import { RefreshCw, FileText, X, Key } from "lucide-react";
 import LaunchIcon from "@mui/icons-material/Launch";
 import { apiKeyApi } from "@/lib/api/apiKey";
 import { showConfirm } from "@/lib/utils/sweetalert";
@@ -30,7 +30,6 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
   const [apiKeyEnabled, setApiKeyEnabled] = useState(true);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -59,13 +58,13 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
   };
 
   const handleCopyApiKey = async () => {
-    if (apiKey) {
+    if (apiKey && apiKeyEnabled) {
       try {
         await navigator.clipboard.writeText(apiKey);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        showToast("API key copied to clipboard", "success");
       } catch (error) {
         console.error("Failed to copy:", error);
+        showToast("Failed to copy API key", "error");
       }
     }
   };
@@ -317,6 +316,7 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
                     <TextField
                       fullWidth
                       value={apiKey || ""}
+                      onClick={handleCopyApiKey}
                       InputProps={{
                         readOnly: true,
                       }}
@@ -328,36 +328,27 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
                     />
                     <Button
                       variant="outlined"
-                      onClick={handleCopyApiKey}
-                      startIcon={<Copy size={18} />}
+                      onClick={handleRegenerateApiKey}
+                      startIcon={<RefreshCw size={18} />}
+                      disabled={loading || !apiKeyEnabled}
                       sx={{
                         borderColor: "#e0e0e0",
                         color: "#666",
                         textTransform: "none",
-                        minWidth: 120,
                         "&:hover": {
                           borderColor: "#bdbdbd",
                           backgroundColor: "#fafafa",
                         },
                       }}
                     >
-                      {copied ? "Copied!" : "Copy"}
                     </Button>
                   </Box>
 
                   <Divider sx={{ my: 4 }} />
 
                   {/* Management Controls */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      mb: 4,
-                    }}
-                  >
-                    {/* Left: API Key Status */}
-                    <Box sx={{ flex: 1 }}>
+                  <Box sx={{ mb: 4 }}>
+                    <Box>
                       <Typography
                         variant="body1"
                         sx={{ fontWeight: 600, mb: 2, color: "#333" }}
@@ -391,28 +382,6 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
                           },
                         }}
                       />
-                    </Box>
-
-                    {/* Right: Re-Generate */}
-                    <Box sx={{ flex: 1, textAlign: "right" }}>
-                      <Button
-                        variant="contained"
-                        onClick={handleRegenerateApiKey}
-                        disabled={loading}
-                        startIcon={<RefreshCw size={18} />}
-                        sx={{
-                          backgroundColor: colors.primary,
-                          color: "white",
-                          textTransform: "none",
-                          px: 3,
-                          mt: 4.5,
-                          "&:hover": {
-                            backgroundColor: colors.primary,
-                          },
-                        }}
-                      >
-                        Regenerate
-                      </Button>
                     </Box>
                   </Box>
 

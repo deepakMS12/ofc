@@ -3,6 +3,7 @@ import {
   CloseRounded,
   ErrorOutlineRounded,
   InfoOutlined,
+  WarningAmberRounded,
 } from "@mui/icons-material";
 import {
   Box,
@@ -17,7 +18,7 @@ import { forwardRef } from "react";
 type ToasterSnackbarProps = {
   isOpen?: boolean;
   message?: string;
-  type?: "success" | "error" | "info";
+  type?: "success" | "error" | "warning" | "info";
   onClose?: () => void;
 };
 
@@ -31,29 +32,45 @@ const TransitionDown = forwardRef(function TransitionDown(
 const SNACKBAR_VARIANT_CONFIG: Record<
   NonNullable<ToasterSnackbarProps["type"]>,
   {
-    title: string;
-    message: string;
-    color: string;
+    bg: string;
+    textColor: string;
+    accent: string;
+    borderColor: string;
+    closeColor: string;
     icon: typeof CheckCircleOutlineRounded;
   }
 > = {
   success: {
-    title: "Everything worked!",
-    message: "Action completed successfully.",
-    color: "#53d67b",
+    bg: "#ffffff",
+    textColor: "#111827",
+    accent: "#22c55e",
+    borderColor: "rgba(15,23,42,0.08)",
+    closeColor: "#64748b",
     icon: CheckCircleOutlineRounded,
   },
   info: {
-    title: "Did you know?",
-    message: "Here is something helpful for you.",
-    color: "#4f7cff",
+    bg: "#eff6ff",
+    textColor: "#1e3a8a",
+    accent: "#3b82f6",
+    borderColor: "#bfdbfe",
+    closeColor: "#1d4ed8",
     icon: InfoOutlined,
   },
   error: {
-    title: "Something went wrong",
-    message: "Something went wrong. Please try again.",
-    color: "#ff6f6f",
+    bg: "#fef2f2",
+    textColor: "#991b1b",
+    accent: "#ef4444",
+    borderColor: "#fecaca",
+    closeColor: "#b91c1c",
     icon: ErrorOutlineRounded,
+  },
+  warning: {
+    bg: "#fff7ed",
+    textColor: "#9a3412",
+    accent: "#f59e0b",
+    borderColor: "#fed7aa",
+    closeColor: "#c2410c",
+    icon: WarningAmberRounded,
   },
 };
 
@@ -79,11 +96,15 @@ const ToasterSnackbar = ({
         sx={{
           width: { xs: "calc(100vw - 32px)", sm: 400 },
           maxWidth: "100%",
-          bgcolor: "#202835",
-          color: "#f1f5ff",
+          bgcolor: variant.bg,
+          color: variant.textColor,
           borderRadius: 3,
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 14px 36px rgba(0,0,0,0.45)",
+          border: "1px solid",
+          borderColor: variant.borderColor,
+          boxShadow:
+            type === "success"
+              ? "0 4px 8px 0 var(--shadow-card-depth2), 0 0 1px 0 var(--shadow-card-depth1)"
+              : "0 4px 12px rgba(15, 23, 42, 0.12)",
           display: "flex",
           alignItems: "center",
           position: "relative",
@@ -101,7 +122,7 @@ const ToasterSnackbar = ({
             bottom: 8,
             width: 5,
             borderRadius: 999,
-            bgcolor: variant.color,
+            bgcolor: variant.accent,
           }}
         />
         <Box
@@ -113,8 +134,8 @@ const ToasterSnackbar = ({
             flexShrink: 0,
             display: "grid",
             placeItems: "center",
-            bgcolor: `${variant.color}22`,
-            color: variant.color,
+            bgcolor: `${variant.accent}22`,
+            color: variant.accent,
           }}
         >
           <Icon fontSize="small" />
@@ -134,8 +155,8 @@ const ToasterSnackbar = ({
             position: "absolute",
             top: 10,
             right: 10,
-            color: "rgba(210,220,236,0.7)",
-            "&:hover": { color: "#ffffff", bgcolor: "rgba(255,255,255,0.08)" },
+            color: variant.closeColor,
+            "&:hover": { color: variant.closeColor, bgcolor: "rgba(15,23,42,0.06)" },
           }}
         >
           <CloseRounded fontSize="small" />

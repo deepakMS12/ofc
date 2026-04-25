@@ -3,7 +3,7 @@ import { createContext, useEffect, useState, type ReactNode } from "react";
 
 
 
-type ToastType = "success" | "error" | "info";
+type ToastType = "success" | "error" | "warning" | "info";
 type ShowToastFn = (msg: string, type?: ToastType) => void;
 
 export type ToastContextValue = {
