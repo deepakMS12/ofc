@@ -17,6 +17,84 @@ body {
   background: #fffdf6;
 }
 
+:root {
+  --panel: #0b0d1a;
+}
+
+.signup-page-container .left {
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 48px 52px 52px;
+    position: relative;
+}
+.signup-page-container .grid-bg {
+    animation: gridPulse 6s ease-in-out infinite;
+    background-image: linear-gradient(#5b3ff51f 1px, #0000 0), linear-gradient(90deg, #5b3ff51f 1px, #0000 0);
+    background-size: 48px 48px;
+    inset: 0;
+    -webkit-mask-image: radial-gradient(ellipse 90% 90% at 30% 50%, #000 20%, #0000 80%);
+    mask-image: radial-gradient(ellipse 90% 90% at 30% 50%, #000 20%, #0000 80%);
+    position: absolute;
+}
+
+@keyframes gridPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.signup-page-container .glow-1 {
+    background: radial-gradient(circle, #5b3ff52e 0, #0000 70%);
+    height: 500px;
+    left: -100px;
+    top: -100px;
+    width: 500px;
+}
+.signup-page-container .glow-2 {
+    background: radial-gradient(circle, #8b6fff1f 0, #0000 70%);
+    bottom: 60px;
+    height: 300px;
+    right: -60px;
+    width: 300px;
+}
+.signup-page-container .glow {
+    border-radius: 50%;
+    pointer-events: none;
+    position: absolute;
+}
+.signup-page-container .scanline {
+    animation: scan 4s linear infinite;
+    background: linear-gradient(90deg, #0000, #5b3ff599 30%, #8b6fffcc 50%, #5b3ff599 70%, #0000);
+    height: 1px;
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+@keyframes scan {
+  0% {
+    top: -2px;
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
 /* Media overlay lock */
 body.media-overlay-locked {
   overflow: hidden !important;
