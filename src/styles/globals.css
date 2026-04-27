@@ -21,7 +21,7 @@ body {
   --panel: #0b0d1a;
 }
 
-.signup-page-container .left {
+.auth-page-container .left {
     background: var(--panel);
     display: flex;
     flex-direction: column;
@@ -30,7 +30,7 @@ body {
     padding: 48px 52px 52px;
     position: relative;
 }
-.signup-page-container .grid-bg {
+.auth-page-container .grid-bg {
     animation: gridPulse 6s ease-in-out infinite;
     background-image: linear-gradient(#5b3ff51f 1px, #0000 0), linear-gradient(90deg, #5b3ff51f 1px, #0000 0);
     background-size: 48px 48px;
@@ -49,26 +49,26 @@ body {
     opacity: 1;
   }
 }
-.signup-page-container .glow-1 {
+.auth-page-container .glow-1 {
     background: radial-gradient(circle, #5b3ff52e 0, #0000 70%);
     height: 500px;
     left: -100px;
     top: -100px;
     width: 500px;
 }
-.signup-page-container .glow-2 {
+.auth-page-container .glow-2 {
     background: radial-gradient(circle, #8b6fff1f 0, #0000 70%);
     bottom: 60px;
     height: 300px;
     right: -60px;
     width: 300px;
 }
-.signup-page-container .glow {
+.auth-page-container .glow {
     border-radius: 50%;
     pointer-events: none;
     position: absolute;
 }
-.signup-page-container .scanline {
+.auth-page-container .scanline {
     animation: scan 4s linear infinite;
     background: linear-gradient(90deg, #0000, #5b3ff599 30%, #8b6fffcc 50%, #5b3ff599 70%, #0000);
     height: 1px;

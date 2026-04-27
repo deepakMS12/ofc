@@ -3,7 +3,7 @@ import { clearDemoAuthStorage, isDemoAuthSession } from "@/lib/demoAuth";
 import { getGlobalToast } from "@/contexts/ToastContext";
 
 const API_BASE_URL = (
-  import.meta.env.VITE_URL_TO_PDF_API_BASE 
+  import.meta.env.VITE_PY_API_BASE 
 ).replace(/\/$/, "");
 
 const apiClient = axios.create({

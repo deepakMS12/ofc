@@ -16,7 +16,7 @@ const sidePanelSx = {
 
 export const AuthSplitLayout = ({ children, maxWidth = 520 }:any) => {
   return (
-    <Box className="signup-page-container" sx={{ minHeight: "100vh", display: "flex", bgcolor: "#f4f4f4" }}>
+    <Box className="auth-page-container" sx={{ minHeight: "100vh", display: "flex", bgcolor: "#f4f4f4" }}>
       <Box className="left" sx={sidePanelSx}>
         <Box className="grid-bg" />
         <Box className="glow glow-1" />
