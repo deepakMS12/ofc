@@ -10,7 +10,18 @@ export type ConvertUrlToPdfArg = {
   queryType: UrlToPdfQueryType;
   body: UrlToPdfRequestBody | FormData;
   downloadFileName: string;
-  sourceType?: "url" | "html" | "html-file" | "html-variable" | "docx-file";
+  sourceType?:
+    | "url"
+    | "html"
+    | "html-file"
+    | "html-variable"
+    | "docx-file"
+    | "images-pdf"
+    | "wkhtml-url"
+    | "wkhtml-html-code"
+    | "wkhtml-html-file"
+    | "html-to-word"
+    | "html-to-excel";
 };
 
 export type ConvertUrlToPdfResult = {
@@ -38,30 +49,61 @@ type UrlToPdfSuccessJson = {
   data?: { buffer?: string; url?: string };
 };
 
-function base64ToPdfBlob(base64: string): Blob {
+function mimeForExtension(ext: ".pdf" | ".zip" | ".docx" | ".xlsx"): string {
+  if (ext === ".pdf") return "application/pdf";
+  if (ext === ".zip") return "application/zip";
+  if (ext === ".docx") {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+  return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+}
+
+function base64ToBlob(base64: string, mime: string): Blob {
   const binary = atob(base64);
   const len = binary.length;
   const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
-  return new Blob([bytes], { type: "application/pdf" });
+  return new Blob([bytes], { type: mime });
 }
 
-/** API may return raw PDF bytes or JSON with `{ data: { buffer: base64 } }`. */
-async function responseBodyToPdfBlob(body: Blob): Promise<
-  | { ok: true; pdf: Blob }
-  | { ok: false; message: string }
-> {
+type ParsedDownload =
+  | { ok: true; blob: Blob; fileExt: ".pdf" | ".zip" | ".docx" | ".xlsx" }
+  | { ok: false; message: string };
+
+type ParseOptions = {
+  /** When set, JSON/ZIP payloads are treated as this Office type (ZIP signature). */
+  fixedExt?: ".docx" | ".xlsx";
+};
+
+/** API may return raw bytes or JSON with `{ data: { buffer: base64 } }`. */
+async function responseBodyToDownloadBlob(
+  body: Blob,
+  options?: ParseOptions,
+): Promise<ParsedDownload> {
   const buf = await body.arrayBuffer();
   const view = new Uint8Array(buf);
+  const fixed = options?.fixedExt;
+
   if (view.length >= 1 && view[0] === 0x7b) {
     try {
       const text = new TextDecoder().decode(buf);
       const json = JSON.parse(text) as UrlToPdfSuccessJson;
       const b64 = json.data?.buffer;
       if (typeof b64 === "string" && b64.length > 0) {
-        return { ok: true, pdf: base64ToPdfBlob(b64) };
+        if (fixed) {
+          return {
+            ok: true,
+            blob: base64ToBlob(b64, mimeForExtension(fixed)),
+            fileExt: fixed,
+          };
+        }
+        return {
+          ok: true,
+          blob: base64ToBlob(b64, mimeForExtension(".pdf")),
+          fileExt: ".pdf",
+        };
       }
       const msg =
         (typeof json.message === "string" && json.message.trim()) ||
@@ -72,6 +114,7 @@ async function responseBodyToPdfBlob(body: Blob): Promise<
       return { ok: false, message: "Invalid JSON response from server." };
     }
   }
+
   if (
     view.length >= 4 &&
     view[0] === 0x25 &&
@@ -79,9 +122,60 @@ async function responseBodyToPdfBlob(body: Blob): Promise<
     view[2] === 0x44 &&
     view[3] === 0x46
   ) {
-    return { ok: true, pdf: new Blob([buf], { type: "application/pdf" }) };
+    if (fixed) {
+      return {
+        ok: false,
+        message: "Unexpected PDF response for this conversion.",
+      };
+    }
+    return {
+      ok: true,
+      blob: new Blob([buf], { type: "application/pdf" }),
+      fileExt: ".pdf",
+    };
   }
-  return { ok: false, message: "Unexpected response format (not PDF or JSON)." };
+
+  if (view.length >= 4 && view[0] === 0x50 && view[1] === 0x4b) {
+    if (fixed) {
+      return {
+        ok: true,
+        blob: new Blob([buf], { type: mimeForExtension(fixed) }),
+        fileExt: fixed,
+      };
+    }
+    return {
+      ok: true,
+      blob: new Blob([buf], { type: "application/zip" }),
+      fileExt: ".zip",
+    };
+  }
+
+  if (fixed && view.length > 0) {
+    return {
+      ok: true,
+      blob: new Blob([buf], { type: mimeForExtension(fixed) }),
+      fileExt: fixed,
+    };
+  }
+
+  return { ok: false, message: "Unexpected response format (not PDF, ZIP, or JSON)." };
+}
+
+function normalizeDownloadFileName(
+  rawName: string,
+  fileExt: ".pdf" | ".zip" | ".docx" | ".xlsx",
+): string {
+  const trimmed = rawName.trim();
+  const fallback =
+    fileExt === ".docx"
+      ? "document"
+      : fileExt === ".xlsx"
+        ? "workbook"
+        : fileExt === ".zip"
+          ? "archive"
+          : "export";
+  const base = (trimmed || fallback).replace(/\.(pdf|zip|docx|xlsx)$/i, "");
+  return `${base}${fileExt}`;
 }
 
 export const convertUrlToPdf = createAsyncThunk<
@@ -95,28 +189,62 @@ export const convertUrlToPdf = createAsyncThunk<
         ? "/convert/url"
         : arg.sourceType === "docx-file"
           ? "/convert/docx"
-        : arg.sourceType === "html-variable"
-          ? "/convert/html/variable"
-          : "/convert/html";
+          : arg.sourceType === "images-pdf"
+            ? "/convert/images-pdf"
+            : arg.sourceType === "wkhtml-url"
+              ? "/wkhtmltopdf/url_pdf"
+              : arg.sourceType === "wkhtml-html-code"
+                ? "/wkhtmltopdf/html_pdf"
+                : arg.sourceType === "wkhtml-html-file"
+                  ? "/wkhtmltopdf/htmlfile_pdf"
+                  : arg.sourceType === "html-to-word"
+                    ? "/libreoffice/html_doc"
+                    : arg.sourceType === "html-to-excel"
+                      ? "/libreoffice/html_excel"
+                      : arg.sourceType === "html-variable"
+                        ? "/convert/html/variable"
+                        : "/convert/html";
+    const isFormData = typeof FormData !== "undefined" && arg.body instanceof FormData;
+    const skipQueryParam =
+      arg.sourceType === "docx-file" ||
+      arg.sourceType === "wkhtml-url" ||
+      arg.sourceType === "wkhtml-html-code" ||
+      arg.sourceType === "wkhtml-html-file" ||
+      arg.sourceType === "html-to-word" ||
+      arg.sourceType === "html-to-excel";
     const response = await urlToPdfClient.post<Blob>(
       endpoint,
       arg.body,
       {
-        params: arg.sourceType === "docx-file" ? undefined : { type: arg.queryType },
+        params: skipQueryParam ? undefined : { type: arg.queryType },
         responseType: "blob",
-        headers: { Accept: "*/*" },
+        headers: {
+          Accept: "*/*",
+          ...(isFormData ? { "Content-Type": false as unknown as string } : {}),
+        },
       },
     );
 
     const raw = response.data;
-    const parsed = await responseBodyToPdfBlob(raw);
+    const parseOpts: ParseOptions | undefined =
+      arg.sourceType === "html-to-word"
+        ? { fixedExt: ".docx" }
+        : arg.sourceType === "html-to-excel"
+          ? { fixedExt: ".xlsx" }
+          : undefined;
+    const parsed = await responseBodyToDownloadBlob(raw, parseOpts);
     if (!parsed.ok) {
       return rejectWithValue(parsed.message);
     }
 
+    const downloadFileName = normalizeDownloadFileName(
+      arg.downloadFileName,
+      parsed.fileExt,
+    );
+
     return {
-      blob: parsed.pdf,
-      downloadFileName: arg.downloadFileName,
+      blob: parsed.blob,
+      downloadFileName,
     };
   } catch (err: unknown) {
     if (axios.isAxiosError(err) && err.response?.data instanceof Blob) {
@@ -131,5 +259,3 @@ export const convertUrlToPdf = createAsyncThunk<
     return rejectWithValue("Conversion failed.");
   }
 });
-
-

@@ -22,12 +22,44 @@ import URLtoPDF from "./URLtoPDF";
 import HtmlVariableToPDF, { type HtmlVariableToPdfHandle } from "./HtmlVariableToPDF";
 import DocxToPDF, { type DocxToPdfHandle } from "./DocxToPDF";
 import TemplateFillToPDF from "./TemplateFillToPDF";
+import ImagesToPDF, { type ImagesToPdfHandle } from "./ImagesToPDF";
+import WkhtmlToPdfPanel, {
+  type WkhtmlToPdfHandle,
+  wkhtmlSlugToVariant,
+} from "./WkhtmlToPdfPanel";
+import HtmlToOfficePanel, {
+  type HtmlToOfficeHandle,
+  htmlOfficeSlugToTarget,
+} from "./HtmlToOfficePanel";
+
+type ImagesToPdfSidebarBundle = {
+  ref: RefObject<ImagesToPdfHandle | null>;
+};
+
+type WkhtmlToPdfSidebarBundle = {
+  ref: RefObject<WkhtmlToPdfHandle | null>;
+  selectedFileName: string | undefined;
+  onRequestPickFile: () => void;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type HtmlToOfficeSidebarBundle = {
+  ref: RefObject<HtmlToOfficeHandle | null>;
+  selectedFileName: string | undefined;
+  onRequestPickFile: () => void;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
 
 type WorkspaceSidebarProps = {
   toolSlug?: string;
   urlToPdfRef?: RefObject<URLtoPDFHandle | null>;
   htmlVariableToPdfRef?: RefObject<HtmlVariableToPdfHandle | null>;
   docxToPdfRef?: RefObject<DocxToPdfHandle | null>;
+  imagesToPdf?: ImagesToPdfSidebarBundle;
+  wkhtmlToPdf?: WkhtmlToPdfSidebarBundle;
+  htmlToOffice?: HtmlToOfficeSidebarBundle;
   onUrlToPdfSourceChange?: (value: string) => void;
   files: File[];
   miniCanvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -52,6 +84,9 @@ const WorkspaceSidebar = memo(
     urlToPdfRef,
     htmlVariableToPdfRef,
     docxToPdfRef,
+    imagesToPdf,
+    wkhtmlToPdf,
+    htmlToOffice,
     onUrlToPdfSourceChange,
     files,
     activePageIndex,
@@ -115,6 +150,29 @@ const WorkspaceSidebar = memo(
           <DocxToPDF ref={docxToPdfRef} selectedFile={files[0] ?? null} />
         )}
         {toolSlug === "template-fill-to-pdf" && <TemplateFillToPDF />}
+        {toolSlug === "images-to-pdf" && imagesToPdf && (
+          <ImagesToPDF ref={imagesToPdf.ref} fileCount={files.length} />
+        )}
+        {wkhtmlSlugToVariant(toolSlug) && wkhtmlToPdf && (
+          <WkhtmlToPdfPanel
+            ref={wkhtmlToPdf.ref}
+            variant={wkhtmlSlugToVariant(toolSlug)!}
+            selectedFileName={wkhtmlToPdf.selectedFileName}
+            onRequestPickFile={wkhtmlToPdf.onRequestPickFile}
+            onValidityChange={wkhtmlToPdf.onValidityChange}
+            onFieldsDirty={wkhtmlToPdf.onFieldsDirty}
+          />
+        )}
+        {htmlOfficeSlugToTarget(toolSlug) && htmlToOffice && (
+          <HtmlToOfficePanel
+            ref={htmlToOffice.ref}
+            target={htmlOfficeSlugToTarget(toolSlug)!}
+            selectedFileName={htmlToOffice.selectedFileName}
+            onRequestPickFile={htmlToOffice.onRequestPickFile}
+            onValidityChange={htmlToOffice.onValidityChange}
+            onFieldsDirty={htmlToOffice.onFieldsDirty}
+          />
+        )}
 
         {toolSlug === "pdf-canvas" && (
           <Stack spacing={1.2}>

@@ -175,6 +175,7 @@ const ConverterPage = () => {
           <TextField
             size="small"
             fullWidth
+            type="password"
             label="Authorization"
             value={converterAuthToken}
             onChange={(e) => {
@@ -188,6 +189,12 @@ const ConverterPage = () => {
             }}
             slotProps={{
               input: {
+                onCopy: (e: React.ClipboardEvent) => {
+                  e.preventDefault();
+                },
+                onCut: (e: React.ClipboardEvent) => {
+                  e.preventDefault();
+                },
                 sx: {
                   fontSize: 13,
                   fontFamily:

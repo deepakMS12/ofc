@@ -85,6 +85,37 @@ function mapEncryption(level: EncryptionLevelId): string {
   return "none";
 }
 
+/** Shared by URL→PDF and Images→PDF when sending `rights` metadata. */
+export function buildPdfRightsFromFields(
+  encryptionLevel: EncryptionLevelId,
+  userPassword: string,
+  ownerPassword: string,
+  rightsRestrictions: Record<UrlToPdfRightsRestrictionId, boolean>,
+): Record<string, unknown> | null {
+  const hasPasswords = Boolean(userPassword.trim() || ownerPassword.trim());
+  const hasRestrictions = Object.values(rightsRestrictions).some(Boolean);
+  const hasEncryption = encryptionLevel !== "none";
+
+  if (!hasPasswords && !hasRestrictions && !hasEncryption) return null;
+
+  const encLevel: EncryptionLevelId =
+    encryptionLevel !== "none"
+      ? encryptionLevel
+      : hasPasswords || hasRestrictions
+        ? "aes-128"
+        : "none";
+
+  return {
+    encryption: mapEncryption(encLevel),
+    userPassword: userPassword.trim(),
+    ownerPassword: ownerPassword.trim(),
+    disallowPrint: rightsRestrictions.disallowPrint,
+    disallowCopy: rightsRestrictions.disallowContentCopy,
+    disallowAnnotation: rightsRestrictions.disallowAnnotation,
+    disallowEdit: rightsRestrictions.disableEditingPdf,
+  };
+}
+
 type ImageWm = {
   type: "image";
   url: string;
@@ -141,34 +172,12 @@ function buildWatermark(
 }
 
 function buildRights(state: UrlToPdfFormState): Record<string, unknown> | null {
-  const {
-    encryptionLevel,
-    userPassword,
-    ownerPassword,
-    rightsRestrictions,
-  } = state;
-  const hasPasswords = Boolean(userPassword.trim() || ownerPassword.trim());
-  const hasRestrictions = Object.values(rightsRestrictions).some(Boolean);
-  const hasEncryption = encryptionLevel !== "none";
-
-  if (!hasPasswords && !hasRestrictions && !hasEncryption) return null;
-
-  const encLevel: EncryptionLevelId =
-    encryptionLevel !== "none"
-      ? encryptionLevel
-      : hasPasswords || hasRestrictions
-        ? "aes-128"
-        : "none";
-
-  return {
-    encryption: mapEncryption(encLevel),
-    userPassword: userPassword.trim(),
-    ownerPassword: ownerPassword.trim(),
-    disallowPrint: rightsRestrictions.disallowPrint,
-    disallowCopy: rightsRestrictions.disallowContentCopy,
-    disallowAnnotation: rightsRestrictions.disallowAnnotation,
-    disallowEdit: rightsRestrictions.disableEditingPdf,
-  };
+  return buildPdfRightsFromFields(
+    state.encryptionLevel,
+    state.userPassword,
+    state.ownerPassword,
+    state.rightsRestrictions,
+  );
 }
 
 function baseMargins(state: UrlToPdfFormState): UrlToPdfMargins {

@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { URLtoPDFHandle } from "@/components/converter/urlToPdfPayload";
 import type { HtmlVariableToPdfHandle } from "@/components/converter/HtmlVariableToPDF";
 import type { DocxToPdfHandle } from "@/components/converter/DocxToPDF";
+import type { ImagesToPdfHandle } from "@/components/converter/ImagesToPDF";
+import type { WkhtmlToPdfHandle } from "@/components/converter/WkhtmlToPdfPanel";
+import { wkhtmlSlugToVariant } from "@/components/converter/WkhtmlToPdfPanel";
+import type { HtmlToOfficeHandle } from "@/components/converter/HtmlToOfficePanel";
+import { htmlOfficeSlugToTarget } from "@/components/converter/HtmlToOfficePanel";
 import { convertUrlToPdf } from "@/store/thunks/urlToPdfThunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { ChangeEvent } from "react";
@@ -39,6 +44,13 @@ const ConverterTool = () => {
   const urlToPdfRef = useRef<URLtoPDFHandle | null>(null);
   const htmlVariableToPdfRef = useRef<HtmlVariableToPdfHandle | null>(null);
   const docxToPdfRef = useRef<DocxToPdfHandle | null>(null);
+  const imagesToPdfRef = useRef<ImagesToPdfHandle | null>(null);
+  const wkhtmlToPdfRef = useRef<WkhtmlToPdfHandle | null>(null);
+  const htmlToOfficeRef = useRef<HtmlToOfficeHandle | null>(null);
+  const [wkhtmlCanConvert, setWkhtmlCanConvert] = useState(false);
+  const [wkhtmlFieldsEpoch, setWkhtmlFieldsEpoch] = useState(0);
+  const [htmlOfficeCanConvert, setHtmlOfficeCanConvert] = useState(false);
+  const [htmlOfficeFieldsEpoch, setHtmlOfficeFieldsEpoch] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
   const [urlToPdfSource, setUrlToPdfSource] = useState("");
   const [activePageIndex, setActivePageIndex] = useState(0);
@@ -49,8 +61,25 @@ const ConverterTool = () => {
   const [imageOutputFormat, setImageOutputFormat] =
     useState<ImageOutputFormat>("image/png");
 
-  const sourceLabel = tool?.title?.split(" TO ")[0] || "File";
-  const targetLabel = tool?.title?.split(" TO ")[1] || "Output";
+  const { sourceLabel, targetLabel } = useMemo(() => {
+    const t = tool?.title?.trim() ?? "";
+    if (!t) return { sourceLabel: "File", targetLabel: "Output" };
+    if (t.includes(" TO ")) {
+      const i = t.indexOf(" TO ");
+      return {
+        sourceLabel: t.slice(0, i).trim(),
+        targetLabel: t.slice(i + 4).trim(),
+      };
+    }
+    const arrowParts = t.split(/\s*→\s*/);
+    if (arrowParts.length >= 2) {
+      return {
+        sourceLabel: arrowParts[0]?.trim() || "File",
+        targetLabel: arrowParts.slice(1).join(" → ").trim(),
+      };
+    }
+    return { sourceLabel: t, targetLabel: "Output" };
+  }, [tool?.title]);
   const isPdfMergeTool = tool?.slug === "pdf-merge";
   const isUrlToPdfTool = tool?.slug === "url-to-pdf";
   const isHtmlCodeToPdfTool =
@@ -60,6 +89,14 @@ const ConverterTool = () => {
   const isHtmlFileToPdfTool = tool?.slug === "html-file-to-pdf";
   const isHtmlVariableToPdfTool = tool?.slug === "html-variable-to-pdf";
   const isDocxToPdfTool = tool?.slug === "docx-to-pdf";
+  const isImagesToPdfTool = tool?.slug === "images-to-pdf";
+  const wkhtmlVariant = useMemo(() => wkhtmlSlugToVariant(tool?.slug), [tool?.slug]);
+  const isAnyWkhtmlTool = wkhtmlVariant != null;
+  const htmlOfficeTarget = useMemo(
+    () => htmlOfficeSlugToTarget(tool?.slug),
+    [tool?.slug],
+  );
+  const isAnyHtmlOfficeTool = htmlOfficeTarget != null;
   const isTemplateFillToPdfTool = tool?.slug === "template-fill-to-pdf";
   const workspaceVariant = useMemo(
     () => getWorkspaceVariant(tool?.slug),
@@ -67,7 +104,9 @@ const ConverterTool = () => {
   );
   const convertButtonLabel = useMemo(() => {
     if (!tool) return "Convert";
-    if (tool.title.includes(" TO ")) return `Convert to ${targetLabel}`;
+    if (tool.title.includes(" TO ") || tool.title.includes("→")) {
+      return `Convert to ${targetLabel}`;
+    }
     return tool.title;
   }, [targetLabel, tool]);
 
@@ -86,6 +125,15 @@ const ConverterTool = () => {
     if (isDocxToPdfTool) {
       return files.length === 0 || urlToPdfLoading;
     }
+    if (isImagesToPdfTool) {
+      return files.length === 0 || urlToPdfLoading;
+    }
+    if (isAnyWkhtmlTool) {
+      return !wkhtmlCanConvert || urlToPdfLoading;
+    }
+    if (isAnyHtmlOfficeTool) {
+      return !htmlOfficeCanConvert || urlToPdfLoading;
+    }
     if (isTemplateFillToPdfTool) {
       return urlToPdfLoading;
     }
@@ -98,6 +146,11 @@ const ConverterTool = () => {
     isHtmlFileToPdfTool,
     isHtmlVariableToPdfTool,
     isDocxToPdfTool,
+    isImagesToPdfTool,
+    isAnyWkhtmlTool,
+    wkhtmlCanConvert,
+    isAnyHtmlOfficeTool,
+    htmlOfficeCanConvert,
     isTemplateFillToPdfTool,
     files.length,
     urlToPdfSource,
@@ -220,9 +273,175 @@ const ConverterTool = () => {
     tool,
   ]);
 
+  const handleImagesToPdfConvert = useCallback(async () => {
+    if (!tool || !isImagesToPdfTool) return;
+    const handle = imagesToPdfRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files.length) {
+      showToast("Select at least one image.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    const { queryType, body } = handle.getPayload(files);
+    const downloadFileName = handle.getOutputFileName().trim() || "photos";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "images-pdf",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "PDF download started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isImagesToPdfTool, showToast, tool]);
+
+  const bumpWkhtmlFields = useCallback(() => {
+    setWkhtmlFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpHtmlOfficeFields = useCallback(() => {
+    setHtmlOfficeFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const handleHtmlOfficeConvert = useCallback(async () => {
+    if (!tool || !htmlOfficeTarget) return;
+    const handle = htmlToOfficeRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select an HTML file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    const body = handle.getPayload(files);
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "output";
+    const sourceType =
+      htmlOfficeTarget === "word" ? "html-to-word" : "html-to-excel";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType,
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your file download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, htmlOfficeTarget, showToast, tool]);
+
+  const handleWkhtmlToPdfConvert = useCallback(async () => {
+    if (!tool || !isAnyWkhtmlTool || !wkhtmlVariant) return;
+    const handle = wkhtmlToPdfRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (wkhtmlVariant === "html-file" && !files[0]) {
+      showToast("Select an HTML file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    const { queryType, body } = handle.getPayload(files);
+    const downloadFileName = handle.getOutputFileName().trim() || "export";
+    const sourceType =
+      wkhtmlVariant === "url"
+        ? "wkhtml-url"
+        : wkhtmlVariant === "html-code"
+          ? "wkhtml-html-code"
+          : "wkhtml-html-file";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType,
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "PDF download started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [
+    dispatch,
+    files,
+    isAnyWkhtmlTool,
+    showToast,
+    tool,
+    wkhtmlVariant,
+  ]);
+
   useEffect(() => {
     setUrlToPdfDownloadComplete(false);
-  }, [files.length, isHtmlFileToPdfTool, isHtmlVariableToPdfTool, slug, urlToPdfSource]);
+  }, [
+    files.length,
+    isHtmlFileToPdfTool,
+    isHtmlVariableToPdfTool,
+    isImagesToPdfTool,
+    isAnyWkhtmlTool,
+    isAnyHtmlOfficeTool,
+    slug,
+    urlToPdfSource,
+    wkhtmlFieldsEpoch,
+    htmlOfficeFieldsEpoch,
+  ]);
+
+  useEffect(() => {
+    setWkhtmlCanConvert(false);
+    setHtmlOfficeCanConvert(false);
+  }, [slug]);
 
   useEffect(() => {
     if (!files.length) {
@@ -246,12 +465,35 @@ const ConverterTool = () => {
         setFiles([selected[0]]);
       } else if (isHtmlFileToPdfTool || isDocxToPdfTool) {
         setFiles([selected[0]]);
+      } else if (wkhtmlVariant === "html-file" || isAnyHtmlOfficeTool) {
+        setFiles([selected[0]]);
+      } else if (isImagesToPdfTool) {
+        const imagesOnly = selected.filter(
+          (f) =>
+            f.type === "image/png" ||
+            f.type === "image/jpeg" ||
+            /\.(png|jpe?g)$/i.test(f.name),
+        );
+        if (!imagesOnly.length) {
+          showToast("Only PNG and JPEG images are supported.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles((prev) => [...prev, ...imagesOnly]);
       } else {
         setFiles((prev) => [...prev, ...selected]);
       }
       event.target.value = "";
     },
-    [isDocxToPdfTool, isHtmlFileToPdfTool, workspaceVariant],
+    [
+      isDocxToPdfTool,
+      isAnyHtmlOfficeTool,
+      isHtmlFileToPdfTool,
+      isImagesToPdfTool,
+      showToast,
+      wkhtmlVariant,
+      workspaceVariant,
+    ],
   );
 
   const handleRemoveFile = useCallback((indexToRemove: number) => {
@@ -339,7 +581,12 @@ const ConverterTool = () => {
   }, [drawMiniCanvasPlaceholder, files, imageResizePercent, workspaceVariant]);
 
   useEffect(() => {
-    if (!isHtmlFileToPdfTool) return;
+    if (
+      !isHtmlFileToPdfTool &&
+      wkhtmlVariant !== "html-file" &&
+      !isAnyHtmlOfficeTool
+    )
+      return;
     const canvas = htmlFileCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -389,10 +636,12 @@ const ConverterTool = () => {
     ctx.moveTo(pageX + 6, pageY + 28);
     ctx.lineTo(pageX + 18, pageY + 28);
     ctx.stroke();
-  }, [files, isHtmlFileToPdfTool]);
+  }, [files, isAnyHtmlOfficeTool, isHtmlFileToPdfTool, wkhtmlVariant]);
 
   const urlToPdfSuccessTitle =
-    tool?.title?.replace(" TO ", " to ") ?? "URL to PDF";
+    tool?.title
+      ?.replace(/\s*→\s*/g, " to ")
+      .replace(/\s+TO\s+/gi, " to ") ?? "URL to PDF";
 
   const renderWorkspace = useCallback(() => {
     if (isUrlToPdfTool || isHtmlCodeToPdfTool) {
@@ -497,6 +746,140 @@ const ConverterTool = () => {
         </Box>
       );
     }
+    if (isImagesToPdfTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            gap: 2,
+          }}
+        >
+          <Box sx={{ display: "grid", placeItems: "center", minHeight: 320 }}>
+            {files.length ? (
+              <Stack
+                direction="row"
+                spacing={2}
+                flexWrap="wrap"
+                justifyContent="center"
+                sx={{ width: "100%" }}
+              >
+                {files.map((file, idx) => (
+                  <FileTile
+                    key={`${file.name}-${idx}`}
+                    name={file.name}
+                    onRemove={() => handleRemoveFile(idx)}
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <EmptyWorkspaceState
+                sourceLabel="png / jpeg images"
+                onPickFiles={handlePickFiles}
+              />
+            )}
+          </Box>
+        </Box>
+      );
+    }
+    if (isAnyHtmlOfficeTool && htmlOfficeTarget) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle={
+              htmlOfficeTarget === "word"
+                ? "Your Word document download has started. Check your downloads folder."
+                : "Your Excel workbook download has started. Check your downloads folder."
+            }
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            minHeight: 320,
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <EmptyWorkspaceState
+            sourceLabel="html file"
+            onPickFiles={handlePickFiles}
+            selectedFileName={files[0]?.name}
+            previewCanvasRef={htmlFileCanvasRef}
+            onRemoveSelectedFile={
+              files.length ? () => handleRemoveFile(0) : undefined
+            }
+          />
+        </Box>
+      );
+    }
+    if (isAnyWkhtmlTool && wkhtmlVariant) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your PDF download has started. Check your downloads folder."
+          />
+        );
+      }
+      if (wkhtmlVariant === "html-file") {
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              minHeight: 320,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <EmptyWorkspaceState
+              sourceLabel="html file"
+              onPickFiles={handlePickFiles}
+              selectedFileName={files[0]?.name}
+              previewCanvasRef={htmlFileCanvasRef}
+              onRemoveSelectedFile={
+                files.length ? () => handleRemoveFile(0) : undefined
+              }
+            />
+          </Box>
+        );
+      }
+      return null;
+    }
     if (isTemplateFillToPdfTool) return null;
     // if (workspaceVariant === "pdf-canvas") {
     //   return (
@@ -571,6 +954,11 @@ const ConverterTool = () => {
     isHtmlFileToPdfTool,
     isHtmlVariableToPdfTool,
     isDocxToPdfTool,
+    isImagesToPdfTool,
+    isAnyHtmlOfficeTool,
+    htmlOfficeTarget,
+    isAnyWkhtmlTool,
+    wkhtmlVariant,
     isTemplateFillToPdfTool,
     urlToPdfLoading,
     urlToPdfDownloadComplete,
@@ -579,7 +967,6 @@ const ConverterTool = () => {
     targetLabel,
     workspaceVariant,
     files,
-    sourceLabel,
     handlePickFiles,
     handleRemoveFile,
   ]);
@@ -621,7 +1008,9 @@ const ConverterTool = () => {
                 pt: { xs: 3, md: 4 },
               }}
             >
-              {tool.title.replace(" TO ", " to ")}
+              {tool.title
+                .replace(/\s*→\s*/g, " to ")
+                .replace(/\s+TO\s+/gi, " to ")}
             </Typography>
 
             <Box
@@ -636,6 +1025,31 @@ const ConverterTool = () => {
                 urlToPdfRef={urlToPdfRef}
                 htmlVariableToPdfRef={htmlVariableToPdfRef}
                 docxToPdfRef={docxToPdfRef}
+                imagesToPdf={
+                  isImagesToPdfTool ? { ref: imagesToPdfRef } : undefined
+                }
+                wkhtmlToPdf={
+                  isAnyWkhtmlTool && wkhtmlVariant
+                    ? {
+                        ref: wkhtmlToPdfRef,
+                        selectedFileName: files[0]?.name,
+                        onRequestPickFile: handlePickFiles,
+                        onValidityChange: setWkhtmlCanConvert,
+                        onFieldsDirty: bumpWkhtmlFields,
+                      }
+                    : undefined
+                }
+                htmlToOffice={
+                  isAnyHtmlOfficeTool && htmlOfficeTarget
+                    ? {
+                        ref: htmlToOfficeRef,
+                        selectedFileName: files[0]?.name,
+                        onRequestPickFile: handlePickFiles,
+                        onValidityChange: setHtmlOfficeCanConvert,
+                        onFieldsDirty: bumpHtmlOfficeFields,
+                      }
+                    : undefined
+                }
                 onUrlToPdfSourceChange={setUrlToPdfSource}
                 files={files}
                 miniCanvasRef={miniCanvasRef}
@@ -667,7 +1081,13 @@ const ConverterTool = () => {
                 variant="contained"
                 disabled={convertDisabled}
                 onClick={() => {
-                  if (
+                  if (isImagesToPdfTool) {
+                    void handleImagesToPdfConvert();
+                  } else if (isAnyHtmlOfficeTool) {
+                    void handleHtmlOfficeConvert();
+                  } else if (isAnyWkhtmlTool) {
+                    void handleWkhtmlToPdfConvert();
+                  } else if (
                     isUrlToPdfTool ||
                     isHtmlCodeToPdfTool ||
                     isHtmlFileToPdfTool ||
@@ -766,10 +1186,13 @@ const ConverterTool = () => {
         hidden
         type="file"
         multiple={
-          workspaceVariant !== "resizer" &&
-          workspaceVariant !== "compressor" &&
-          !isDocxToPdfTool &&
-          !isHtmlFileToPdfTool
+          isImagesToPdfTool ||
+          (workspaceVariant !== "resizer" &&
+            workspaceVariant !== "compressor" &&
+            !isDocxToPdfTool &&
+            !isHtmlFileToPdfTool &&
+            wkhtmlVariant !== "html-file" &&
+            !isAnyHtmlOfficeTool)
         }
         accept={
           workspaceVariant === "pdf-canvas"
@@ -781,6 +1204,10 @@ const ConverterTool = () => {
                 ? ".html,.htm,text/html"
               : isDocxToPdfTool
                 ? ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              : isImagesToPdfTool
+                ? "image/png,image/jpeg,.png,.jpg,.jpeg"
+              : wkhtmlVariant === "html-file" || isAnyHtmlOfficeTool
+                ? ".html,.htm,text/html"
               : undefined
         }
         onChange={handleFilesSelected}

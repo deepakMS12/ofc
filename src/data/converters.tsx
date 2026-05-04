@@ -1,13 +1,15 @@
 import HtmlOutlined from "@mui/icons-material/HtmlOutlined";
-import HttpIcon from '@mui/icons-material/Http';
-// import ImageOutlined from "@mui/icons-material/ImageOutlined";
+import HttpIcon from "@mui/icons-material/Http";
+import ImageOutlined from "@mui/icons-material/ImageOutlined";
 // import DataObjectOutlined from "@mui/icons-material/DataObjectOutlined";
 // import PhotoOutlined from "@mui/icons-material/PhotoOutlined";
 // import MicOutlined from "@mui/icons-material/MicOutlined";
 // import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
-// import TableChartOutlined from "@mui/icons-material/TableChartOutlined";
+import TableChartOutlined from "@mui/icons-material/TableChartOutlined";
 // import TextSnippetOutlined from "@mui/icons-material/TextSnippetOutlined";
 import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
+import CodeOutlined from "@mui/icons-material/CodeOutlined";
+import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 // import AudiotrackOutlined from "@mui/icons-material/AudiotrackOutlined";
 // import GridOnOutlined from "@mui/icons-material/GridOnOutlined";
 // import SlideshowOutlined from "@mui/icons-material/SlideshowOutlined";
@@ -122,6 +124,60 @@ export const converters = [
     layout: "to-pdf",
     SourceIcon: ArticleOutlined,
     sourceColor: "#1565c0",
+  },
+  {
+    slug: "images-to-pdf",
+    title: "Images → PDF",
+    description:
+      "Merge PNG or JPEG images into one PDF, or export a ZIP of separate PDFs. Set page size, margins, optional open password, and PDF rights.",
+    layout: "to-pdf",
+    SourceIcon: ImageOutlined,
+    sourceColor: "#6366f1",
+  },
+  {
+    slug: "wkhtmltopdf-by-url",
+    title: "wkhtmltopdf by URL → PDF",
+    description:
+      "Render a public web page to PDF using wkhtmltopdf-style pipeline. Control fetch mode, optional password, and preview vs download.",
+    layout: "to-pdf",
+    SourceIcon: HttpIcon,
+    sourceColor: "#7c3aed",
+  },
+  {
+    slug: "wkhtmltopdf-by-html-code",
+    title: "wkhtmltopdf by HTML code → PDF",
+    description:
+      "Convert raw HTML (and optional base URL for assets) into a PDF with wkhtmltopdf-style rendering.",
+    layout: "to-pdf",
+    SourceIcon: CodeOutlined,
+    sourceColor: "#7c3aed",
+  },
+  {
+    slug: "wkhtmltopdf-by-html-file",
+    title: "wkhtmltopdf by HTML file → PDF",
+    description:
+      "Upload an HTML file from the workspace, set optional base URL for relative assets, then export to PDF.",
+    layout: "to-pdf",
+    SourceIcon: InsertDriveFileOutlined,
+    sourceColor: "#7c3aed",
+  },
+  {
+    slug: "html-to-word",
+    title: "HTML → Word (doc)",
+    description:
+      "Upload HTML and generate a Word document (.docx) via LibreOffice—set an optional base file name and download or preview.",
+    layout: "to-pdf",
+    SourceIcon: HtmlOutlined,
+    sourceColor: "#2563eb",
+  },
+  {
+    slug: "html-to-excel",
+    title: "HTML → Excel",
+    description:
+      "Upload HTML with tables and export to Excel (.xlsx). Optional base name and download or preview response.",
+    layout: "to-pdf",
+    SourceIcon: TableChartOutlined,
+    sourceColor: "#2e7d32",
   },
   // {
   //   slug: "xlsx-to-pdf",
