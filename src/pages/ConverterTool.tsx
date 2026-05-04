@@ -3,11 +3,16 @@ import type { URLtoPDFHandle } from "@/components/converter/urlToPdfPayload";
 import type { HtmlVariableToPdfHandle } from "@/components/converter/HtmlVariableToPDF";
 import type { DocxToPdfHandle } from "@/components/converter/DocxToPDF";
 import type { ImagesToPdfHandle } from "@/components/converter/ImagesToPDF";
+import type { MergePdfHandle } from "@/components/converter/MergePdfPanel";
+import type { PdfToImageHandle } from "@/components/converter/PdfToImagePanel";
 import type { WkhtmlToPdfHandle } from "@/components/converter/WkhtmlToPdfPanel";
 import { wkhtmlSlugToVariant } from "@/components/converter/WkhtmlToPdfPanel";
 import type { HtmlToOfficeHandle } from "@/components/converter/HtmlToOfficePanel";
 import { htmlOfficeSlugToTarget } from "@/components/converter/HtmlToOfficePanel";
-import type { LockPdfHandle } from "@/components/converter/LockPdfPanel";
+import {
+  pdfUrlSecuritySlugToMode,
+  type PdfUrlSecurityHandle,
+} from "@/components/converter/PdfUrlSecurityPanel";
 import { convertUrlToPdf } from "@/store/thunks/urlToPdfThunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { ChangeEvent } from "react";
@@ -46,15 +51,23 @@ const ConverterTool = () => {
   const htmlVariableToPdfRef = useRef<HtmlVariableToPdfHandle | null>(null);
   const docxToPdfRef = useRef<DocxToPdfHandle | null>(null);
   const imagesToPdfRef = useRef<ImagesToPdfHandle | null>(null);
+  const mergePdfRef = useRef<MergePdfHandle | null>(null);
+  const pdfToImageRef = useRef<PdfToImageHandle | null>(null);
   const wkhtmlToPdfRef = useRef<WkhtmlToPdfHandle | null>(null);
   const htmlToOfficeRef = useRef<HtmlToOfficeHandle | null>(null);
-  const lockPdfRef = useRef<LockPdfHandle | null>(null);
+  const pdfUrlSecurityRef = useRef<PdfUrlSecurityHandle | null>(null);
   const [wkhtmlCanConvert, setWkhtmlCanConvert] = useState(false);
   const [wkhtmlFieldsEpoch, setWkhtmlFieldsEpoch] = useState(0);
   const [htmlOfficeCanConvert, setHtmlOfficeCanConvert] = useState(false);
   const [htmlOfficeFieldsEpoch, setHtmlOfficeFieldsEpoch] = useState(0);
-  const [lockPdfCanConvert, setLockPdfCanConvert] = useState(false);
-  const [lockPdfFieldsEpoch, setLockPdfFieldsEpoch] = useState(0);
+  const [pdfUrlSecurityCanConvert, setPdfUrlSecurityCanConvert] =
+    useState(false);
+  const [pdfUrlSecurityFieldsEpoch, setPdfUrlSecurityFieldsEpoch] =
+    useState(0);
+  const [mergePdfCanConvert, setMergePdfCanConvert] = useState(true);
+  const [mergePdfFieldsEpoch, setMergePdfFieldsEpoch] = useState(0);
+  const [pdfToImageCanConvert, setPdfToImageCanConvert] = useState(false);
+  const [pdfToImageFieldsEpoch, setPdfToImageFieldsEpoch] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
   const [urlToPdfSource, setUrlToPdfSource] = useState("");
   const [activePageIndex, setActivePageIndex] = useState(0);
@@ -85,6 +98,7 @@ const ConverterTool = () => {
     return { sourceLabel: t, targetLabel: "Output" };
   }, [tool?.title]);
   const isPdfMergeTool = tool?.slug === "pdf-merge";
+  const isPdfToImageTool = tool?.slug === "pdf-to-image";
   const isUrlToPdfTool = tool?.slug === "url-to-pdf";
   const isHtmlCodeToPdfTool =
     tool?.slug === "html-code-to-pdf" ||
@@ -101,7 +115,12 @@ const ConverterTool = () => {
     [tool?.slug],
   );
   const isAnyHtmlOfficeTool = htmlOfficeTarget != null;
-  const isLockPdfTool = tool?.slug === "lock-pdf";
+  const pdfUrlSecurityMode = useMemo(
+    () => pdfUrlSecuritySlugToMode(tool?.slug),
+    [tool?.slug],
+  );
+  const isPdfUrlSecurityTool = pdfUrlSecurityMode != null;
+  const isUnlockPdfTool = tool?.slug === "unlock-pdf";
   const isTemplateFillToPdfTool = tool?.slug === "template-fill-to-pdf";
   const workspaceVariant = useMemo(
     () => getWorkspaceVariant(tool?.slug),
@@ -117,7 +136,12 @@ const ConverterTool = () => {
 
   const convertDisabled = useMemo(() => {
     if (!tool) return true;
-    if (isPdfMergeTool) return files.length < 2;
+    if (isPdfMergeTool) {
+      return files.length < 2 || !mergePdfCanConvert || urlToPdfLoading;
+    }
+    if (isPdfToImageTool) {
+      return !pdfToImageCanConvert || urlToPdfLoading;
+    }
     if (isUrlToPdfTool || isHtmlCodeToPdfTool) {
       return !urlToPdfSource.trim() || urlToPdfLoading;
     }
@@ -139,8 +163,8 @@ const ConverterTool = () => {
     if (isAnyHtmlOfficeTool) {
       return !htmlOfficeCanConvert || urlToPdfLoading;
     }
-    if (isLockPdfTool) {
-      return !lockPdfCanConvert || urlToPdfLoading;
+    if (isPdfUrlSecurityTool) {
+      return !pdfUrlSecurityCanConvert || urlToPdfLoading;
     }
     if (isTemplateFillToPdfTool) {
       return urlToPdfLoading;
@@ -149,6 +173,9 @@ const ConverterTool = () => {
   }, [
     tool,
     isPdfMergeTool,
+    mergePdfCanConvert,
+    isPdfToImageTool,
+    pdfToImageCanConvert,
     isUrlToPdfTool,
     isHtmlCodeToPdfTool,
     isHtmlFileToPdfTool,
@@ -159,8 +186,8 @@ const ConverterTool = () => {
     wkhtmlCanConvert,
     isAnyHtmlOfficeTool,
     htmlOfficeCanConvert,
-    isLockPdfTool,
-    lockPdfCanConvert,
+    isPdfUrlSecurityTool,
+    pdfUrlSecurityCanConvert,
     isTemplateFillToPdfTool,
     files.length,
     urlToPdfSource,
@@ -325,6 +352,99 @@ const ConverterTool = () => {
     }
   }, [dispatch, files, isImagesToPdfTool, showToast, tool]);
 
+  const handleMergePdfConvert = useCallback(async () => {
+    if (!tool || !isPdfMergeTool) return;
+    const handle = mergePdfRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (files.length < 2) {
+      showToast("Select at least two PDF files.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    const { queryType, body } = handle.getPayload(files);
+    const downloadFileName = handle.getOutputFileName().trim() || "merged";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "merge-pdf",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "PDF download started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isPdfMergeTool, showToast, tool]);
+
+  const handlePdfToImageConvert = useCallback(async () => {
+    if (!tool || !isPdfToImageTool) return;
+    const handle = pdfToImageRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select a PDF file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let queryType: "d" | "p";
+    let body: FormData;
+    try {
+      ({ queryType, body } = handle.getPayload(files));
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const downloadFileName = handle.getOutputFileName().trim() || "export";
+    const responseBodyFixedExt = handle.getOutputImageExt();
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "pdf-to-image",
+          responseBodyFixedExt,
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your file download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isPdfToImageTool, showToast, tool]);
+
   const bumpWkhtmlFields = useCallback(() => {
     setWkhtmlFieldsEpoch((n) => n + 1);
   }, []);
@@ -378,27 +498,52 @@ const ConverterTool = () => {
     }
   }, [dispatch, files, htmlOfficeTarget, showToast, tool]);
 
-  const bumpLockPdfFields = useCallback(() => {
-    setLockPdfFieldsEpoch((n) => n + 1);
+  const bumpPdfUrlSecurityFields = useCallback(() => {
+    setPdfUrlSecurityFieldsEpoch((n) => n + 1);
   }, []);
 
-  const handleLockPdfConvert = useCallback(async () => {
-    if (!tool || !isLockPdfTool) return;
-    const handle = lockPdfRef.current;
+  const bumpMergePdfFields = useCallback(() => {
+    setMergePdfFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpPdfToImageFields = useCallback(() => {
+    setPdfToImageFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const handlePdfUrlSecurityConvert = useCallback(async () => {
+    if (!tool || !pdfUrlSecurityMode) return;
+    const handle = pdfUrlSecurityRef.current;
     if (!handle) {
       showToast("Form is not ready.", "error");
       return;
     }
+    if (pdfUrlSecurityMode === "unlock" && !files[0]) {
+      showToast("Select a PDF file.", "info");
+      return;
+    }
     setUrlToPdfDownloadComplete(false);
-    const body = handle.getPayload();
-    const downloadFileName = handle.getOutputFileName().trim() || "locked";
+    let body: FormData | Record<string, string>;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(
+        e instanceof Error ? e.message : "Could not build the request.",
+        "error",
+      );
+      return;
+    }
+    const downloadFileName =
+      handle.getOutputFileName().trim() ||
+      (pdfUrlSecurityMode === "unlock" ? "unlocked" : "locked");
+    const sourceType =
+      pdfUrlSecurityMode === "unlock" ? "pdf-unlock-upload" : "pdf-lock-url";
     try {
       const result = await dispatch(
         convertUrlToPdf({
           queryType: "p",
           body,
           downloadFileName,
-          sourceType: "pdf-lock-url",
+          sourceType,
         }),
       ).unwrap();
 
@@ -408,12 +553,17 @@ const ConverterTool = () => {
       a.download = result.downloadFileName;
       a.click();
       URL.revokeObjectURL(objectUrl);
-      showToast("Your locked PDF download has started.", "success");
+      showToast(
+        pdfUrlSecurityMode === "unlock"
+          ? "Your unlocked PDF download has started."
+          : "Your locked PDF download has started.",
+        "success",
+      );
       setUrlToPdfDownloadComplete(true);
     } catch (e: unknown) {
       showToast(typeof e === "string" ? e : "Conversion failed.", "error");
     }
-  }, [dispatch, isLockPdfTool, showToast, tool]);
+  }, [dispatch, files, pdfUrlSecurityMode, showToast, tool]);
 
   const handleWkhtmlToPdfConvert = useCallback(async () => {
     if (!tool || !isAnyWkhtmlTool || !wkhtmlVariant) return;
@@ -477,20 +627,26 @@ const ConverterTool = () => {
     isHtmlFileToPdfTool,
     isHtmlVariableToPdfTool,
     isImagesToPdfTool,
+    isPdfMergeTool,
+    isPdfToImageTool,
     isAnyWkhtmlTool,
     isAnyHtmlOfficeTool,
-    isLockPdfTool,
+    isPdfUrlSecurityTool,
     slug,
     urlToPdfSource,
     wkhtmlFieldsEpoch,
     htmlOfficeFieldsEpoch,
-    lockPdfFieldsEpoch,
+    pdfUrlSecurityFieldsEpoch,
+    mergePdfFieldsEpoch,
+    pdfToImageFieldsEpoch,
   ]);
 
   useEffect(() => {
     setWkhtmlCanConvert(false);
     setHtmlOfficeCanConvert(false);
-    setLockPdfCanConvert(false);
+    setPdfUrlSecurityCanConvert(false);
+    setMergePdfCanConvert(true);
+    setPdfToImageCanConvert(false);
   }, [slug]);
 
   useEffect(() => {
@@ -513,7 +669,7 @@ const ConverterTool = () => {
       if (!selected.length) return;
       if (workspaceVariant === "resizer" || workspaceVariant === "compressor") {
         setFiles([selected[0]]);
-      } else if (isHtmlFileToPdfTool || isDocxToPdfTool) {
+      } else if (isHtmlFileToPdfTool || isDocxToPdfTool || isUnlockPdfTool) {
         setFiles([selected[0]]);
       } else if (wkhtmlVariant === "html-file" || isAnyHtmlOfficeTool) {
         setFiles([selected[0]]);
@@ -530,6 +686,26 @@ const ConverterTool = () => {
           return;
         }
         setFiles((prev) => [...prev, ...imagesOnly]);
+      } else if (isPdfMergeTool) {
+        const pdfsOnly = selected.filter(
+          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
+        );
+        if (!pdfsOnly.length) {
+          showToast("Only PDF files are supported for merge.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles((prev) => [...prev, ...pdfsOnly]);
+      } else if (isPdfToImageTool) {
+        const pdf = selected.find(
+          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
+        );
+        if (!pdf) {
+          showToast("Select a PDF file.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles([pdf]);
       } else {
         setFiles((prev) => [...prev, ...selected]);
       }
@@ -537,9 +713,12 @@ const ConverterTool = () => {
     },
     [
       isDocxToPdfTool,
+      isUnlockPdfTool,
       isAnyHtmlOfficeTool,
       isHtmlFileToPdfTool,
       isImagesToPdfTool,
+      isPdfMergeTool,
+      isPdfToImageTool,
       showToast,
       wkhtmlVariant,
       workspaceVariant,
@@ -796,6 +975,92 @@ const ConverterTool = () => {
         </Box>
       );
     }
+    if (isPdfMergeTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box sx={{ width: "100%", gap: 2 }}>
+          <Box sx={{ display: "grid", placeItems: "center", minHeight: 320 }}>
+            {files.length ? (
+              <Stack
+                direction="row"
+                spacing={2}
+                flexWrap="wrap"
+                justifyContent="center"
+                sx={{ width: "100%" }}
+              >
+                {files.map((file, idx) => (
+                  <FileTile
+                    key={`${file.name}-${idx}`}
+                    name={file.name}
+                    onRemove={() => handleRemoveFile(idx)}
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <EmptyWorkspaceState
+                sourceLabel="pdf files"
+                onPickFiles={handlePickFiles}
+              />
+            )}
+          </Box>
+        </Box>
+      );
+    }
+    if (isPdfToImageTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 320,
+          }}
+        >
+          {files.length ? (
+            <FileTile
+              name={files[0]?.name ?? "document.pdf"}
+              onRemove={() => setFiles([])}
+            />
+          ) : (
+            <EmptyWorkspaceState
+              sourceLabel="pdf file"
+              onPickFiles={handlePickFiles}
+            />
+          )}
+        </Box>
+      );
+    }
     if (isImagesToPdfTool) {
       if (urlToPdfLoading) {
         return (
@@ -847,7 +1112,7 @@ const ConverterTool = () => {
         </Box>
       );
     }
-    if (isLockPdfTool) {
+    if (isPdfUrlSecurityTool && pdfUrlSecurityMode) {
       if (urlToPdfLoading) {
         return (
           <ConverterLoadingWorkspace
@@ -860,8 +1125,36 @@ const ConverterTool = () => {
         return (
           <UrlToPdfDownloadSuccess
             title={urlToPdfSuccessTitle}
-            subtitle="Your locked PDF download has started. Check your downloads folder."
+            subtitle={
+              pdfUrlSecurityMode === "unlock"
+                ? "Your unlocked PDF download has started. Check your downloads folder."
+                : "Your locked PDF download has started. Check your downloads folder."
+            }
           />
+        );
+      }
+      if (pdfUrlSecurityMode === "unlock") {
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "grid",
+              placeItems: "center",
+              minHeight: 320,
+            }}
+          >
+            {files.length ? (
+              <FileTile
+                name={files[0]?.name ?? "document.pdf"}
+                onRemove={() => setFiles([])}
+              />
+            ) : (
+              <EmptyWorkspaceState
+                sourceLabel="pdf file"
+                onPickFiles={handlePickFiles}
+              />
+            )}
+          </Box>
         );
       }
       return (
@@ -879,8 +1172,8 @@ const ConverterTool = () => {
             color="text.secondary"
             sx={{ textAlign: "center", maxWidth: 420, lineHeight: 1.6 }}
           >
-            All settings are in the left panel. There is nothing to upload or preview
-            on this side for Lock PDF.
+            All settings are on the left. This workspace stays empty for Lock PDF
+            (URL only).
           </Typography>
         </Box>
       );
@@ -1042,8 +1335,11 @@ const ConverterTool = () => {
     isHtmlFileToPdfTool,
     isHtmlVariableToPdfTool,
     isDocxToPdfTool,
+    isPdfMergeTool,
+    isPdfToImageTool,
     isImagesToPdfTool,
-    isLockPdfTool,
+    isPdfUrlSecurityTool,
+    pdfUrlSecurityMode,
     isAnyHtmlOfficeTool,
     htmlOfficeTarget,
     isAnyWkhtmlTool,
@@ -1117,6 +1413,24 @@ const ConverterTool = () => {
                 imagesToPdf={
                   isImagesToPdfTool ? { ref: imagesToPdfRef } : undefined
                 }
+                mergePdf={
+                  isPdfMergeTool
+                    ? {
+                        ref: mergePdfRef,
+                        onValidityChange: setMergePdfCanConvert,
+                        onFieldsDirty: bumpMergePdfFields,
+                      }
+                    : undefined
+                }
+                pdfToImage={
+                  isPdfToImageTool
+                    ? {
+                        ref: pdfToImageRef,
+                        onValidityChange: setPdfToImageCanConvert,
+                        onFieldsDirty: bumpPdfToImageFields,
+                      }
+                    : undefined
+                }
                 wkhtmlToPdf={
                   isAnyWkhtmlTool && wkhtmlVariant
                     ? {
@@ -1139,12 +1453,18 @@ const ConverterTool = () => {
                       }
                     : undefined
                 }
-                lockPdf={
-                  isLockPdfTool
+                pdfUrlSecurity={
+                  isPdfUrlSecurityTool
                     ? {
-                        ref: lockPdfRef,
-                        onValidityChange: setLockPdfCanConvert,
-                        onFieldsDirty: bumpLockPdfFields,
+                        ref: pdfUrlSecurityRef,
+                        onValidityChange: setPdfUrlSecurityCanConvert,
+                        onFieldsDirty: bumpPdfUrlSecurityFields,
+                        ...(pdfUrlSecurityMode === "unlock"
+                          ? {
+                              selectedFileName: files[0]?.name,
+                              onRequestPickFile: handlePickFiles,
+                            }
+                          : {}),
                       }
                     : undefined
                 }
@@ -1181,10 +1501,14 @@ const ConverterTool = () => {
                 onClick={() => {
                   if (isImagesToPdfTool) {
                     void handleImagesToPdfConvert();
+                  } else if (isPdfMergeTool) {
+                    void handleMergePdfConvert();
+                  } else if (isPdfToImageTool) {
+                    void handlePdfToImageConvert();
                   } else if (isAnyHtmlOfficeTool) {
                     void handleHtmlOfficeConvert();
-                  } else if (isLockPdfTool) {
-                    void handleLockPdfConvert();
+                  } else if (isPdfUrlSecurityTool) {
+                    void handlePdfUrlSecurityConvert();
                   } else if (isAnyWkhtmlTool) {
                     void handleWkhtmlToPdfConvert();
                   } else if (
@@ -1287,15 +1611,20 @@ const ConverterTool = () => {
         type="file"
         multiple={
           isImagesToPdfTool ||
+          isPdfMergeTool ||
           (workspaceVariant !== "resizer" &&
             workspaceVariant !== "compressor" &&
             !isDocxToPdfTool &&
             !isHtmlFileToPdfTool &&
             wkhtmlVariant !== "html-file" &&
-            !isAnyHtmlOfficeTool)
+            !isAnyHtmlOfficeTool &&
+            !isUnlockPdfTool &&
+            !isPdfToImageTool)
         }
         accept={
-          workspaceVariant === "pdf-canvas"
+          isPdfMergeTool || isPdfToImageTool
+            ? ".pdf,application/pdf"
+            : workspaceVariant === "pdf-canvas"
             ? ".pdf,application/pdf"
             : workspaceVariant === "resizer" ||
                 workspaceVariant === "compressor"
@@ -1308,6 +1637,8 @@ const ConverterTool = () => {
                 ? "image/png,image/jpeg,.png,.jpg,.jpeg"
               : wkhtmlVariant === "html-file" || isAnyHtmlOfficeTool
                 ? ".html,.htm,text/html"
+              : isUnlockPdfTool
+                ? ".pdf,application/pdf"
               : undefined
         }
         onChange={handleFilesSelected}

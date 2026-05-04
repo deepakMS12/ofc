@@ -3,7 +3,6 @@ import type { WorkspaceVariant } from "./types";
 export const getWorkspaceVariant = (slug?: string): WorkspaceVariant => {
   if (!slug) return "default";
   if (
-    slug.includes("pdf-merge") ||
     slug.includes("pdf-compress") ||
     slug.includes("pdf-editor") ||
     slug.includes("pdf-edit") ||

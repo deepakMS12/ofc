@@ -1,7 +1,7 @@
 import { converters } from "./converters";
 
 /** Tools listed under “Other” instead of PDF / Image slices (order preserved). */
-const OTHER_SECTION_SLUGS = new Set(["lock-pdf"]);
+const OTHER_SECTION_SLUGS = new Set(["lock-pdf", "unlock-pdf"]);
 
 /**
  * Grouped converter tools — each section shows a title (Office, Office 2, …) and its cards.

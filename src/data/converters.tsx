@@ -7,10 +7,12 @@ import ImageOutlined from "@mui/icons-material/ImageOutlined";
 // import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import TableChartOutlined from "@mui/icons-material/TableChartOutlined";
 import LockOutlined from "@mui/icons-material/LockOutlined";
+import LockOpenOutlined from "@mui/icons-material/LockOpenOutlined";
 // import TextSnippetOutlined from "@mui/icons-material/TextSnippetOutlined";
 import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
 import CodeOutlined from "@mui/icons-material/CodeOutlined";
 import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
+import MergeType from "@mui/icons-material/MergeType";
 // import AudiotrackOutlined from "@mui/icons-material/AudiotrackOutlined";
 // import GridOnOutlined from "@mui/icons-material/GridOnOutlined";
 // import SlideshowOutlined from "@mui/icons-material/SlideshowOutlined";
@@ -136,6 +138,15 @@ export const converters = [
     sourceColor: "#6366f1",
   },
   {
+    slug: "pdf-merge",
+    title: "Merge PDF",
+    description:
+      "Combine multiple PDFs in order—first file first in the output. Optional per-file passwords, a simple open password on the merged file, and full rights management.",
+    layout: "to-pdf",
+    SourceIcon: MergeType,
+    sourceColor: "#b45309",
+  },
+  {
     slug: "wkhtmltopdf-by-url",
     title: "wkhtmltopdf by URL → PDF",
     description:
@@ -188,6 +199,24 @@ export const converters = [
     layout: "to-pdf",
     SourceIcon: LockOutlined,
     sourceColor: "#5b21b6",
+  },
+  {
+    slug: "unlock-pdf",
+    title: "Unlock PDF",
+    description:
+      "Upload a PDF from the workspace and remove password protection when you know the unlock password (optional if the file is not encrypted). Set an optional output file name.",
+    layout: "to-pdf",
+    SourceIcon: LockOpenOutlined,
+    sourceColor: "#0d9488",
+  },
+  {
+    slug: "pdf-to-image",
+    title: "PDF → JPG / PNG / WebP",
+    description:
+      "High-DPI raster export (default 300 DPI, up to 600). PNG and WebP use lossless settings when possible; JPEG uses high quality and minimal chroma subsampling so text stays sharp when zoomed.",
+    layout: "to-pdf",
+    SourceIcon: ImageOutlined,
+    sourceColor: "#0f766e",
   },
   // {
   //   slug: "xlsx-to-pdf",

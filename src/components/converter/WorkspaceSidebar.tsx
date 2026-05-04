@@ -16,7 +16,8 @@ import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { colors } from "@/utils/customColor";
 import type { ImageOutputFormat } from "./types";
 import PDFCompress from "./PDFCompress";
-import PDFMerge from "./PDFMerge";
+import MergePdfPanel, { type MergePdfHandle } from "./MergePdfPanel";
+import PdfToImagePanel, { type PdfToImageHandle } from "./PdfToImagePanel";
 import type { URLtoPDFHandle } from "./urlToPdfPayload";
 import URLtoPDF from "./URLtoPDF";
 import HtmlVariableToPDF, { type HtmlVariableToPdfHandle } from "./HtmlVariableToPDF";
@@ -31,10 +32,25 @@ import HtmlToOfficePanel, {
   type HtmlToOfficeHandle,
   htmlOfficeSlugToTarget,
 } from "./HtmlToOfficePanel";
-import LockPdfPanel, { type LockPdfHandle } from "./LockPdfPanel";
+import PdfUrlSecurityPanel, {
+  type PdfUrlSecurityHandle,
+  pdfUrlSecuritySlugToMode,
+} from "./PdfUrlSecurityPanel";
 
 type ImagesToPdfSidebarBundle = {
   ref: RefObject<ImagesToPdfHandle | null>;
+};
+
+type MergePdfSidebarBundle = {
+  ref: RefObject<MergePdfHandle | null>;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type PdfToImageSidebarBundle = {
+  ref: RefObject<PdfToImageHandle | null>;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
 };
 
 type WkhtmlToPdfSidebarBundle = {
@@ -53,10 +69,12 @@ type HtmlToOfficeSidebarBundle = {
   onFieldsDirty: () => void;
 };
 
-type LockPdfSidebarBundle = {
-  ref: RefObject<LockPdfHandle | null>;
+type PdfUrlSecuritySidebarBundle = {
+  ref: RefObject<PdfUrlSecurityHandle | null>;
   onValidityChange: (ok: boolean) => void;
   onFieldsDirty: () => void;
+  selectedFileName?: string;
+  onRequestPickFile?: () => void;
 };
 
 type WorkspaceSidebarProps = {
@@ -65,9 +83,11 @@ type WorkspaceSidebarProps = {
   htmlVariableToPdfRef?: RefObject<HtmlVariableToPdfHandle | null>;
   docxToPdfRef?: RefObject<DocxToPdfHandle | null>;
   imagesToPdf?: ImagesToPdfSidebarBundle;
+  mergePdf?: MergePdfSidebarBundle;
+  pdfToImage?: PdfToImageSidebarBundle;
   wkhtmlToPdf?: WkhtmlToPdfSidebarBundle;
   htmlToOffice?: HtmlToOfficeSidebarBundle;
-  lockPdf?: LockPdfSidebarBundle;
+  pdfUrlSecurity?: PdfUrlSecuritySidebarBundle;
   onUrlToPdfSourceChange?: (value: string) => void;
   files: File[];
   miniCanvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -93,9 +113,11 @@ const WorkspaceSidebar = memo(
     htmlVariableToPdfRef,
     docxToPdfRef,
     imagesToPdf,
+    mergePdf,
+    pdfToImage,
     wkhtmlToPdf,
     htmlToOffice,
-    lockPdf,
+    pdfUrlSecurity,
     onUrlToPdfSourceChange,
     files,
     activePageIndex,
@@ -134,7 +156,22 @@ const WorkspaceSidebar = memo(
         </Typography> */}
 
         {(toolSlug === "pdf-compressor" || toolSlug === "pdf-to-docx") && <PDFCompress />}
-        {toolSlug === "pdf-merge" && <PDFMerge />}
+        {toolSlug === "pdf-merge" && mergePdf && (
+          <MergePdfPanel
+            ref={mergePdf.ref}
+            fileCount={files.length}
+            onValidityChange={mergePdf.onValidityChange}
+            onFieldsDirty={mergePdf.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "pdf-to-image" && pdfToImage && (
+          <PdfToImagePanel
+            ref={pdfToImage.ref}
+            fileCount={files.length}
+            onValidityChange={pdfToImage.onValidityChange}
+            onFieldsDirty={pdfToImage.onFieldsDirty}
+          />
+        )}
         {(toolSlug === "url-to-pdf" ||
           toolSlug === "html-code-to-pdf" ||
           toolSlug === "HTML code to PDF" ||
@@ -182,11 +219,14 @@ const WorkspaceSidebar = memo(
             onFieldsDirty={htmlToOffice.onFieldsDirty}
           />
         )}
-        {toolSlug === "lock-pdf" && lockPdf && (
-          <LockPdfPanel
-            ref={lockPdf.ref}
-            onValidityChange={lockPdf.onValidityChange}
-            onFieldsDirty={lockPdf.onFieldsDirty}
+        {pdfUrlSecuritySlugToMode(toolSlug) && pdfUrlSecurity && (
+          <PdfUrlSecurityPanel
+            ref={pdfUrlSecurity.ref}
+            mode={pdfUrlSecuritySlugToMode(toolSlug)!}
+            selectedFileName={pdfUrlSecurity.selectedFileName}
+            onRequestPickFile={pdfUrlSecurity.onRequestPickFile}
+            onValidityChange={pdfUrlSecurity.onValidityChange}
+            onFieldsDirty={pdfUrlSecurity.onFieldsDirty}
           />
         )}
 

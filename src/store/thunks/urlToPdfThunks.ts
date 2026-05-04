@@ -10,6 +10,8 @@ export type ConvertUrlToPdfArg = {
   queryType: UrlToPdfQueryType;
   body: UrlToPdfRequestBody | FormData;
   downloadFileName: string;
+  /** For JSON `{ data: { buffer } }` image responses, pick the decoded MIME/extension. */
+  responseBodyFixedExt?: ".jpg" | ".png" | ".webp";
   sourceType?:
     | "url"
     | "html"
@@ -17,12 +19,15 @@ export type ConvertUrlToPdfArg = {
     | "html-variable"
     | "docx-file"
     | "images-pdf"
+    | "merge-pdf"
+    | "pdf-to-image"
     | "wkhtml-url"
     | "wkhtml-html-code"
     | "wkhtml-html-file"
     | "html-to-word"
     | "html-to-excel"
-    | "pdf-lock-url";
+    | "pdf-lock-url"
+    | "pdf-unlock-upload";
 };
 
 export type ConvertUrlToPdfResult = {
@@ -50,13 +55,27 @@ type UrlToPdfSuccessJson = {
   data?: { buffer?: string; url?: string };
 };
 
-function mimeForExtension(ext: ".pdf" | ".zip" | ".docx" | ".xlsx"): string {
+type OutputFileExt =
+  | ".pdf"
+  | ".zip"
+  | ".docx"
+  | ".xlsx"
+  | ".jpg"
+  | ".png"
+  | ".webp";
+
+function mimeForExtension(ext: OutputFileExt): string {
   if (ext === ".pdf") return "application/pdf";
   if (ext === ".zip") return "application/zip";
   if (ext === ".docx") {
     return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   }
-  return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (ext === ".xlsx") {
+    return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  }
+  if (ext === ".jpg") return "image/jpeg";
+  if (ext === ".png") return "image/png";
+  return "image/webp";
 }
 
 function base64ToBlob(base64: string, mime: string): Blob {
@@ -70,12 +89,12 @@ function base64ToBlob(base64: string, mime: string): Blob {
 }
 
 type ParsedDownload =
-  | { ok: true; blob: Blob; fileExt: ".pdf" | ".zip" | ".docx" | ".xlsx" }
+  | { ok: true; blob: Blob; fileExt: OutputFileExt }
   | { ok: false; message: string };
 
 type ParseOptions = {
-  /** When set, JSON/ZIP payloads are treated as this Office type (ZIP signature). */
-  fixedExt?: ".docx" | ".xlsx";
+  /** When set, JSON `{ data: { buffer } }` or ambiguous raw bytes use this extension/MIME. */
+  fixedExt?: OutputFileExt;
 };
 
 /** API may return raw bytes or JSON with `{ data: { buffer: base64 } }`. */
@@ -114,6 +133,46 @@ async function responseBodyToDownloadBlob(
     } catch {
       return { ok: false, message: "Invalid JSON response from server." };
     }
+  }
+
+  if (view.length >= 3 && view[0] === 0xff && view[1] === 0xd8 && view[2] === 0xff) {
+    return {
+      ok: true,
+      blob: new Blob([buf], { type: "image/jpeg" }),
+      fileExt: ".jpg",
+    };
+  }
+
+  if (
+    view.length >= 4 &&
+    view[0] === 0x89 &&
+    view[1] === 0x50 &&
+    view[2] === 0x4e &&
+    view[3] === 0x47
+  ) {
+    return {
+      ok: true,
+      blob: new Blob([buf], { type: "image/png" }),
+      fileExt: ".png",
+    };
+  }
+
+  if (
+    view.length >= 12 &&
+    view[0] === 0x52 &&
+    view[1] === 0x49 &&
+    view[2] === 0x46 &&
+    view[3] === 0x46 &&
+    view[8] === 0x57 &&
+    view[9] === 0x45 &&
+    view[10] === 0x42 &&
+    view[11] === 0x50
+  ) {
+    return {
+      ok: true,
+      blob: new Blob([buf], { type: "image/webp" }),
+      fileExt: ".webp",
+    };
   }
 
   if (
@@ -159,13 +218,13 @@ async function responseBodyToDownloadBlob(
     };
   }
 
-  return { ok: false, message: "Unexpected response format (not PDF, ZIP, or JSON)." };
+  return {
+    ok: false,
+    message: "Unexpected response format (not JSON, JPEG, PNG, WebP, PDF, or ZIP).",
+  };
 }
 
-function normalizeDownloadFileName(
-  rawName: string,
-  fileExt: ".pdf" | ".zip" | ".docx" | ".xlsx",
-): string {
+function normalizeDownloadFileName(rawName: string, fileExt: OutputFileExt): string {
   const trimmed = rawName.trim();
   const fallback =
     fileExt === ".docx"
@@ -174,8 +233,13 @@ function normalizeDownloadFileName(
         ? "workbook"
         : fileExt === ".zip"
           ? "archive"
-          : "export";
-  const base = (trimmed || fallback).replace(/\.(pdf|zip|docx|xlsx)$/i, "");
+          : fileExt === ".jpg" || fileExt === ".png" || fileExt === ".webp"
+            ? "export"
+            : "export";
+  const base = (trimmed || fallback).replace(
+    /\.(pdf|zip|docx|xlsx|jpe?g|png|webp)$/i,
+    "",
+  );
   return `${base}${fileExt}`;
 }
 
@@ -192,7 +256,11 @@ export const convertUrlToPdf = createAsyncThunk<
           ? "/convert/docx"
           : arg.sourceType === "images-pdf"
             ? "/convert/images-pdf"
-            : arg.sourceType === "wkhtml-url"
+            : arg.sourceType === "merge-pdf"
+              ? "/convert/merge-pdf"
+              : arg.sourceType === "pdf-to-image"
+                ? "/convert/pdf-jpg"
+                : arg.sourceType === "wkhtml-url"
               ? "/wkhtmltopdf/url_pdf"
               : arg.sourceType === "wkhtml-html-code"
                 ? "/wkhtmltopdf/html_pdf"
@@ -204,6 +272,8 @@ export const convertUrlToPdf = createAsyncThunk<
                       ? "/libreoffice/html_excel"
                       : arg.sourceType === "pdf-lock-url"
                         ? "/convert/pdf-url"
+                        : arg.sourceType === "pdf-unlock-upload"
+                          ? "/convert/pdf-unlock"
                       : arg.sourceType === "html-variable"
                         ? "/convert/html/variable"
                         : "/convert/html";
@@ -215,7 +285,8 @@ export const convertUrlToPdf = createAsyncThunk<
       arg.sourceType === "wkhtml-html-file" ||
       arg.sourceType === "html-to-word" ||
       arg.sourceType === "html-to-excel" ||
-      arg.sourceType === "pdf-lock-url";
+      arg.sourceType === "pdf-lock-url" ||
+      arg.sourceType === "pdf-unlock-upload";
     const response = await urlToPdfClient.post<Blob>(
       endpoint,
       arg.body,
@@ -235,7 +306,9 @@ export const convertUrlToPdf = createAsyncThunk<
         ? { fixedExt: ".docx" }
         : arg.sourceType === "html-to-excel"
           ? { fixedExt: ".xlsx" }
-          : undefined;
+          : arg.responseBodyFixedExt
+            ? { fixedExt: arg.responseBodyFixedExt }
+            : undefined;
     const parsed = await responseBodyToDownloadBlob(raw, parseOpts);
     if (!parsed.ok) {
       return rejectWithValue(parsed.message);
