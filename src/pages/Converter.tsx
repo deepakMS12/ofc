@@ -36,7 +36,7 @@ const Converter = ({ title, converters: convertersProp = [] }:any) => {
   }, []);
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box sx={{ px: 4 }}>
       <Box
         sx={{
           mb: 2,

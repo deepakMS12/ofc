@@ -1,6 +1,5 @@
 // API Client
 export { default as apiClient } from './client';
-export { authApiClient } from './authApiClient';
 
 // API Modules
 export * from './auth';

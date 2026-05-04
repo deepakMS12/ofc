@@ -1,4 +1,5 @@
-import { authApiClient } from "./authApiClient";
+import authApiClient from "./authApiClient";
+
 
 type ApiStatus = "A" | "D";
 

@@ -2,7 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, IconButton, Badge, Tooltip, Avatar, Divider, Chip } from '@mui/material';
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Badge,
+  Tooltip,
+  Avatar,
+  Divider,
+  Chip,
+} from '@mui/material';
 import { Clock, User, LogOut, Bell } from 'lucide-react';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsDrawer from '@/components/dialogs/NotificationsDrawer';

@@ -19,9 +19,14 @@ import StarIcon from "@mui/icons-material/Star";
 import CloseIcon from "@mui/icons-material/Close";
 import Converter from "./Converter";
 import { converterSections } from "../data/converterSections";
+import { OFC_CONVERTER_AUTH_TOKEN_LS_KEY } from "@/lib/api/urlToPdfClient";
 
 const RECENT_SEARCHES_KEY = "converterRecentSearches";
 const FAVORITE_SEARCHES_KEY = "converterFavoriteSearches";
+
+function normalizeStoredConverterToken(raw: string): string {
+  return raw.replace(/^Bearer\s+/i, "").trim();
+}
 
 const ConverterPage = () => {
   const navigate = useNavigate();
@@ -29,6 +34,7 @@ const ConverterPage = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [favoriteSearches, setFavoriteSearches] = useState<string[]>([]);
+  const [converterAuthToken, setConverterAuthToken] = useState("");
 
   const saveRecentSearch = (value: string) => {
     const term = value.trim();
@@ -93,6 +99,11 @@ const ConverterPage = () => {
   }, []);
 
   useEffect(() => {
+    const saved = localStorage.getItem(OFC_CONVERTER_AUTH_TOKEN_LS_KEY);
+    setConverterAuthToken(saved ? normalizeStoredConverterToken(saved) : "");
+  }, []);
+
+  useEffect(() => {
     const raw = localStorage.getItem(RECENT_SEARCHES_KEY);
     if (!raw) {
       return;
@@ -140,7 +151,62 @@ const ConverterPage = () => {
   }, [query]);
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={0}>
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          px:4,
+          pt:3,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: "100%",
+            maxWidth: 420,
+          }}
+        >
+          <TextField
+            size="small"
+            fullWidth
+            label="Authorization"
+            value={converterAuthToken}
+            onChange={(e) => {
+              const next = normalizeStoredConverterToken(e.target.value);
+              setConverterAuthToken(next);
+              if (next) {
+                localStorage.setItem(OFC_CONVERTER_AUTH_TOKEN_LS_KEY, next);
+              } else {
+                localStorage.removeItem(OFC_CONVERTER_AUTH_TOKEN_LS_KEY);
+              }
+            }}
+            slotProps={{
+              input: {
+                sx: {
+                  fontSize: 13,
+                  fontFamily:
+                    "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                  backgroundColor: "#fff",
+                  borderRadius: 1,
+                  pl: 0.5,
+                },
+              },
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderColor: "#e5e7eb",
+              },
+            }}
+          />
+        </Box>
+      </Box>
+
       {filteredSections.map((section) => (
         <Converter
           key={section.id}

@@ -1,4 +1,5 @@
-import { authApiClient } from "@/lib/api/authApiClient";
+import authApiClient from "./authApiClient";
+
 
 export type AuthV1LoginBody = {
   username: string;
