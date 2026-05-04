@@ -31,6 +31,7 @@ import HtmlToOfficePanel, {
   type HtmlToOfficeHandle,
   htmlOfficeSlugToTarget,
 } from "./HtmlToOfficePanel";
+import LockPdfPanel, { type LockPdfHandle } from "./LockPdfPanel";
 
 type ImagesToPdfSidebarBundle = {
   ref: RefObject<ImagesToPdfHandle | null>;
@@ -52,6 +53,12 @@ type HtmlToOfficeSidebarBundle = {
   onFieldsDirty: () => void;
 };
 
+type LockPdfSidebarBundle = {
+  ref: RefObject<LockPdfHandle | null>;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
 type WorkspaceSidebarProps = {
   toolSlug?: string;
   urlToPdfRef?: RefObject<URLtoPDFHandle | null>;
@@ -60,6 +67,7 @@ type WorkspaceSidebarProps = {
   imagesToPdf?: ImagesToPdfSidebarBundle;
   wkhtmlToPdf?: WkhtmlToPdfSidebarBundle;
   htmlToOffice?: HtmlToOfficeSidebarBundle;
+  lockPdf?: LockPdfSidebarBundle;
   onUrlToPdfSourceChange?: (value: string) => void;
   files: File[];
   miniCanvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -87,6 +95,7 @@ const WorkspaceSidebar = memo(
     imagesToPdf,
     wkhtmlToPdf,
     htmlToOffice,
+    lockPdf,
     onUrlToPdfSourceChange,
     files,
     activePageIndex,
@@ -171,6 +180,13 @@ const WorkspaceSidebar = memo(
             onRequestPickFile={htmlToOffice.onRequestPickFile}
             onValidityChange={htmlToOffice.onValidityChange}
             onFieldsDirty={htmlToOffice.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "lock-pdf" && lockPdf && (
+          <LockPdfPanel
+            ref={lockPdf.ref}
+            onValidityChange={lockPdf.onValidityChange}
+            onFieldsDirty={lockPdf.onFieldsDirty}
           />
         )}
 

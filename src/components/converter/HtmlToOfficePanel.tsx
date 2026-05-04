@@ -83,9 +83,9 @@ const HtmlToOfficePanel = forwardRef<
     onValidityChange(Boolean(selectedFileName?.trim()));
   }, [selectedFileName, onValidityChange]);
 
-  useEffect(() => {
-    onFieldsDirty();
-  }, [baseName, responseMode, onFieldsDirty]);
+    useEffect(() => {
+      onFieldsDirty();
+    }, [baseName, responseMode, onFieldsDirty]);
 
 
   return (

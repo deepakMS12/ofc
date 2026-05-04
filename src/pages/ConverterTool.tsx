@@ -7,6 +7,7 @@ import type { WkhtmlToPdfHandle } from "@/components/converter/WkhtmlToPdfPanel"
 import { wkhtmlSlugToVariant } from "@/components/converter/WkhtmlToPdfPanel";
 import type { HtmlToOfficeHandle } from "@/components/converter/HtmlToOfficePanel";
 import { htmlOfficeSlugToTarget } from "@/components/converter/HtmlToOfficePanel";
+import type { LockPdfHandle } from "@/components/converter/LockPdfPanel";
 import { convertUrlToPdf } from "@/store/thunks/urlToPdfThunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { ChangeEvent } from "react";
@@ -47,10 +48,13 @@ const ConverterTool = () => {
   const imagesToPdfRef = useRef<ImagesToPdfHandle | null>(null);
   const wkhtmlToPdfRef = useRef<WkhtmlToPdfHandle | null>(null);
   const htmlToOfficeRef = useRef<HtmlToOfficeHandle | null>(null);
+  const lockPdfRef = useRef<LockPdfHandle | null>(null);
   const [wkhtmlCanConvert, setWkhtmlCanConvert] = useState(false);
   const [wkhtmlFieldsEpoch, setWkhtmlFieldsEpoch] = useState(0);
   const [htmlOfficeCanConvert, setHtmlOfficeCanConvert] = useState(false);
   const [htmlOfficeFieldsEpoch, setHtmlOfficeFieldsEpoch] = useState(0);
+  const [lockPdfCanConvert, setLockPdfCanConvert] = useState(false);
+  const [lockPdfFieldsEpoch, setLockPdfFieldsEpoch] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
   const [urlToPdfSource, setUrlToPdfSource] = useState("");
   const [activePageIndex, setActivePageIndex] = useState(0);
@@ -97,6 +101,7 @@ const ConverterTool = () => {
     [tool?.slug],
   );
   const isAnyHtmlOfficeTool = htmlOfficeTarget != null;
+  const isLockPdfTool = tool?.slug === "lock-pdf";
   const isTemplateFillToPdfTool = tool?.slug === "template-fill-to-pdf";
   const workspaceVariant = useMemo(
     () => getWorkspaceVariant(tool?.slug),
@@ -134,6 +139,9 @@ const ConverterTool = () => {
     if (isAnyHtmlOfficeTool) {
       return !htmlOfficeCanConvert || urlToPdfLoading;
     }
+    if (isLockPdfTool) {
+      return !lockPdfCanConvert || urlToPdfLoading;
+    }
     if (isTemplateFillToPdfTool) {
       return urlToPdfLoading;
     }
@@ -151,6 +159,8 @@ const ConverterTool = () => {
     wkhtmlCanConvert,
     isAnyHtmlOfficeTool,
     htmlOfficeCanConvert,
+    isLockPdfTool,
+    lockPdfCanConvert,
     isTemplateFillToPdfTool,
     files.length,
     urlToPdfSource,
@@ -368,6 +378,43 @@ const ConverterTool = () => {
     }
   }, [dispatch, files, htmlOfficeTarget, showToast, tool]);
 
+  const bumpLockPdfFields = useCallback(() => {
+    setLockPdfFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const handleLockPdfConvert = useCallback(async () => {
+    if (!tool || !isLockPdfTool) return;
+    const handle = lockPdfRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    const body = handle.getPayload();
+    const downloadFileName = handle.getOutputFileName().trim() || "locked";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType: "p",
+          body,
+          downloadFileName,
+          sourceType: "pdf-lock-url",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast("Your locked PDF download has started.", "success");
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, isLockPdfTool, showToast, tool]);
+
   const handleWkhtmlToPdfConvert = useCallback(async () => {
     if (!tool || !isAnyWkhtmlTool || !wkhtmlVariant) return;
     const handle = wkhtmlToPdfRef.current;
@@ -432,15 +479,18 @@ const ConverterTool = () => {
     isImagesToPdfTool,
     isAnyWkhtmlTool,
     isAnyHtmlOfficeTool,
+    isLockPdfTool,
     slug,
     urlToPdfSource,
     wkhtmlFieldsEpoch,
     htmlOfficeFieldsEpoch,
+    lockPdfFieldsEpoch,
   ]);
 
   useEffect(() => {
     setWkhtmlCanConvert(false);
     setHtmlOfficeCanConvert(false);
+    setLockPdfCanConvert(false);
   }, [slug]);
 
   useEffect(() => {
@@ -797,6 +847,44 @@ const ConverterTool = () => {
         </Box>
       );
     }
+    if (isLockPdfTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel}…`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your locked PDF download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            minHeight: 320,
+            display: "grid",
+            placeItems: "center",
+            px: 3,
+          }}
+        >
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ textAlign: "center", maxWidth: 420, lineHeight: 1.6 }}
+          >
+            All settings are in the left panel. There is nothing to upload or preview
+            on this side for Lock PDF.
+          </Typography>
+        </Box>
+      );
+    }
     if (isAnyHtmlOfficeTool && htmlOfficeTarget) {
       if (urlToPdfLoading) {
         return (
@@ -955,6 +1043,7 @@ const ConverterTool = () => {
     isHtmlVariableToPdfTool,
     isDocxToPdfTool,
     isImagesToPdfTool,
+    isLockPdfTool,
     isAnyHtmlOfficeTool,
     htmlOfficeTarget,
     isAnyWkhtmlTool,
@@ -1050,6 +1139,15 @@ const ConverterTool = () => {
                       }
                     : undefined
                 }
+                lockPdf={
+                  isLockPdfTool
+                    ? {
+                        ref: lockPdfRef,
+                        onValidityChange: setLockPdfCanConvert,
+                        onFieldsDirty: bumpLockPdfFields,
+                      }
+                    : undefined
+                }
                 onUrlToPdfSourceChange={setUrlToPdfSource}
                 files={files}
                 miniCanvasRef={miniCanvasRef}
@@ -1085,6 +1183,8 @@ const ConverterTool = () => {
                     void handleImagesToPdfConvert();
                   } else if (isAnyHtmlOfficeTool) {
                     void handleHtmlOfficeConvert();
+                  } else if (isLockPdfTool) {
+                    void handleLockPdfConvert();
                   } else if (isAnyWkhtmlTool) {
                     void handleWkhtmlToPdfConvert();
                   } else if (

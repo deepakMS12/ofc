@@ -6,6 +6,7 @@ import ImageOutlined from "@mui/icons-material/ImageOutlined";
 // import MicOutlined from "@mui/icons-material/MicOutlined";
 // import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import TableChartOutlined from "@mui/icons-material/TableChartOutlined";
+import LockOutlined from "@mui/icons-material/LockOutlined";
 // import TextSnippetOutlined from "@mui/icons-material/TextSnippetOutlined";
 import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
 import CodeOutlined from "@mui/icons-material/CodeOutlined";
@@ -178,6 +179,15 @@ export const converters = [
     layout: "to-pdf",
     SourceIcon: TableChartOutlined,
     sourceColor: "#2e7d32",
+  },
+  {
+    slug: "lock-pdf",
+    title: "Lock PDF",
+    description:
+      "Password-protect an existing PDF with AES-256 encryption. Enter the PDF URL, choose an open password, and an optional output file name.",
+    layout: "to-pdf",
+    SourceIcon: LockOutlined,
+    sourceColor: "#5b21b6",
   },
   // {
   //   slug: "xlsx-to-pdf",

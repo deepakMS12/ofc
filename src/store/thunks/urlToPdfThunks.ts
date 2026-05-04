@@ -21,7 +21,8 @@ export type ConvertUrlToPdfArg = {
     | "wkhtml-html-code"
     | "wkhtml-html-file"
     | "html-to-word"
-    | "html-to-excel";
+    | "html-to-excel"
+    | "pdf-lock-url";
 };
 
 export type ConvertUrlToPdfResult = {
@@ -201,6 +202,8 @@ export const convertUrlToPdf = createAsyncThunk<
                     ? "/libreoffice/html_doc"
                     : arg.sourceType === "html-to-excel"
                       ? "/libreoffice/html_excel"
+                      : arg.sourceType === "pdf-lock-url"
+                        ? "/convert/pdf-url"
                       : arg.sourceType === "html-variable"
                         ? "/convert/html/variable"
                         : "/convert/html";
@@ -211,7 +214,8 @@ export const convertUrlToPdf = createAsyncThunk<
       arg.sourceType === "wkhtml-html-code" ||
       arg.sourceType === "wkhtml-html-file" ||
       arg.sourceType === "html-to-word" ||
-      arg.sourceType === "html-to-excel";
+      arg.sourceType === "html-to-excel" ||
+      arg.sourceType === "pdf-lock-url";
     const response = await urlToPdfClient.post<Blob>(
       endpoint,
       arg.body,
