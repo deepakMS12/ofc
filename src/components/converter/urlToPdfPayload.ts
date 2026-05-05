@@ -36,7 +36,10 @@ export type UrlToPdfRequestBody = Record<string, unknown>;
 
 export type UrlToPdfFormState = {
   sourceValue: string;
+  baseUrl: string;
   sourceType: "url" | "html" | "html-file";
+  sourcePassword: string;
+  outputFileName: string;
   /** When true → `?type=d`; when false → `?type=p`. */
   isPreview: boolean;
   alignment: string;
@@ -74,9 +77,9 @@ export type UrlToPdfFormState = {
   rightsRestrictions: Record<UrlToPdfRightsRestrictionId, boolean>;
 };
 
-function emptyToNull(s: string): string | null {
-  const t = s.trim();
-  return t === "" ? null : s;
+function toNullableString(raw: string): string | null {
+  const v = raw.trim();
+  return v === "" ? null : v;
 }
 
 function mapEncryption(level: EncryptionLevelId): string {
@@ -95,20 +98,19 @@ export function buildPdfRightsFromFields(
   const hasPasswords = Boolean(userPassword.trim() || ownerPassword.trim());
   const hasRestrictions = Object.values(rightsRestrictions).some(Boolean);
   const hasEncryption = encryptionLevel !== "none";
-
-  if (!hasPasswords && !hasRestrictions && !hasEncryption) return null;
-
+  if (!hasPasswords && !hasRestrictions && !hasEncryption) {
+    return null;
+  }
   const encLevel: EncryptionLevelId =
-    encryptionLevel !== "none"
-      ? encryptionLevel
-      : hasPasswords || hasRestrictions
+    hasEncryption || hasPasswords || hasRestrictions
+      ? encryptionLevel === "none"
         ? "aes-128"
-        : "none";
-
+        : encryptionLevel
+      : "none";
   return {
-    encryption: mapEncryption(encLevel),
-    userPassword: userPassword.trim(),
-    ownerPassword: ownerPassword.trim(),
+    encryption: mapEncryption(encLevel) as string | null,
+    userPassword: toNullableString(userPassword),
+    ownerPassword: toNullableString(ownerPassword),
     disallowPrint: rightsRestrictions.disallowPrint,
     disallowCopy: rightsRestrictions.disallowContentCopy,
     disallowAnnotation: rightsRestrictions.disallowAnnotation,
@@ -201,9 +203,12 @@ export function buildUrlToPdfPayload(state: UrlToPdfFormState): {
   const pageFormatApi =
     state.pageFormat === "custom" ? "custom" : state.pageFormat;
 
-  const sourceKey = state.sourceType === "url" ? "url" : "html";
   const common: UrlToPdfRequestBody = {
-    [sourceKey]: state.sourceValue.trim(),
+    ...(state.sourceType === "url"
+      ? { url: state.sourceValue.trim() }
+      : state.sourceType === "html"
+        ? { htmlCode: state.sourceValue.trim() }
+        : {}),
     pageFormat: pageFormatApi,
     orientation,
     unit: state.dimensionUnit,
@@ -222,43 +227,29 @@ export function buildUrlToPdfPayload(state: UrlToPdfFormState): {
       queryType: "d",
       body: {
         ...common,
-        ...(state.pageFormat === "custom"
-          ? {
-              customWidth: state.pageWidth.trim() || "210",
-              customHeight: state.pageHeight.trim() || "297",
-            }
-          : {}),
-        header: emptyToNull(state.headerHtml),
+        header: toNullableString(state.headerHtml),
         headerEveryPage: state.headerEveryPage,
-        footer: emptyToNull(state.footerHtml),
+        footer: toNullableString(state.footerHtml),
         footerEveryPage: state.footerEveryPage,
-        customCss: emptyToNull(state.customCss),
-        watermark: null,
-        rights: null,
+        customCss: toNullableString(state.customCss),
+        watermark: buildWatermark(state),
+        rights: buildRights(state),
       },
     };
   }
 
-  const pwd = state.userPassword.trim();
   const watermark = buildWatermark(state);
   const rights = buildRights(state);
 
   const body: UrlToPdfRequestBody = {
     ...common,
-    ...(pwd ? { password: pwd } : {}),
-    ...(state.pageFormat === "custom"
-      ? {
-          customWidth: state.pageWidth.trim() || "210",
-          customHeight: state.pageHeight.trim() || "297",
-        }
-      : {}),
-    header: emptyToNull(state.headerHtml),
+    header: toNullableString(state.headerHtml),
     headerEveryPage: state.headerEveryPage,
-    footer: emptyToNull(state.footerHtml),
+    footer: toNullableString(state.footerHtml),
     footerEveryPage: state.footerEveryPage,
-    customCss: emptyToNull(state.customCss),
-    watermark: watermark ?? null,
-    rights: rights ?? null,
+    customCss: toNullableString(state.customCss),
+    watermark,
+    rights,
   };
 
   return { queryType: "p", body };

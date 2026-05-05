@@ -22,6 +22,7 @@ import type { PdfToHtmlHandle } from "@/components/converter/PdfToHtmlPanel";
 import type { TextToQrHandle } from "@/components/converter/TextToQrPanel";
 import type { TextToBarcodeHandle } from "@/components/converter/TextToBarcodePanel";
 import type { ScanQrBarcodeHandle } from "@/components/converter/ScanQrBarcodePanel";
+import type { TemplateFillToPdfHandle } from "@/components/converter/TemplateFillToPDF";
 import { convertUrlToPdf } from "@/store/thunks/urlToPdfThunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { ChangeEvent } from "react";
@@ -45,9 +46,18 @@ import ConverterLoadingWorkspace from "@/components/converter/ConverterLoadingWo
 import UrlToPdfDownloadSuccess from "@/components/converter/DownloadSuccess";
 import { useToast } from "@/hooks/useToast";
 
+const isPdfLikeFile = (file: File): boolean =>
+  file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+
+const isExcelLikeFile = (file: File): boolean =>
+  file.type ===
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+  file.type === "application/vnd.ms-excel" ||
+  /\.xlsx?$/i.test(file.name);
+
 const ConverterTool = () => {
   const { slug } = useParams();
-  const tool = converters.find((c) => c.slug === slug);
+  const tool = useMemo(() => converters.find((c) => c.slug === slug), [slug]);
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
   const urlToPdfLoading = useAppSelector(
@@ -74,6 +84,7 @@ const ConverterTool = () => {
   const textToQrRef = useRef<TextToQrHandle | null>(null);
   const textToBarcodeRef = useRef<TextToBarcodeHandle | null>(null);
   const scanQrBarcodeRef = useRef<ScanQrBarcodeHandle | null>(null);
+  const templateFillToPdfRef = useRef<TemplateFillToPdfHandle | null>(null);
   const [wkhtmlCanConvert, setWkhtmlCanConvert] = useState(false);
   const [wkhtmlFieldsEpoch, setWkhtmlFieldsEpoch] = useState(0);
   const [htmlOfficeCanConvert, setHtmlOfficeCanConvert] = useState(false);
@@ -302,9 +313,15 @@ const ConverterTool = () => {
     const handle = urlToPdfRef.current;
     const variableHandle = htmlVariableToPdfRef.current;
     const docxHandle = docxToPdfRef.current;
+    const templateFillHandle = templateFillToPdfRef.current;
     let payloadBody: Record<string, unknown> | null = null;
     if (isHtmlVariableToPdfTool) {
       if (!variableHandle) {
+        showToast("Form is not ready.", "error");
+        return;
+      }
+    } else if (isTemplateFillToPdfTool) {
+      if (!templateFillHandle) {
         showToast("Form is not ready.", "error");
         return;
       }
@@ -329,7 +346,6 @@ const ConverterTool = () => {
         showToast("Selected HTML file is empty.", "error");
         return;
       }
-      payloadBody = { html: htmlText };
     } else if (!isDocxToPdfTool) {
       const rawSource = handle!.getSourceValue().trim();
       if (!rawSource) {
@@ -344,6 +360,8 @@ const ConverterTool = () => {
     let downloadFileName =
       (isHtmlVariableToPdfTool
         ? variableHandle!.getOutputFileName()
+        : isTemplateFillToPdfTool
+          ? templateFillHandle!.getOutputFileName()
         : isDocxToPdfTool
           ? docxHandle!.getOutputFileName()
         : handle!.getOutputFileName()
@@ -354,22 +372,49 @@ const ConverterTool = () => {
     try {
       const { queryType, body } = isHtmlVariableToPdfTool
         ? variableHandle!.getPayload()
+        : isTemplateFillToPdfTool
+          ? templateFillHandle!.getPayload()
         : isDocxToPdfTool
           ? docxHandle!.getPayload()
         : handle!.getPayload();
-      const requestBody =
-        payloadBody ??
-        (body as Record<string, unknown>);
+      const requestBody = payloadBody ?? (body as Record<string, unknown>);
+      const finalBody =
+        isHtmlFileToPdfTool && files[0]
+          ? (() => {
+              const b = requestBody as Record<string, unknown>;
+              const options = { ...b };
+              delete options.url;
+              delete options.htmlCode;
+              delete options.baseUrl;
+              delete options.password;
+              delete options.fileName;
+              const fd = new FormData();
+              fd.append("file", files[0]);
+              fd.append("options", JSON.stringify(options));
+              if (typeof b.baseUrl === "string" && b.baseUrl.trim()) {
+                fd.append("baseUrl", b.baseUrl.trim());
+              }
+              if (typeof b.password === "string" && b.password.trim()) {
+                fd.append("password", b.password.trim());
+              }
+              if (typeof b.fileName === "string" && b.fileName.trim()) {
+                fd.append("fileName", b.fileName.trim());
+              }
+              return fd;
+            })()
+          : requestBody;
 
       const result = await dispatch(
         convertUrlToPdf({
           queryType,
-          body: requestBody,
+          body: finalBody,
           downloadFileName,
           sourceType: isHtmlFileToPdfTool
             ? "html-file"
             : isHtmlVariableToPdfTool
               ? "html-variable"
+            : isTemplateFillToPdfTool
+              ? "docx-template"
             : isDocxToPdfTool
               ? "docx-file"
             : isHtmlCodeToPdfTool
@@ -1273,9 +1318,7 @@ const ConverterTool = () => {
       } else if (isHtmlFileToPdfTool || isDocxToPdfTool || isUnlockPdfTool) {
         setFiles([selected[0]]);
       } else if (isPdfCompressTool) {
-        const pdf = selected.find(
-          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
-        );
+        const pdf = selected.find(isPdfLikeFile);
         if (!pdf) {
           showToast("Select a PDF file.", "info");
           event.target.value = "";
@@ -1298,9 +1341,7 @@ const ConverterTool = () => {
         }
         setFiles((prev) => [...prev, ...imagesOnly]);
       } else if (isPdfMergeTool) {
-        const pdfsOnly = selected.filter(
-          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
-        );
+        const pdfsOnly = selected.filter(isPdfLikeFile);
         if (!pdfsOnly.length) {
           showToast("Only PDF files are supported for merge.", "info");
           event.target.value = "";
@@ -1308,51 +1349,15 @@ const ConverterTool = () => {
         }
         setFiles((prev) => [...prev, ...pdfsOnly]);
       } else if (isPdfToImageTool || isPdfToDocxTool) {
-        const pdf = selected.find(
-          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
-        );
+        const pdf = selected.find(isPdfLikeFile);
         if (!pdf) {
           showToast("Select a PDF file.", "info");
           event.target.value = "";
           return;
         }
         setFiles([pdf]);
-      } else if (isExcelToPdfTool) {
-        const workbook = selected.find(
-          (f) =>
-            f.type ===
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-            f.type === "application/vnd.ms-excel" ||
-            /\.xlsx?$/i.test(f.name),
-        );
-        if (!workbook) {
-          showToast("Select an .xlsx or .xls file.", "info");
-          event.target.value = "";
-          return;
-        }
-        setFiles([workbook]);
-      } else if (isLockExcelTool) {
-        const workbook = selected.find(
-          (f) =>
-            f.type ===
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-            f.type === "application/vnd.ms-excel" ||
-            /\.xlsx?$/i.test(f.name),
-        );
-        if (!workbook) {
-          showToast("Select an .xlsx or .xls file.", "info");
-          event.target.value = "";
-          return;
-        }
-        setFiles([workbook]);
-      } else if (isUnlockExcelTool) {
-        const workbook = selected.find(
-          (f) =>
-            f.type ===
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-            f.type === "application/vnd.ms-excel" ||
-            /\.xlsx?$/i.test(f.name),
-        );
+      } else if (isExcelToPdfTool || isLockExcelTool || isUnlockExcelTool) {
+        const workbook = selected.find(isExcelLikeFile);
         if (!workbook) {
           showToast("Select an .xlsx or .xls file.", "info");
           event.target.value = "";
@@ -1360,9 +1365,7 @@ const ConverterTool = () => {
         }
         setFiles([workbook]);
       } else if (isPdfToHtmlTool) {
-        const pdf = selected.find(
-          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
-        );
+        const pdf = selected.find(isPdfLikeFile);
         if (!pdf) {
           showToast("Select a PDF file.", "info");
           event.target.value = "";
@@ -2467,10 +2470,11 @@ const ConverterTool = () => {
               }}
             >
               <WorkspaceSidebar
-                toolSlug={tool?.slug}
+                toolSlug={tool.slug}
                 urlToPdfRef={urlToPdfRef}
                 htmlVariableToPdfRef={htmlVariableToPdfRef}
                 docxToPdfRef={docxToPdfRef}
+                templateFillToPdfRef={templateFillToPdfRef}
                 imagesToPdf={
                   isImagesToPdfTool ? { ref: imagesToPdfRef } : undefined
                 }

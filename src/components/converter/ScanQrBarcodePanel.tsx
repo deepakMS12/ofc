@@ -1,4 +1,4 @@
-import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box,  ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { colors } from "@/utils/customColor";
 import { SettingsAccordion } from "./pdfSettings/SettingsAccordion";
@@ -38,7 +38,7 @@ type ScanQrBarcodePanelProps = {
 
 const ScanQrBarcodePanel = forwardRef<ScanQrBarcodeHandle, ScanQrBarcodePanelProps>(
   function ScanQrBarcodePanel(
-    { mode, selectedFileName, onRequestPickFile, onValidityChange, onFieldsDirty },
+    { mode, selectedFileName, onValidityChange, onFieldsDirty },
     ref,
   ) {
     const [imageUrl, setImageUrl] = useState("");
@@ -96,32 +96,12 @@ const ScanQrBarcodePanel = forwardRef<ScanQrBarcodeHandle, ScanQrBarcodePanelPro
           width: "100%",
         }}
       >
-        <Box
-          sx={{
-            fontSize: 12,
-            color: "#1d4ed8",
-            bgcolor: "#eef6ff",
-            borderRadius: 1.5,
-            px: 1.2,
-            py: 0.9,
-            mb: 1.2,
-            border: "1px solid #dbeafe",
-          }}
-        >
-          Linux servers need libzbar0 (Debian/Ubuntu) for pyzbar. If nothing is detected, try a higher-resolution crop of the code.
-        </Box>
+
 
         <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pb: 1 }}>
           <SettingsAccordion id="scan-qr-source" title="Source" defaultExpanded>
             {mode === "upload" ? (
-              <Box sx={{ mb: 2 }}>
-                <Typography component="span" sx={fieldLabelSx}>
-                  Image file
-                </Typography>
-                <Button variant="outlined" size="small" onClick={onRequestPickFile}>
-                  {selectedFileName?.trim() || "Choose file"}
-                </Button>
-              </Box>
+            null
             ) : (
               <Box sx={{ mb: 2 }}>
                 <Typography component="span" sx={fieldLabelSx}>

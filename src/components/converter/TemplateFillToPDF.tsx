@@ -1,16 +1,13 @@
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import { SettingsAccordion } from "./pdfSettings/SettingsAccordion";
 import { SettingsOutlinedField } from "./pdfSettings/SettingsOutlinedField";
 import { HtmlGhostTextField } from "./pdfSettings/HtmlGhostTextField";
 
-const DEFAULT_VARIABLE_LINES = `COMPANY_NAME = Acme Corp
-REPORT_DATE = 09 Apr 2025
-AUDIT_PERIOD = Q1 2025
-AUDITOR_NAME = Jane Smith
-AUDIT_FIRM = TrustAudit LLP
-REPORT_ID = SOC2-2025-042
-OVERALL_RISK = Low`;
+const DEFAULT_VARIABLE_LINES = `{
+  "COMPANY_NAME": "Acme Corp",
+  "REPORT_DATE": "09 Apr 2025"
+}`;
 
 const DEFAULT_TABLE_ROWS_JSON = `[
   {
@@ -28,10 +25,58 @@ const DEFAULT_TABLE_ROWS_JSON = `[
   }
 ]`;
 
-export default function TemplateFillToPDF() {
+export type TemplateFillToPdfHandle = {
+  getOutputFileName: () => string;
+  getPayload: () => {
+    queryType: "d" | "p";
+    body: Record<string, unknown>;
+  };
+};
+
+const TemplateFillToPDF = forwardRef<TemplateFillToPdfHandle>(function TemplateFillToPDF(
+  _,
+  ref,
+) {
   const [outputFileName, setOutputFileName] = useState("");
+  const [templateUrl, setTemplateUrl] = useState("");
   const [variableLines, setVariableLines] = useState("");
   const [tableRowsJson, setTableRowsJson] = useState("");
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      getOutputFileName: () => outputFileName,
+      getPayload: () => {
+        const url = templateUrl.trim();
+        if (!url) {
+          throw new Error("DOCX template URL is required.");
+        }
+        let variables: Record<string, unknown> = {};
+        let tableRows: unknown = null;
+        try {
+          variables = variableLines.trim()
+            ? (JSON.parse(variableLines) as Record<string, unknown>)
+            : {};
+        } catch {
+          throw new Error("Variables JSON is invalid.");
+        }
+        try {
+          tableRows = tableRowsJson.trim() ? JSON.parse(tableRowsJson) : null;
+        } catch {
+          throw new Error("Table rows JSON is invalid.");
+        }
+        return {
+          queryType: "d" as const,
+          body: {
+            url,
+            variables,
+            table_rows: tableRows,
+          },
+        };
+      },
+    }),
+    [outputFileName, tableRowsJson, templateUrl, variableLines],
+  );
 
   return (
     <Box
@@ -53,6 +98,8 @@ export default function TemplateFillToPDF() {
               label="DOCX template URL"
               placeholder="https://your-server.com/template.docx"
               fullWidth
+              value={templateUrl}
+              onChange={(e) => setTemplateUrl(e.target.value)}
             />
             <Box
               sx={{
@@ -126,5 +173,7 @@ export default function TemplateFillToPDF() {
       </Box>
     </Box>
   );
-}
+});
+
+export default TemplateFillToPDF;
 

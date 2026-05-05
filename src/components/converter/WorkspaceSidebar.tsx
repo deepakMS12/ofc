@@ -22,7 +22,9 @@ import type { URLtoPDFHandle } from "./urlToPdfPayload";
 import URLtoPDF from "./URLtoPDF";
 import HtmlVariableToPDF, { type HtmlVariableToPdfHandle } from "./HtmlVariableToPDF";
 import DocxToPDF, { type DocxToPdfHandle } from "./DocxToPDF";
-import TemplateFillToPDF from "./TemplateFillToPDF";
+import TemplateFillToPDF, {
+  type TemplateFillToPdfHandle,
+} from "./TemplateFillToPDF";
 import ImagesToPDF, { type ImagesToPdfHandle } from "./ImagesToPDF";
 import WkhtmlToPdfPanel, {
   type WkhtmlToPdfHandle,
@@ -155,6 +157,7 @@ type WorkspaceSidebarProps = {
   urlToPdfRef?: RefObject<URLtoPDFHandle | null>;
   htmlVariableToPdfRef?: RefObject<HtmlVariableToPdfHandle | null>;
   docxToPdfRef?: RefObject<DocxToPdfHandle | null>;
+  templateFillToPdfRef?: RefObject<TemplateFillToPdfHandle | null>;
   imagesToPdf?: ImagesToPdfSidebarBundle;
   mergePdf?: MergePdfSidebarBundle;
   pdfToImage?: PdfToImageSidebarBundle;
@@ -194,6 +197,7 @@ const WorkspaceSidebar = memo(
     urlToPdfRef,
     htmlVariableToPdfRef,
     docxToPdfRef,
+    templateFillToPdfRef,
     imagesToPdf,
     mergePdf,
     pdfToImage,
@@ -293,7 +297,9 @@ const WorkspaceSidebar = memo(
         {toolSlug === "docx-to-pdf" && (
           <DocxToPDF ref={docxToPdfRef} selectedFile={files[0] ?? null} />
         )}
-        {toolSlug === "template-fill-to-pdf" && <TemplateFillToPDF />}
+        {toolSlug === "template-fill-to-pdf" && (
+          <TemplateFillToPDF ref={templateFillToPdfRef} />
+        )}
         {toolSlug === "images-to-pdf" && imagesToPdf && (
           <ImagesToPDF ref={imagesToPdf.ref} fileCount={files.length} />
         )}

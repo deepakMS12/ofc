@@ -129,6 +129,8 @@ type URLtoPDFProps = {
 const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
   function URLtoPDF({ sourceType = "url", onSourceChange }, ref) {
   const [sourceValue, setSourceValue] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
+  const [sourcePassword, setSourcePassword] = useState("");
   const [isPreview, setIsPreview] = useState(true);
   const [outputFileName, setOutputFileName] = useState("");
   const [alignment, setAlignment] = useState("web");
@@ -281,7 +283,10 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
   const collectFormState = useCallback((): UrlToPdfFormState => {
     return {
       sourceValue,
+      baseUrl,
       sourceType,
+      sourcePassword,
+      outputFileName,
       isPreview,
       alignment,
       pageFormat,
@@ -319,7 +324,10 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
     };
   }, [
     sourceValue,
+    baseUrl,
     sourceType,
+    sourcePassword,
+    outputFileName,
     isPreview,
     alignment,
     pageFormat,
@@ -407,12 +415,12 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
           pb: 1,
         }}
       >
-        {sourceType !== "html-file" && (
-          <SettingsAccordion
-            id="pdf-settings-source"
-            title="Source"
-            defaultExpanded
-          >
+        <SettingsAccordion
+          id="pdf-settings-source"
+          title="Source"
+          defaultExpanded
+        >
+          {sourceType !== "html-file" && (
             <SettingsOutlinedField
               id="url-to-pdf-source-url"
               label={sourceLabel}
@@ -423,19 +431,41 @@ const URLtoPDF = forwardRef<URLtoPDFHandle, URLtoPDFProps>(
               value={sourceValue}
               onChange={handleSourceChange}
             />
-            <FormControlLabel
-              sx={{ mt: 1, ml: 0, alignItems: "center" }}
-              control={
-                <Checkbox
-                  color="primary"
-                  checked={isPreview}
-                  onChange={(_, checked) => setIsPreview(checked)}
-                />
-              }
-              label="Preview"
+          )}
+          {(sourceType === "html" || sourceType === "html-file") && (
+            <SettingsOutlinedField
+              id="url-to-pdf-base-url"
+              label="Base URL (optional)"
+              fullWidth
+              placeholder="https://example.com/"
+              value={baseUrl}
+              onChange={(e) => setBaseUrl(e.target.value)}
+              sx={{ mt: 1 }}
             />
-          </SettingsAccordion>
-        )}
+          )}
+          <SettingsOutlinedField
+            id="url-to-pdf-source-password"
+            label="Password (optional)"
+            type="password"
+            autoComplete="new-password"
+            fullWidth
+            placeholder="Optional"
+            value={sourcePassword}
+            onChange={(e) => setSourcePassword(e.target.value)}
+            sx={{ mt: 1 }}
+          />
+          <FormControlLabel
+            sx={{ mt: 1, ml: 0, alignItems: "center" }}
+            control={
+              <Checkbox
+                color="primary"
+                checked={isPreview}
+                onChange={(_, checked) => setIsPreview(checked)}
+              />
+            }
+            label="Preview"
+          />
+        </SettingsAccordion>
         <SettingsAccordion
           id="pdf-settings-page-size"
           title={"Page size & orientation"}

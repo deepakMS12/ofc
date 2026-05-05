@@ -37,47 +37,30 @@ export function buildImagesToPdfFormData(
   for (const f of files) {
     fd.append("files", f);
   }
-  fd.append("merge", String(fields.merge));
   const pageFormatApi =
     fields.pageFormat === "custom" ? "custom" : fields.pageFormat;
-  fd.append("pageFormat", pageFormatApi);
-  fd.append(
-    "orientation",
-    fields.alignment === "android" ? "landscape" : "portrait",
+  const rights = buildPdfRightsFromFields(
+    fields.encryptionLevel,
+    fields.userPassword,
+    fields.ownerPassword,
+    fields.rightsRestrictions,
   );
-  fd.append("unit", fields.dimensionUnit);
-  fd.append(
-    "margins",
-    JSON.stringify({
+  const options = {
+    pageFormat: pageFormatApi,
+    orientation: fields.alignment === "android" ? "landscape" : "portrait",
+    unit: fields.dimensionUnit,
+    customWidth: Number(fields.pageWidth.trim() || "210"),
+    customHeight: Number(fields.pageHeight.trim() || "297"),
+    margins: {
       top: fields.marginTop.trim() || "0",
       right: fields.marginRight.trim() || "0",
       bottom: fields.marginBottom.trim() || "0",
       left: fields.marginLeft.trim() || "0",
-    }),
-  );
-  if (fields.pageFormat === "custom") {
-    fd.append("customWidth", fields.pageWidth.trim() || "210");
-    fd.append("customHeight", fields.pageHeight.trim() || "297");
-  }
-  if (fields.outputFileName.trim()) {
-    fd.append("outputFileName", fields.outputFileName.trim());
-  }
-  if (fields.simpleOpenPassword.trim()) {
-    fd.append("password", fields.simpleOpenPassword.trim());
-  }
-  fd.append("mode", queryType === "d" ? "preview" : "download");
-
-  if (queryType === "p") {
-    const rights = buildPdfRightsFromFields(
-      fields.encryptionLevel,
-      fields.userPassword,
-      fields.ownerPassword,
-      fields.rightsRestrictions,
-    );
-    if (rights) {
-      fd.append("rights", JSON.stringify(rights));
-    }
-  }
+    },
+    merge: fields.merge,
+    ...(queryType === "p" ? { rights } : {}),
+  };
+  fd.append("options", JSON.stringify(options));
 
   return fd;
 }
