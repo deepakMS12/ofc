@@ -11,7 +11,7 @@ export type ConvertUrlToPdfArg = {
   body: UrlToPdfRequestBody | FormData;
   downloadFileName: string;
   /** For JSON `{ data: { buffer } }` image responses, pick the decoded MIME/extension. */
-  responseBodyFixedExt?: ".jpg" | ".png" | ".webp";
+  responseBodyFixedExt?: ".jpg" | ".png" | ".webp" | ".json";
   sourceType?:
     | "url"
     | "html"
@@ -21,13 +21,23 @@ export type ConvertUrlToPdfArg = {
     | "images-pdf"
     | "merge-pdf"
     | "pdf-to-image"
+    | "pdf-compress"
     | "wkhtml-url"
     | "wkhtml-html-code"
     | "wkhtml-html-file"
     | "html-to-word"
     | "html-to-excel"
     | "pdf-lock-url"
-    | "pdf-unlock-upload";
+    | "pdf-unlock-upload"
+    | "pdf-to-docx"
+    | "excel-to-pdf"
+    | "lock-excel"
+    | "unlock-excel"
+    | "pdf-to-html"
+    | "text-to-qr"
+    | "text-to-barcode"
+    | "scan-qr-barcode-upload"
+    | "scan-qr-barcode-url";
 };
 
 export type ConvertUrlToPdfResult = {
@@ -60,6 +70,7 @@ type OutputFileExt =
   | ".zip"
   | ".docx"
   | ".xlsx"
+  | ".json"
   | ".jpg"
   | ".png"
   | ".webp";
@@ -73,6 +84,7 @@ function mimeForExtension(ext: OutputFileExt): string {
   if (ext === ".xlsx") {
     return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   }
+  if (ext === ".json") return "application/json";
   if (ext === ".jpg") return "image/jpeg";
   if (ext === ".png") return "image/png";
   return "image/webp";
@@ -110,6 +122,13 @@ async function responseBodyToDownloadBlob(
     try {
       const text = new TextDecoder().decode(buf);
       const json = JSON.parse(text) as UrlToPdfSuccessJson;
+      if (fixed === ".json") {
+        return {
+          ok: true,
+          blob: new Blob([text], { type: "application/json" }),
+          fileExt: ".json",
+        };
+      }
       const b64 = json.data?.buffer;
       if (typeof b64 === "string" && b64.length > 0) {
         if (fixed) {
@@ -231,13 +250,15 @@ function normalizeDownloadFileName(rawName: string, fileExt: OutputFileExt): str
       ? "document"
       : fileExt === ".xlsx"
         ? "workbook"
+        : fileExt === ".json"
+          ? "scan-result"
         : fileExt === ".zip"
           ? "archive"
           : fileExt === ".jpg" || fileExt === ".png" || fileExt === ".webp"
             ? "export"
             : "export";
   const base = (trimmed || fallback).replace(
-    /\.(pdf|zip|docx|xlsx|jpe?g|png|webp)$/i,
+    /\.(pdf|zip|docx|xlsx|json|jpe?g|png|webp)$/i,
     "",
   );
   return `${base}${fileExt}`;
@@ -260,6 +281,8 @@ export const convertUrlToPdf = createAsyncThunk<
               ? "/convert/merge-pdf"
               : arg.sourceType === "pdf-to-image"
                 ? "/convert/pdf-jpg"
+                : arg.sourceType === "pdf-compress"
+                  ? "/convert/pdf-compress"
                 : arg.sourceType === "wkhtml-url"
               ? "/wkhtmltopdf/url_pdf"
               : arg.sourceType === "wkhtml-html-code"
@@ -274,9 +297,27 @@ export const convertUrlToPdf = createAsyncThunk<
                         ? "/convert/pdf-url"
                         : arg.sourceType === "pdf-unlock-upload"
                           ? "/convert/pdf-unlock"
-                      : arg.sourceType === "html-variable"
-                        ? "/convert/html/variable"
-                        : "/convert/html";
+                          : arg.sourceType === "pdf-to-docx"
+                            ? "/libreoffice/pdf_doc"
+                            : arg.sourceType === "excel-to-pdf"
+                              ? "/libreoffice/xlsx_pdf"
+                              : arg.sourceType === "lock-excel"
+                                ? "/libreoffice/lock_excel"
+                                : arg.sourceType === "unlock-excel"
+                                  ? "/libreoffice/unlock_excel"
+                                  : arg.sourceType === "pdf-to-html"
+                                    ? "/libreoffice/pdf_html"
+                                    : arg.sourceType === "text-to-qr"
+                                      ? "/qrcode/text"
+                                      : arg.sourceType === "text-to-barcode"
+                                        ? "/barcode/text"
+                                        : arg.sourceType ===
+                                              "scan-qr-barcode-upload" ||
+                                            arg.sourceType === "scan-qr-barcode-url"
+                                          ? "/qrcode/scan"
+                              : arg.sourceType === "html-variable"
+                              ? "/convert/html/variable"
+                              : "/convert/html";
     const isFormData = typeof FormData !== "undefined" && arg.body instanceof FormData;
     const skipQueryParam =
       arg.sourceType === "docx-file" ||
@@ -286,7 +327,17 @@ export const convertUrlToPdf = createAsyncThunk<
       arg.sourceType === "html-to-word" ||
       arg.sourceType === "html-to-excel" ||
       arg.sourceType === "pdf-lock-url" ||
-      arg.sourceType === "pdf-unlock-upload";
+      arg.sourceType === "pdf-unlock-upload" ||
+      arg.sourceType === "pdf-to-docx" ||
+      arg.sourceType === "pdf-compress" ||
+      arg.sourceType === "excel-to-pdf" ||
+      arg.sourceType === "lock-excel" ||
+      arg.sourceType === "unlock-excel" ||
+      arg.sourceType === "pdf-to-html" ||
+      arg.sourceType === "text-to-qr" ||
+      arg.sourceType === "text-to-barcode" ||
+      arg.sourceType === "scan-qr-barcode-upload" ||
+      arg.sourceType === "scan-qr-barcode-url";
     const response = await urlToPdfClient.post<Blob>(
       endpoint,
       arg.body,
@@ -304,6 +355,25 @@ export const convertUrlToPdf = createAsyncThunk<
     const parseOpts: ParseOptions | undefined =
       arg.sourceType === "html-to-word"
         ? { fixedExt: ".docx" }
+        : arg.sourceType === "pdf-to-docx"
+          ? { fixedExt: ".docx" }
+          : arg.sourceType === "pdf-compress"
+            ? { fixedExt: ".pdf" }
+          : arg.sourceType === "excel-to-pdf"
+            ? { fixedExt: ".pdf" }
+            : arg.sourceType === "lock-excel"
+              ? { fixedExt: ".xlsx" }
+              : arg.sourceType === "unlock-excel"
+                ? { fixedExt: ".xlsx" }
+                : arg.sourceType === "pdf-to-html"
+                  ? { fixedExt: ".zip" }
+                  : arg.sourceType === "text-to-qr" && arg.responseBodyFixedExt
+                    ? { fixedExt: arg.responseBodyFixedExt }
+                    : arg.sourceType === "text-to-barcode" && arg.responseBodyFixedExt
+                      ? { fixedExt: arg.responseBodyFixedExt }
+                      : arg.sourceType === "scan-qr-barcode-upload" ||
+                          arg.sourceType === "scan-qr-barcode-url"
+                        ? { fixedExt: ".json" }
         : arg.sourceType === "html-to-excel"
           ? { fixedExt: ".xlsx" }
           : arg.responseBodyFixedExt

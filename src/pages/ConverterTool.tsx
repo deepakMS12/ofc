@@ -5,6 +5,7 @@ import type { DocxToPdfHandle } from "@/components/converter/DocxToPDF";
 import type { ImagesToPdfHandle } from "@/components/converter/ImagesToPDF";
 import type { MergePdfHandle } from "@/components/converter/MergePdfPanel";
 import type { PdfToImageHandle } from "@/components/converter/PdfToImagePanel";
+import type { PdfCompressHandle } from "@/components/converter/PdfCompressPanel";
 import type { WkhtmlToPdfHandle } from "@/components/converter/WkhtmlToPdfPanel";
 import { wkhtmlSlugToVariant } from "@/components/converter/WkhtmlToPdfPanel";
 import type { HtmlToOfficeHandle } from "@/components/converter/HtmlToOfficePanel";
@@ -13,6 +14,14 @@ import {
   pdfUrlSecuritySlugToMode,
   type PdfUrlSecurityHandle,
 } from "@/components/converter/PdfUrlSecurityPanel";
+import type { PdfToDocxHandle } from "@/components/converter/PdfToDocxPanel";
+import type { ExcelToPdfHandle } from "@/components/converter/ExcelToPdfPanel";
+import type { LockExcelHandle } from "@/components/converter/LockExcelPanel";
+import type { UnlockExcelHandle } from "@/components/converter/UnlockExcelPanel";
+import type { PdfToHtmlHandle } from "@/components/converter/PdfToHtmlPanel";
+import type { TextToQrHandle } from "@/components/converter/TextToQrPanel";
+import type { TextToBarcodeHandle } from "@/components/converter/TextToBarcodePanel";
+import type { ScanQrBarcodeHandle } from "@/components/converter/ScanQrBarcodePanel";
 import { convertUrlToPdf } from "@/store/thunks/urlToPdfThunks";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { ChangeEvent } from "react";
@@ -53,9 +62,18 @@ const ConverterTool = () => {
   const imagesToPdfRef = useRef<ImagesToPdfHandle | null>(null);
   const mergePdfRef = useRef<MergePdfHandle | null>(null);
   const pdfToImageRef = useRef<PdfToImageHandle | null>(null);
+  const pdfCompressRef = useRef<PdfCompressHandle | null>(null);
   const wkhtmlToPdfRef = useRef<WkhtmlToPdfHandle | null>(null);
   const htmlToOfficeRef = useRef<HtmlToOfficeHandle | null>(null);
   const pdfUrlSecurityRef = useRef<PdfUrlSecurityHandle | null>(null);
+  const pdfToDocxRef = useRef<PdfToDocxHandle | null>(null);
+  const excelToPdfRef = useRef<ExcelToPdfHandle | null>(null);
+  const lockExcelRef = useRef<LockExcelHandle | null>(null);
+  const unlockExcelRef = useRef<UnlockExcelHandle | null>(null);
+  const pdfToHtmlRef = useRef<PdfToHtmlHandle | null>(null);
+  const textToQrRef = useRef<TextToQrHandle | null>(null);
+  const textToBarcodeRef = useRef<TextToBarcodeHandle | null>(null);
+  const scanQrBarcodeRef = useRef<ScanQrBarcodeHandle | null>(null);
   const [wkhtmlCanConvert, setWkhtmlCanConvert] = useState(false);
   const [wkhtmlFieldsEpoch, setWkhtmlFieldsEpoch] = useState(0);
   const [htmlOfficeCanConvert, setHtmlOfficeCanConvert] = useState(false);
@@ -68,6 +86,24 @@ const ConverterTool = () => {
   const [mergePdfFieldsEpoch, setMergePdfFieldsEpoch] = useState(0);
   const [pdfToImageCanConvert, setPdfToImageCanConvert] = useState(false);
   const [pdfToImageFieldsEpoch, setPdfToImageFieldsEpoch] = useState(0);
+  const [pdfCompressCanConvert, setPdfCompressCanConvert] = useState(false);
+  const [pdfCompressFieldsEpoch, setPdfCompressFieldsEpoch] = useState(0);
+  const [pdfToDocxCanConvert, setPdfToDocxCanConvert] = useState(false);
+  const [pdfToDocxFieldsEpoch, setPdfToDocxFieldsEpoch] = useState(0);
+  const [excelToPdfCanConvert, setExcelToPdfCanConvert] = useState(false);
+  const [excelToPdfFieldsEpoch, setExcelToPdfFieldsEpoch] = useState(0);
+  const [lockExcelCanConvert, setLockExcelCanConvert] = useState(false);
+  const [lockExcelFieldsEpoch, setLockExcelFieldsEpoch] = useState(0);
+  const [unlockExcelCanConvert, setUnlockExcelCanConvert] = useState(false);
+  const [unlockExcelFieldsEpoch, setUnlockExcelFieldsEpoch] = useState(0);
+  const [pdfToHtmlCanConvert, setPdfToHtmlCanConvert] = useState(false);
+  const [pdfToHtmlFieldsEpoch, setPdfToHtmlFieldsEpoch] = useState(0);
+  const [textToQrCanConvert, setTextToQrCanConvert] = useState(false);
+  const [textToQrFieldsEpoch, setTextToQrFieldsEpoch] = useState(0);
+  const [textToBarcodeCanConvert, setTextToBarcodeCanConvert] = useState(false);
+  const [textToBarcodeFieldsEpoch, setTextToBarcodeFieldsEpoch] = useState(0);
+  const [scanQrBarcodeCanConvert, setScanQrBarcodeCanConvert] = useState(false);
+  const [scanQrBarcodeFieldsEpoch, setScanQrBarcodeFieldsEpoch] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
   const [urlToPdfSource, setUrlToPdfSource] = useState("");
   const [activePageIndex, setActivePageIndex] = useState(0);
@@ -99,6 +135,7 @@ const ConverterTool = () => {
   }, [tool?.title]);
   const isPdfMergeTool = tool?.slug === "pdf-merge";
   const isPdfToImageTool = tool?.slug === "pdf-to-image";
+  const isPdfCompressTool = tool?.slug === "pdf-compressor";
   const isUrlToPdfTool = tool?.slug === "url-to-pdf";
   const isHtmlCodeToPdfTool =
     tool?.slug === "html-code-to-pdf" ||
@@ -121,6 +158,16 @@ const ConverterTool = () => {
   );
   const isPdfUrlSecurityTool = pdfUrlSecurityMode != null;
   const isUnlockPdfTool = tool?.slug === "unlock-pdf";
+  const isPdfToDocxTool = tool?.slug === "pdf-to-docx";
+  const isExcelToPdfTool = tool?.slug === "excel-to-pdf";
+  const isLockExcelTool = tool?.slug === "lock-excel";
+  const isUnlockExcelTool = tool?.slug === "unlock-excel";
+  const isPdfToHtmlTool = tool?.slug === "pdf-to-html";
+  const isTextToQrTool = tool?.slug === "text-to-qr";
+  const isTextToBarcodeTool = tool?.slug === "text-to-barcode";
+  const isScanQrUploadTool = tool?.slug === "scan-qr-barcode-upload";
+  const isScanQrUrlTool = tool?.slug === "scan-qr-barcode-url";
+  const isScanQrBarcodeTool = isScanQrUploadTool || isScanQrUrlTool;
   const isTemplateFillToPdfTool = tool?.slug === "template-fill-to-pdf";
   const workspaceVariant = useMemo(
     () => getWorkspaceVariant(tool?.slug),
@@ -141,6 +188,9 @@ const ConverterTool = () => {
     }
     if (isPdfToImageTool) {
       return !pdfToImageCanConvert || urlToPdfLoading;
+    }
+    if (isPdfCompressTool) {
+      return !pdfCompressCanConvert || urlToPdfLoading;
     }
     if (isUrlToPdfTool || isHtmlCodeToPdfTool) {
       return !urlToPdfSource.trim() || urlToPdfLoading;
@@ -166,6 +216,30 @@ const ConverterTool = () => {
     if (isPdfUrlSecurityTool) {
       return !pdfUrlSecurityCanConvert || urlToPdfLoading;
     }
+    if (isPdfToDocxTool) {
+      return !pdfToDocxCanConvert || urlToPdfLoading;
+    }
+    if (isExcelToPdfTool) {
+      return !excelToPdfCanConvert || urlToPdfLoading;
+    }
+    if (isLockExcelTool) {
+      return !lockExcelCanConvert || urlToPdfLoading;
+    }
+    if (isUnlockExcelTool) {
+      return !unlockExcelCanConvert || urlToPdfLoading;
+    }
+    if (isPdfToHtmlTool) {
+      return !pdfToHtmlCanConvert || urlToPdfLoading;
+    }
+    if (isTextToQrTool) {
+      return !textToQrCanConvert || urlToPdfLoading;
+    }
+    if (isTextToBarcodeTool) {
+      return !textToBarcodeCanConvert || urlToPdfLoading;
+    }
+    if (isScanQrBarcodeTool) {
+      return !scanQrBarcodeCanConvert || urlToPdfLoading;
+    }
     if (isTemplateFillToPdfTool) {
       return urlToPdfLoading;
     }
@@ -176,6 +250,8 @@ const ConverterTool = () => {
     mergePdfCanConvert,
     isPdfToImageTool,
     pdfToImageCanConvert,
+    isPdfCompressTool,
+    pdfCompressCanConvert,
     isUrlToPdfTool,
     isHtmlCodeToPdfTool,
     isHtmlFileToPdfTool,
@@ -188,6 +264,22 @@ const ConverterTool = () => {
     htmlOfficeCanConvert,
     isPdfUrlSecurityTool,
     pdfUrlSecurityCanConvert,
+    isPdfToDocxTool,
+    pdfToDocxCanConvert,
+    isExcelToPdfTool,
+    excelToPdfCanConvert,
+    isLockExcelTool,
+    lockExcelCanConvert,
+    isUnlockExcelTool,
+    unlockExcelCanConvert,
+    isPdfToHtmlTool,
+    pdfToHtmlCanConvert,
+    isTextToQrTool,
+    textToQrCanConvert,
+    isTextToBarcodeTool,
+    textToBarcodeCanConvert,
+    isScanQrBarcodeTool,
+    scanQrBarcodeCanConvert,
     isTemplateFillToPdfTool,
     files.length,
     urlToPdfSource,
@@ -498,6 +590,453 @@ const ConverterTool = () => {
     }
   }, [dispatch, files, htmlOfficeTarget, showToast, tool]);
 
+  const handlePdfToDocxConvert = useCallback(async () => {
+    if (!tool || !isPdfToDocxTool) return;
+    const handle = pdfToDocxRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select a PDF file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "document";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "pdf-to-docx",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your Word document download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isPdfToDocxTool, showToast, tool]);
+
+  const handlePdfCompressConvert = useCallback(async () => {
+    if (!tool || !isPdfCompressTool) return;
+    const handle = pdfCompressRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select a PDF file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "smaller";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "pdf-compress",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your compressed PDF download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isPdfCompressTool, showToast, tool]);
+
+  const handleExcelToPdfConvert = useCallback(async () => {
+    if (!tool || !isExcelToPdfTool) return;
+    const handle = excelToPdfRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select an Excel file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "report";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "excel-to-pdf",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your PDF download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isExcelToPdfTool, showToast, tool]);
+
+  const handleLockExcelConvert = useCallback(async () => {
+    if (!tool || !isLockExcelTool) return;
+    const handle = lockExcelRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select an Excel file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "locked";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "lock-excel",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your locked workbook download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isLockExcelTool, showToast, tool]);
+
+  const handleUnlockExcelConvert = useCallback(async () => {
+    if (!tool || !isUnlockExcelTool) return;
+    const handle = unlockExcelRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select an Excel file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "unlocked";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "unlock-excel",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your unlocked workbook download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isUnlockExcelTool, showToast, tool]);
+
+  const handlePdfToHtmlConvert = useCallback(async () => {
+    if (!tool || !isPdfToHtmlTool) return;
+    const handle = pdfToHtmlRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (!files[0]) {
+      showToast("Select a PDF file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "pages";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "pdf-to-html",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your HTML export download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, files, isPdfToHtmlTool, showToast, tool]);
+
+  const handleTextToQrConvert = useCallback(async () => {
+    if (!tool || !isTextToQrTool) return;
+    const handle = textToQrRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload();
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "qr-out";
+    const responseBodyFixedExt = handle.getOutputImageExt();
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "text-to-qr",
+          responseBodyFixedExt,
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your QR export download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, isTextToQrTool, showToast, tool]);
+
+  const handleTextToBarcodeConvert = useCallback(async () => {
+    if (!tool || !isTextToBarcodeTool) return;
+    const handle = textToBarcodeRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData;
+    try {
+      body = handle.getPayload();
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "barcode";
+    const responseBodyFixedExt = handle.getOutputImageExt();
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: "text-to-barcode",
+          responseBodyFixedExt,
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your barcode export download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [dispatch, isTextToBarcodeTool, showToast, tool]);
+
+  const handleScanQrBarcodeConvert = useCallback(async () => {
+    if (!tool || !isScanQrBarcodeTool) return;
+    const handle = scanQrBarcodeRef.current;
+    if (!handle) {
+      showToast("Form is not ready.", "error");
+      return;
+    }
+    if (isScanQrUploadTool && !files[0]) {
+      showToast("Select an image file.", "info");
+      return;
+    }
+    setUrlToPdfDownloadComplete(false);
+    let body: FormData | Record<string, string>;
+    try {
+      body = handle.getPayload(files);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Could not build the request.", "error");
+      return;
+    }
+    const queryType = handle.getIsPreview() ? "d" : "p";
+    const downloadFileName = handle.getOutputFileName().trim() || "scan-result";
+    try {
+      const result = await dispatch(
+        convertUrlToPdf({
+          queryType,
+          body,
+          downloadFileName,
+          sourceType: isScanQrUploadTool
+            ? "scan-qr-barcode-upload"
+            : "scan-qr-barcode-url",
+          responseBodyFixedExt: ".json",
+        }),
+      ).unwrap();
+
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = result.downloadFileName;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast(
+        queryType === "d"
+          ? "Preview download started."
+          : "Your scan result download has started.",
+        "success",
+      );
+      setUrlToPdfDownloadComplete(true);
+    } catch (e: unknown) {
+      showToast(typeof e === "string" ? e : "Conversion failed.", "error");
+    }
+  }, [
+    dispatch,
+    files,
+    isScanQrBarcodeTool,
+    isScanQrUploadTool,
+    showToast,
+    tool,
+  ]);
+
   const bumpPdfUrlSecurityFields = useCallback(() => {
     setPdfUrlSecurityFieldsEpoch((n) => n + 1);
   }, []);
@@ -508,6 +1047,41 @@ const ConverterTool = () => {
 
   const bumpPdfToImageFields = useCallback(() => {
     setPdfToImageFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpPdfToDocxFields = useCallback(() => {
+    setPdfToDocxFieldsEpoch((n) => n + 1);
+  }, []);
+  const bumpPdfCompressFields = useCallback(() => {
+    setPdfCompressFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpExcelToPdfFields = useCallback(() => {
+    setExcelToPdfFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpLockExcelFields = useCallback(() => {
+    setLockExcelFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpUnlockExcelFields = useCallback(() => {
+    setUnlockExcelFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpPdfToHtmlFields = useCallback(() => {
+    setPdfToHtmlFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpTextToQrFields = useCallback(() => {
+    setTextToQrFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpTextToBarcodeFields = useCallback(() => {
+    setTextToBarcodeFieldsEpoch((n) => n + 1);
+  }, []);
+
+  const bumpScanQrBarcodeFields = useCallback(() => {
+    setScanQrBarcodeFieldsEpoch((n) => n + 1);
   }, []);
 
   const handlePdfUrlSecurityConvert = useCallback(async () => {
@@ -629,6 +1203,15 @@ const ConverterTool = () => {
     isImagesToPdfTool,
     isPdfMergeTool,
     isPdfToImageTool,
+    isPdfCompressTool,
+    isPdfToDocxTool,
+    isExcelToPdfTool,
+    isLockExcelTool,
+    isUnlockExcelTool,
+    isPdfToHtmlTool,
+    isTextToQrTool,
+    isTextToBarcodeTool,
+    isScanQrBarcodeTool,
     isAnyWkhtmlTool,
     isAnyHtmlOfficeTool,
     isPdfUrlSecurityTool,
@@ -639,6 +1222,15 @@ const ConverterTool = () => {
     pdfUrlSecurityFieldsEpoch,
     mergePdfFieldsEpoch,
     pdfToImageFieldsEpoch,
+    pdfCompressFieldsEpoch,
+    pdfToDocxFieldsEpoch,
+    excelToPdfFieldsEpoch,
+    lockExcelFieldsEpoch,
+    unlockExcelFieldsEpoch,
+    pdfToHtmlFieldsEpoch,
+    textToQrFieldsEpoch,
+    textToBarcodeFieldsEpoch,
+    scanQrBarcodeFieldsEpoch,
   ]);
 
   useEffect(() => {
@@ -647,6 +1239,15 @@ const ConverterTool = () => {
     setPdfUrlSecurityCanConvert(false);
     setMergePdfCanConvert(true);
     setPdfToImageCanConvert(false);
+    setPdfCompressCanConvert(false);
+    setPdfToDocxCanConvert(false);
+    setExcelToPdfCanConvert(false);
+    setLockExcelCanConvert(false);
+    setUnlockExcelCanConvert(false);
+    setPdfToHtmlCanConvert(false);
+    setTextToQrCanConvert(false);
+    setTextToBarcodeCanConvert(false);
+    setScanQrBarcodeCanConvert(false);
   }, [slug]);
 
   useEffect(() => {
@@ -671,6 +1272,16 @@ const ConverterTool = () => {
         setFiles([selected[0]]);
       } else if (isHtmlFileToPdfTool || isDocxToPdfTool || isUnlockPdfTool) {
         setFiles([selected[0]]);
+      } else if (isPdfCompressTool) {
+        const pdf = selected.find(
+          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
+        );
+        if (!pdf) {
+          showToast("Select a PDF file.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles([pdf]);
       } else if (wkhtmlVariant === "html-file" || isAnyHtmlOfficeTool) {
         setFiles([selected[0]]);
       } else if (isImagesToPdfTool) {
@@ -696,7 +1307,7 @@ const ConverterTool = () => {
           return;
         }
         setFiles((prev) => [...prev, ...pdfsOnly]);
-      } else if (isPdfToImageTool) {
+      } else if (isPdfToImageTool || isPdfToDocxTool) {
         const pdf = selected.find(
           (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
         );
@@ -706,6 +1317,70 @@ const ConverterTool = () => {
           return;
         }
         setFiles([pdf]);
+      } else if (isExcelToPdfTool) {
+        const workbook = selected.find(
+          (f) =>
+            f.type ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+            f.type === "application/vnd.ms-excel" ||
+            /\.xlsx?$/i.test(f.name),
+        );
+        if (!workbook) {
+          showToast("Select an .xlsx or .xls file.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles([workbook]);
+      } else if (isLockExcelTool) {
+        const workbook = selected.find(
+          (f) =>
+            f.type ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+            f.type === "application/vnd.ms-excel" ||
+            /\.xlsx?$/i.test(f.name),
+        );
+        if (!workbook) {
+          showToast("Select an .xlsx or .xls file.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles([workbook]);
+      } else if (isUnlockExcelTool) {
+        const workbook = selected.find(
+          (f) =>
+            f.type ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+            f.type === "application/vnd.ms-excel" ||
+            /\.xlsx?$/i.test(f.name),
+        );
+        if (!workbook) {
+          showToast("Select an .xlsx or .xls file.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles([workbook]);
+      } else if (isPdfToHtmlTool) {
+        const pdf = selected.find(
+          (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
+        );
+        if (!pdf) {
+          showToast("Select a PDF file.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles([pdf]);
+      } else if (isScanQrUploadTool) {
+        const image = selected.find(
+          (f) =>
+            f.type.startsWith("image/") ||
+            /\.(png|jpe?g|webp|gif|bmp|tiff?|svg)$/i.test(f.name),
+        );
+        if (!image) {
+          showToast("Select an image file.", "info");
+          event.target.value = "";
+          return;
+        }
+        setFiles([image]);
       } else {
         setFiles((prev) => [...prev, ...selected]);
       }
@@ -714,11 +1389,18 @@ const ConverterTool = () => {
     [
       isDocxToPdfTool,
       isUnlockPdfTool,
+      isPdfCompressTool,
       isAnyHtmlOfficeTool,
       isHtmlFileToPdfTool,
       isImagesToPdfTool,
       isPdfMergeTool,
       isPdfToImageTool,
+      isPdfToDocxTool,
+      isExcelToPdfTool,
+      isLockExcelTool,
+      isUnlockExcelTool,
+      isPdfToHtmlTool,
+      isScanQrUploadTool,
       showToast,
       wkhtmlVariant,
       workspaceVariant,
@@ -1061,6 +1743,375 @@ const ConverterTool = () => {
         </Box>
       );
     }
+    if (isPdfCompressTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your compressed PDF download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 320,
+          }}
+        >
+          {files.length ? (
+            <FileTile
+              name={files[0]?.name ?? "document.pdf"}
+              onRemove={() => setFiles([])}
+            />
+          ) : (
+            <EmptyWorkspaceState sourceLabel="pdf file" onPickFiles={handlePickFiles} />
+          )}
+        </Box>
+      );
+    }
+    if (isPdfToDocxTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your Word document download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 320,
+          }}
+        >
+          {files.length ? (
+            <FileTile
+              name={files[0]?.name ?? "document.pdf"}
+              onRemove={() => setFiles([])}
+            />
+          ) : (
+            <EmptyWorkspaceState
+              sourceLabel="pdf file"
+              onPickFiles={handlePickFiles}
+            />
+          )}
+        </Box>
+      );
+    }
+    if (isExcelToPdfTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your PDF download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 320,
+          }}
+        >
+          {files.length ? (
+            <FileTile
+              name={files[0]?.name ?? "workbook.xlsx"}
+              onRemove={() => setFiles([])}
+            />
+          ) : (
+            <EmptyWorkspaceState
+              sourceLabel="excel file (.xlsx / .xls)"
+              onPickFiles={handlePickFiles}
+            />
+          )}
+        </Box>
+      );
+    }
+    if (isLockExcelTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your locked workbook download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 320,
+          }}
+        >
+          {files.length ? (
+            <FileTile
+              name={files[0]?.name ?? "workbook.xlsx"}
+              onRemove={() => setFiles([])}
+            />
+          ) : (
+            <EmptyWorkspaceState
+              sourceLabel="excel file (.xlsx / .xls)"
+              onPickFiles={handlePickFiles}
+            />
+          )}
+        </Box>
+      );
+    }
+    if (isUnlockExcelTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your unlocked workbook download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 320,
+          }}
+        >
+          {files.length ? (
+            <FileTile
+              name={files[0]?.name ?? "workbook.xlsx"}
+              onRemove={() => setFiles([])}
+            />
+          ) : (
+            <EmptyWorkspaceState
+              sourceLabel="excel file (.xlsx / .xls)"
+              onPickFiles={handlePickFiles}
+            />
+          )}
+        </Box>
+      );
+    }
+    if (isPdfToHtmlTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your HTML export download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 320,
+          }}
+        >
+          {files.length ? (
+            <FileTile
+              name={files[0]?.name ?? "document.pdf"}
+              onRemove={() => setFiles([])}
+            />
+          ) : (
+            <EmptyWorkspaceState
+              sourceLabel="pdf file"
+              onPickFiles={handlePickFiles}
+            />
+          )}
+        </Box>
+      );
+    }
+    if (isTextToQrTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your QR export download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            minHeight: 320,
+            display: "grid",
+            placeItems: "center",
+            px: 3,
+          }}
+        >
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ textAlign: "center", maxWidth: 420, lineHeight: 1.6 }}
+          >
+            Configure QR content and design in the left panel, then run export.
+          </Typography>
+        </Box>
+      );
+    }
+    if (isTextToBarcodeTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your barcode export download has started. Check your downloads folder."
+          />
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            minHeight: 320,
+            display: "grid",
+            placeItems: "center",
+            px: 3,
+          }}
+        >
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ textAlign: "center", maxWidth: 420, lineHeight: 1.6 }}
+          >
+            Configure barcode options in the left panel, then export.
+          </Typography>
+        </Box>
+      );
+    }
+    if (isScanQrBarcodeTool) {
+      if (urlToPdfLoading) {
+        return (
+          <ConverterLoadingWorkspace
+            title={`Converting ${sourceLabel} to ${targetLabel}...`}
+            subtitle="Please wait, don't close your browser."
+          />
+        );
+      }
+      if (urlToPdfDownloadComplete) {
+        return (
+          <UrlToPdfDownloadSuccess
+            title={urlToPdfSuccessTitle}
+            subtitle="Your scan result download has started. Check your downloads folder."
+          />
+        );
+      }
+      if (isScanQrUploadTool) {
+        return (
+          <Box
+            sx={{
+              width: "100%",
+              display: "grid",
+              placeItems: "center",
+              minHeight: 320,
+            }}
+          >
+            {files.length ? (
+              <FileTile
+                name={files[0]?.name ?? "image.png"}
+                onRemove={() => setFiles([])}
+              />
+            ) : (
+              <EmptyWorkspaceState sourceLabel="image file" onPickFiles={handlePickFiles} />
+            )}
+          </Box>
+        );
+      }
+      return (
+        <Box
+          sx={{
+            width: "100%",
+            minHeight: 320,
+            display: "grid",
+            placeItems: "center",
+            px: 3,
+          }}
+        >
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ textAlign: "center", maxWidth: 420, lineHeight: 1.6 }}
+          >
+            Paste an image URL in the left panel to scan QR/barcode.
+          </Typography>
+        </Box>
+      );
+    }
     if (isImagesToPdfTool) {
       if (urlToPdfLoading) {
         return (
@@ -1337,6 +2388,16 @@ const ConverterTool = () => {
     isDocxToPdfTool,
     isPdfMergeTool,
     isPdfToImageTool,
+    isPdfCompressTool,
+    isPdfToDocxTool,
+    isExcelToPdfTool,
+    isLockExcelTool,
+    isUnlockExcelTool,
+    isPdfToHtmlTool,
+    isTextToQrTool,
+    isTextToBarcodeTool,
+    isScanQrBarcodeTool,
+    isScanQrUploadTool,
     isImagesToPdfTool,
     isPdfUrlSecurityTool,
     pdfUrlSecurityMode,
@@ -1431,6 +2492,16 @@ const ConverterTool = () => {
                       }
                     : undefined
                 }
+                pdfCompress={
+                  isPdfCompressTool
+                    ? {
+                        ref: pdfCompressRef,
+                        selectedFileName: files[0]?.name,
+                        onValidityChange: setPdfCompressCanConvert,
+                        onFieldsDirty: bumpPdfCompressFields,
+                      }
+                    : undefined
+                }
                 wkhtmlToPdf={
                   isAnyWkhtmlTool && wkhtmlVariant
                     ? {
@@ -1465,6 +2536,86 @@ const ConverterTool = () => {
                               onRequestPickFile: handlePickFiles,
                             }
                           : {}),
+                      }
+                    : undefined
+                }
+                pdfToDocx={
+                  isPdfToDocxTool
+                    ? {
+                        ref: pdfToDocxRef,
+                        selectedFileName: files[0]?.name,
+                        onValidityChange: setPdfToDocxCanConvert,
+                        onFieldsDirty: bumpPdfToDocxFields,
+                      }
+                    : undefined
+                }
+                excelToPdf={
+                  isExcelToPdfTool
+                    ? {
+                        ref: excelToPdfRef,
+                        selectedFileName: files[0]?.name,
+                        onValidityChange: setExcelToPdfCanConvert,
+                        onFieldsDirty: bumpExcelToPdfFields,
+                      }
+                    : undefined
+                }
+                lockExcel={
+                  isLockExcelTool
+                    ? {
+                        ref: lockExcelRef,
+                        selectedFileName: files[0]?.name,
+                        onValidityChange: setLockExcelCanConvert,
+                        onFieldsDirty: bumpLockExcelFields,
+                      }
+                    : undefined
+                }
+                unlockExcel={
+                  isUnlockExcelTool
+                    ? {
+                        ref: unlockExcelRef,
+                        selectedFileName: files[0]?.name,
+                        onValidityChange: setUnlockExcelCanConvert,
+                        onFieldsDirty: bumpUnlockExcelFields,
+                      }
+                    : undefined
+                }
+                pdfToHtml={
+                  isPdfToHtmlTool
+                    ? {
+                        ref: pdfToHtmlRef,
+                        selectedFileName: files[0]?.name,
+                        onValidityChange: setPdfToHtmlCanConvert,
+                        onFieldsDirty: bumpPdfToHtmlFields,
+                      }
+                    : undefined
+                }
+                textToQr={
+                  isTextToQrTool
+                    ? {
+                        ref: textToQrRef,
+                        onValidityChange: setTextToQrCanConvert,
+                        onFieldsDirty: bumpTextToQrFields,
+                      }
+                    : undefined
+                }
+                textToBarcode={
+                  isTextToBarcodeTool
+                    ? {
+                        ref: textToBarcodeRef,
+                        onValidityChange: setTextToBarcodeCanConvert,
+                        onFieldsDirty: bumpTextToBarcodeFields,
+                      }
+                    : undefined
+                }
+                scanQrBarcode={
+                  isScanQrBarcodeTool
+                    ? {
+                        ref: scanQrBarcodeRef,
+                        mode: isScanQrUploadTool ? "upload" : "url",
+                        selectedFileName: files[0]?.name,
+                        onRequestPickFile: handlePickFiles,
+                        onValidityChange: setScanQrBarcodeCanConvert,
+                        onFieldsDirty: bumpScanQrBarcodeFields,
                       }
                     : undefined
                 }
@@ -1505,6 +2656,24 @@ const ConverterTool = () => {
                     void handleMergePdfConvert();
                   } else if (isPdfToImageTool) {
                     void handlePdfToImageConvert();
+                  } else if (isPdfCompressTool) {
+                    void handlePdfCompressConvert();
+                  } else if (isPdfToDocxTool) {
+                    void handlePdfToDocxConvert();
+                  } else if (isExcelToPdfTool) {
+                    void handleExcelToPdfConvert();
+                  } else if (isLockExcelTool) {
+                    void handleLockExcelConvert();
+                  } else if (isUnlockExcelTool) {
+                    void handleUnlockExcelConvert();
+                  } else if (isPdfToHtmlTool) {
+                    void handlePdfToHtmlConvert();
+                  } else if (isTextToQrTool) {
+                    void handleTextToQrConvert();
+                  } else if (isTextToBarcodeTool) {
+                    void handleTextToBarcodeConvert();
+                  } else if (isScanQrBarcodeTool) {
+                    void handleScanQrBarcodeConvert();
                   } else if (isAnyHtmlOfficeTool) {
                     void handleHtmlOfficeConvert();
                   } else if (isPdfUrlSecurityTool) {
@@ -1619,11 +2788,28 @@ const ConverterTool = () => {
             wkhtmlVariant !== "html-file" &&
             !isAnyHtmlOfficeTool &&
             !isUnlockPdfTool &&
-            !isPdfToImageTool)
+            !isPdfToImageTool &&
+            !isPdfCompressTool &&
+            !isPdfToDocxTool &&
+            !isExcelToPdfTool &&
+            !isLockExcelTool &&
+            !isUnlockExcelTool &&
+            !isPdfToHtmlTool &&
+            !isTextToQrTool &&
+            !isTextToBarcodeTool &&
+            !isScanQrUploadTool)
         }
         accept={
-          isPdfMergeTool || isPdfToImageTool
+          isPdfMergeTool ||
+          isPdfToImageTool ||
+          isPdfCompressTool ||
+          isPdfToDocxTool ||
+          isPdfToHtmlTool
             ? ".pdf,application/pdf"
+            : isExcelToPdfTool || isLockExcelTool || isUnlockExcelTool
+              ? ".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            : isScanQrUploadTool
+              ? "image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tif,.tiff,.svg"
             : workspaceVariant === "pdf-canvas"
             ? ".pdf,application/pdf"
             : workspaceVariant === "resizer" ||

@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 
 export type HtmlGhostTextFieldProps = {
   id: string;
-  label: string;
+  label?: string;
   value: string;
   onChange: (next: string) => void;
   defaultHtml: string;

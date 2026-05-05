@@ -18,7 +18,7 @@ import MergeType from "@mui/icons-material/MergeType";
 // import SlideshowOutlined from "@mui/icons-material/SlideshowOutlined";
 // import MovieOutlined from "@mui/icons-material/MovieOutlined";
 // import CropFreeOutlined from "@mui/icons-material/CropFreeOutlined";
-// import CompressOutlined from "@mui/icons-material/CompressOutlined";
+import CompressOutlined from "@mui/icons-material/CompressOutlined";
 // import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined";
 // import CodeOutlined from "@mui/icons-material/CodeOutlined";
 
@@ -192,6 +192,33 @@ export const converters = [
     sourceColor: "#2e7d32",
   },
   {
+    slug: "excel-to-pdf",
+    title: "Excel → PDF",
+    description:
+      "Upload .xlsx or .xls and produce a PDF. Choose download or preview, and set an optional output file name.",
+    layout: "to-pdf",
+    SourceIcon: TableChartOutlined,
+    sourceColor: "#217346",
+  },
+  {
+    slug: "lock-excel",
+    title: "Lock Excel",
+    description:
+      "Protect every worksheet with one sheet password. Choose preview or download and set an optional output file name.",
+    layout: "to-pdf",
+    SourceIcon: LockOutlined,
+    sourceColor: "#14532d",
+  },
+  {
+    slug: "unlock-excel",
+    title: "Unlock Excel",
+    description:
+      "Remove worksheet protection from an Excel file using the current sheet password when needed, then download or preview.",
+    layout: "to-pdf",
+    SourceIcon: LockOpenOutlined,
+    sourceColor: "#0d9488",
+  },
+  {
     slug: "lock-pdf",
     title: "Lock PDF",
     description:
@@ -217,6 +244,69 @@ export const converters = [
     layout: "to-pdf",
     SourceIcon: ImageOutlined,
     sourceColor: "#0f766e",
+  },
+  {
+    slug: "pdf-compressor",
+    title: "Compress PDF",
+    description:
+      "Rewrite PDF streams to reduce file size while preserving layout. Supports optional PDF password, custom output name, and download or preview response.",
+    layout: "to-pdf",
+    SourceIcon: CompressOutlined,
+    sourceColor: "#7c3aed",
+  },
+  {
+    slug: "pdf-to-docx",
+    title: "PDF → DOCX",
+    description:
+      "Upload a PDF and convert it to an editable Word document (.docx). Optional open password, preview or download response, and a custom output name.",
+    layout: "to-pdf",
+    SourceIcon: ArticleOutlined,
+    sourceColor: "#1565c0",
+  },
+  {
+    slug: "pdf-to-html",
+    title: "PDF → HTML",
+    description:
+      "Convert PDF pages to HTML output from an uploaded file. Optional PDF password, custom output name, and download or preview response.",
+    layout: "to-pdf",
+    SourceIcon: CodeOutlined,
+    sourceColor: "#e65100",
+  },
+  {
+    slug: "text-to-qr",
+    title: "Text → QR code",
+    description:
+      "Build branded QR codes from raw text, URL, or contact payload with design/export controls and optional center icon.",
+    layout: "to-pdf",
+    SourceIcon: CodeOutlined,
+    sourceColor: "#1d4ed8",
+  },
+  {
+    slug: "text-to-barcode",
+    title: "Text → Barcode",
+    description:
+      "Generate linear barcodes (CODE128, CODE39, EAN, ITF, Codabar) with styling and export options.",
+    layout: "to-pdf",
+    SourceIcon: CodeOutlined,
+    sourceColor: "#0f766e",
+  },
+  {
+    slug: "scan-qr-barcode-upload",
+    title: "Scan QR / Barcode (Upload image)",
+    description:
+      "Upload an image file containing a QR code or barcode and export decoded scan results as JSON.",
+    layout: "to-pdf",
+    SourceIcon: ImageOutlined,
+    sourceColor: "#0f766e",
+  },
+  {
+    slug: "scan-qr-barcode-url",
+    title: "Scan QR / Barcode (Image URL)",
+    description:
+      "Paste an image URL containing a QR code or barcode and export decoded scan results as JSON.",
+    layout: "to-pdf",
+    SourceIcon: HttpIcon,
+    sourceColor: "#1d4ed8",
   },
   // {
   //   slug: "xlsx-to-pdf",

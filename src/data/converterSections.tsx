@@ -10,16 +10,18 @@ const OTHER_SECTION_SLUGS = new Set(["lock-pdf", "unlock-pdf"]);
 const convertersMain = converters.filter((c) => !OTHER_SECTION_SLUGS.has(c.slug));
 const convertersOther = converters.filter((c) => OTHER_SECTION_SLUGS.has(c.slug));
 
+const MAIN_SECTION_SIZE = 8;
+
 export const converterSections = [
   {
     id: "pdf",
     title: "PDF",
-    converters: convertersMain.slice(0, 8),
+    converters: convertersMain.slice(0, MAIN_SECTION_SIZE),
   },
   {
     id: "image",
     title: "Image",
-    converters: convertersMain.slice(8, 16),
+    converters: convertersMain.slice(MAIN_SECTION_SIZE),
   },
   {
     id: "other",

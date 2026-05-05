@@ -3,20 +3,19 @@ import { Box, Typography, Divider } from "@mui/material";
 import ConverterCard from "../components/resuable/ConverterCard";
 
 const Converter = ({ title, converters: convertersProp = [] }:any) => {
-  const [visibleSlugs, setVisibleSlugs] = useState(
-    () => new Set(convertersProp.map((c:any) => c.slug))
-  );
+  /** Slugs the user removed from this section — new tools from props still show by default. */
+  const [removedSlugs, setRemovedSlugs] = useState(() => new Set<string>());
   const [disabledSlugs, setDisabledSlugs] = useState(() => new Set());
 
   const visibleList = useMemo(
-    () => convertersProp.filter((c:any) => visibleSlugs.has(c.slug)),
-    [visibleSlugs, convertersProp]
+    () => convertersProp.filter((c:any) => !removedSlugs.has(c.slug)),
+    [removedSlugs, convertersProp]
   );
 
   const handleDelete = useCallback((slug:any) => {
-    setVisibleSlugs((prev) => {
+    setRemovedSlugs((prev) => {
       const next = new Set(prev);
-      next.delete(slug);
+      next.add(slug);
       return next;
     });
     setDisabledSlugs((prev) => {

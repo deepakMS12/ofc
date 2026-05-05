@@ -10,7 +10,7 @@ export const getWorkspaceVariant = (slug?: string): WorkspaceVariant => {
   ) {
     return "pdf-canvas";
   }
-  if (slug.includes("compressor")) return "compressor";
+  if (slug === "compressor" || slug === "image-compressor") return "compressor";
   if (slug.includes("resizer")) return "resizer";
   return "default";
 };

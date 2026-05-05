@@ -15,9 +15,9 @@ import RotateRightRoundedIcon from "@mui/icons-material/RotateRightRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { colors } from "@/utils/customColor";
 import type { ImageOutputFormat } from "./types";
-import PDFCompress from "./PDFCompress";
 import MergePdfPanel, { type MergePdfHandle } from "./MergePdfPanel";
 import PdfToImagePanel, { type PdfToImageHandle } from "./PdfToImagePanel";
+import PdfCompressPanel, { type PdfCompressHandle } from "./PdfCompressPanel";
 import type { URLtoPDFHandle } from "./urlToPdfPayload";
 import URLtoPDF from "./URLtoPDF";
 import HtmlVariableToPDF, { type HtmlVariableToPdfHandle } from "./HtmlVariableToPDF";
@@ -36,6 +36,16 @@ import PdfUrlSecurityPanel, {
   type PdfUrlSecurityHandle,
   pdfUrlSecuritySlugToMode,
 } from "./PdfUrlSecurityPanel";
+import PdfToDocxPanel, { type PdfToDocxHandle } from "./PdfToDocxPanel";
+import ExcelToPdfPanel, { type ExcelToPdfHandle } from "./ExcelToPdfPanel";
+import LockExcelPanel, { type LockExcelHandle } from "./LockExcelPanel";
+import UnlockExcelPanel, { type UnlockExcelHandle } from "./UnlockExcelPanel";
+import PdfToHtmlPanel, { type PdfToHtmlHandle } from "./PdfToHtmlPanel";
+import TextToQrPanel, { type TextToQrHandle } from "./TextToQrPanel";
+import TextToBarcodePanel, { type TextToBarcodeHandle } from "./TextToBarcodePanel";
+import ScanQrBarcodePanel, {
+  type ScanQrBarcodeHandle,
+} from "./ScanQrBarcodePanel";
 
 type ImagesToPdfSidebarBundle = {
   ref: RefObject<ImagesToPdfHandle | null>;
@@ -49,6 +59,13 @@ type MergePdfSidebarBundle = {
 
 type PdfToImageSidebarBundle = {
   ref: RefObject<PdfToImageHandle | null>;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type PdfCompressSidebarBundle = {
+  ref: RefObject<PdfCompressHandle | null>;
+  selectedFileName: string | undefined;
   onValidityChange: (ok: boolean) => void;
   onFieldsDirty: () => void;
 };
@@ -77,6 +94,62 @@ type PdfUrlSecuritySidebarBundle = {
   onRequestPickFile?: () => void;
 };
 
+type PdfToDocxSidebarBundle = {
+  ref: RefObject<PdfToDocxHandle | null>;
+  selectedFileName: string | undefined;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type ExcelToPdfSidebarBundle = {
+  ref: RefObject<ExcelToPdfHandle | null>;
+  selectedFileName: string | undefined;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type LockExcelSidebarBundle = {
+  ref: RefObject<LockExcelHandle | null>;
+  selectedFileName: string | undefined;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type UnlockExcelSidebarBundle = {
+  ref: RefObject<UnlockExcelHandle | null>;
+  selectedFileName: string | undefined;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type PdfToHtmlSidebarBundle = {
+  ref: RefObject<PdfToHtmlHandle | null>;
+  selectedFileName: string | undefined;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type TextToQrSidebarBundle = {
+  ref: RefObject<TextToQrHandle | null>;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type TextToBarcodeSidebarBundle = {
+  ref: RefObject<TextToBarcodeHandle | null>;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
+type ScanQrBarcodeSidebarBundle = {
+  ref: RefObject<ScanQrBarcodeHandle | null>;
+  mode: "upload" | "url";
+  selectedFileName?: string | undefined;
+  onRequestPickFile?: () => void;
+  onValidityChange: (ok: boolean) => void;
+  onFieldsDirty: () => void;
+};
+
 type WorkspaceSidebarProps = {
   toolSlug?: string;
   urlToPdfRef?: RefObject<URLtoPDFHandle | null>;
@@ -85,9 +158,18 @@ type WorkspaceSidebarProps = {
   imagesToPdf?: ImagesToPdfSidebarBundle;
   mergePdf?: MergePdfSidebarBundle;
   pdfToImage?: PdfToImageSidebarBundle;
+  pdfCompress?: PdfCompressSidebarBundle;
   wkhtmlToPdf?: WkhtmlToPdfSidebarBundle;
   htmlToOffice?: HtmlToOfficeSidebarBundle;
   pdfUrlSecurity?: PdfUrlSecuritySidebarBundle;
+  pdfToDocx?: PdfToDocxSidebarBundle;
+  excelToPdf?: ExcelToPdfSidebarBundle;
+  lockExcel?: LockExcelSidebarBundle;
+  unlockExcel?: UnlockExcelSidebarBundle;
+  pdfToHtml?: PdfToHtmlSidebarBundle;
+  textToQr?: TextToQrSidebarBundle;
+  textToBarcode?: TextToBarcodeSidebarBundle;
+  scanQrBarcode?: ScanQrBarcodeSidebarBundle;
   onUrlToPdfSourceChange?: (value: string) => void;
   files: File[];
   miniCanvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -115,9 +197,18 @@ const WorkspaceSidebar = memo(
     imagesToPdf,
     mergePdf,
     pdfToImage,
+    pdfCompress,
     wkhtmlToPdf,
     htmlToOffice,
     pdfUrlSecurity,
+    pdfToDocx,
+    excelToPdf,
+    lockExcel,
+    unlockExcel,
+    pdfToHtml,
+    textToQr,
+    textToBarcode,
+    scanQrBarcode,
     onUrlToPdfSourceChange,
     files,
     activePageIndex,
@@ -155,7 +246,14 @@ const WorkspaceSidebar = memo(
           {getTitle(toolSlug)}
         </Typography> */}
 
-        {(toolSlug === "pdf-compressor" || toolSlug === "pdf-to-docx") && <PDFCompress />}
+        {toolSlug === "pdf-compressor" && pdfCompress && (
+          <PdfCompressPanel
+            ref={pdfCompress.ref}
+            selectedFileName={pdfCompress.selectedFileName}
+            onValidityChange={pdfCompress.onValidityChange}
+            onFieldsDirty={pdfCompress.onFieldsDirty}
+          />
+        )}
         {toolSlug === "pdf-merge" && mergePdf && (
           <MergePdfPanel
             ref={mergePdf.ref}
@@ -229,6 +327,72 @@ const WorkspaceSidebar = memo(
             onFieldsDirty={pdfUrlSecurity.onFieldsDirty}
           />
         )}
+        {toolSlug === "pdf-to-docx" && pdfToDocx && (
+          <PdfToDocxPanel
+            ref={pdfToDocx.ref}
+            selectedFileName={pdfToDocx.selectedFileName}
+            onValidityChange={pdfToDocx.onValidityChange}
+            onFieldsDirty={pdfToDocx.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "excel-to-pdf" && excelToPdf && (
+          <ExcelToPdfPanel
+            ref={excelToPdf.ref}
+            selectedFileName={excelToPdf.selectedFileName}
+            onValidityChange={excelToPdf.onValidityChange}
+            onFieldsDirty={excelToPdf.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "lock-excel" && lockExcel && (
+          <LockExcelPanel
+            ref={lockExcel.ref}
+            selectedFileName={lockExcel.selectedFileName}
+            onValidityChange={lockExcel.onValidityChange}
+            onFieldsDirty={lockExcel.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "unlock-excel" && unlockExcel && (
+          <UnlockExcelPanel
+            ref={unlockExcel.ref}
+            selectedFileName={unlockExcel.selectedFileName}
+            onValidityChange={unlockExcel.onValidityChange}
+            onFieldsDirty={unlockExcel.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "pdf-to-html" && pdfToHtml && (
+          <PdfToHtmlPanel
+            ref={pdfToHtml.ref}
+            selectedFileName={pdfToHtml.selectedFileName}
+            onValidityChange={pdfToHtml.onValidityChange}
+            onFieldsDirty={pdfToHtml.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "text-to-qr" && textToQr && (
+          <TextToQrPanel
+            ref={textToQr.ref}
+            onValidityChange={textToQr.onValidityChange}
+            onFieldsDirty={textToQr.onFieldsDirty}
+          />
+        )}
+        {toolSlug === "text-to-barcode" && textToBarcode && (
+          <TextToBarcodePanel
+            ref={textToBarcode.ref}
+            onValidityChange={textToBarcode.onValidityChange}
+            onFieldsDirty={textToBarcode.onFieldsDirty}
+          />
+        )}
+        {(toolSlug === "scan-qr-barcode-upload" ||
+          toolSlug === "scan-qr-barcode-url") &&
+          scanQrBarcode && (
+            <ScanQrBarcodePanel
+              ref={scanQrBarcode.ref}
+              mode={scanQrBarcode.mode}
+              selectedFileName={scanQrBarcode.selectedFileName}
+              onRequestPickFile={scanQrBarcode.onRequestPickFile}
+              onValidityChange={scanQrBarcode.onValidityChange}
+              onFieldsDirty={scanQrBarcode.onFieldsDirty}
+            />
+          )}
 
         {toolSlug === "pdf-canvas" && (
           <Stack spacing={1.2}>
