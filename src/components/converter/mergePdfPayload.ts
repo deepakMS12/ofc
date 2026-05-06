@@ -31,33 +31,29 @@ export function isValidMergeInputPasswordsJson(raw: string): boolean {
 export function buildMergePdfFormData(
   files: File[],
   fields: MergePdfFormFields,
-  queryType: UrlToPdfQueryType,
+  _queryType: UrlToPdfQueryType,
 ): FormData {
   const fd = new FormData();
   for (const f of files) {
     fd.append("files", f);
   }
   if (fields.inputPasswordsJson.trim()) {
-    fd.append("inputPasswords", fields.inputPasswordsJson.trim());
+    fd.append("passwords", fields.inputPasswordsJson.trim());
   }
   if (fields.outputFileName.trim()) {
-    fd.append("outputFileName", fields.outputFileName.trim());
+    fd.append("fileName", fields.outputFileName.trim());
   }
   if (fields.simpleOpenPassword.trim()) {
     fd.append("password", fields.simpleOpenPassword.trim());
   }
-  fd.append("mode", queryType === "d" ? "preview" : "download");
-
-  if (queryType === "p") {
-    const rights = buildPdfRightsFromFields(
-      fields.encryptionLevel,
-      fields.userPassword,
-      fields.ownerPassword,
-      fields.rightsRestrictions,
-    );
-    if (rights) {
-      fd.append("rights", JSON.stringify(rights));
-    }
+  const rights = buildPdfRightsFromFields(
+    fields.encryptionLevel,
+    fields.userPassword,
+    fields.ownerPassword,
+    fields.rightsRestrictions,
+  );
+  if (rights) {
+    fd.append("rights", JSON.stringify(rights));
   }
 
   return fd;

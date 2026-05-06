@@ -29,6 +29,7 @@ export type ConvertUrlToPdfArg = {
     | "html-to-excel"
     | "pdf-lock-url"
     | "pdf-unlock-upload"
+    | "pdf-unlock-url"
     | "pdf-to-docx"
     | "excel-to-pdf"
     | "lock-excel"
@@ -127,6 +128,7 @@ const SOURCE_ENDPOINT_MAP: Partial<Record<SourceType, string>> = {
     "html-to-word": "/libreoffice/html_doc",
     "html-to-excel": "/libreoffice/html_excel",
     "pdf-lock-url": "/convert/pdf-url",
+    "pdf-unlock-url": "/convert/pdf-unlock-url",
     "pdf-unlock-upload": "/convert/pdf-unlock",
     "pdf-to-docx": "/libreoffice/pdf_doc",
     "excel-to-pdf": "/libreoffice/xlsx_pdf",
@@ -141,13 +143,6 @@ const SOURCE_ENDPOINT_MAP: Partial<Record<SourceType, string>> = {
 };
 
 const SOURCES_WITHOUT_QUERY_PARAM = new Set<SourceType>([
-  "wkhtml-url",
-  "wkhtml-html-code",
-  "wkhtml-html-file",
-  "html-to-word",
-  "html-to-excel",
-  "pdf-lock-url",
-  "pdf-unlock-upload",
   "pdf-to-docx",
   "pdf-compress",
   "excel-to-pdf",
@@ -162,12 +157,21 @@ const SOURCES_WITHOUT_QUERY_PARAM = new Set<SourceType>([
 
 const SOURCE_QUERY_R_MAP: Partial<Record<SourceType, string>> = {
     url: "0001",
+    "wkhtml-url": "0022",
+    "wkhtml-html-code": "0023",
+    "wkhtml-html-file": "0024",
     html: "0002",
     "html-file": "0003",
     "docx-file": "0004",
     "docx-template": "0006",
     "images-pdf": "0011",
+    "merge-pdf": "0010",
     "html-variable": "0028",
+    "html-to-word": "0025",
+    "html-to-excel": "0026",
+    "pdf-lock-url": "0007",
+    "pdf-unlock-url": "0008",
+    "pdf-unlock-upload": "0009",
 };
 
 const SOURCE_FIXED_EXT_MAP: Partial<Record<SourceType, OutputFileExt>> = {

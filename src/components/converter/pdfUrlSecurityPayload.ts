@@ -14,16 +14,12 @@ export function buildPdfUrlSecurityBody(
   mode: PdfUrlSecurityMode,
   state: PdfUrlSecurityFormState,
 ): Record<string, string> {
-  if (mode !== "lock") {
-    throw new Error("buildPdfUrlSecurityBody is only used for lock mode.");
-  }
   const output = state.outputFileName.trim() || defaultBaseName(mode);
-  const body: Record<string, string> = {
-    pdfUrl: state.pdfUrl.trim(),
-    outputFileName: output,
-    userPassword: state.password.trim(),
+  return {
+    url: state.pdfUrl.trim(),
+    password: state.password.trim(),
+    fileName: output,
   };
-  return body;
 }
 
 /** FormData for POST /convert/pdf-unlock (upload). */
@@ -38,6 +34,6 @@ export function buildPdfUnlockUploadFormData(
     fd.append("password", unlockPassword.trim());
   }
   const out = outputFileName.trim() || defaultBaseName("unlock");
-  fd.append("outputFileName", out);
+  fd.append("fileName", out);
   return fd;
 }

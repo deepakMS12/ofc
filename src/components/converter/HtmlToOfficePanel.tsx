@@ -9,7 +9,8 @@ import { SettingsAccordion } from "./pdfSettings/SettingsAccordion";
 import { SettingsOutlinedField } from "./pdfSettings/SettingsOutlinedField";
 import { colors } from "@/utils/customColor";
 import {
-  buildHtmlOfficeFormData,
+  buildHtmlToExcelFormData,
+  buildHtmlToWordFormData,
   type HtmlOfficeTarget,
 } from "./htmlToOfficePayload";
 
@@ -69,14 +70,13 @@ const HtmlToOfficePanel = forwardRef<
         if (!file) {
           throw new Error("Select an HTML file first.");
         }
-        return buildHtmlOfficeFormData(
-          file,
-          baseName,
-          responseMode === "preview" ? "preview" : "download",
-        );
+        if (target === "word") {
+          return buildHtmlToWordFormData(file, baseName);
+        }
+        return buildHtmlToExcelFormData(file, baseName);
       },
     }),
-    [baseName, responseMode],
+    [baseName, responseMode, target],
   );
 
   useEffect(() => {

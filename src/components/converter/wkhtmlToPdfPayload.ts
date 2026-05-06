@@ -14,48 +14,45 @@ export type WkhtmlFormState = {
   pdfPassword: string;
 };
 
-function modeFromQuery(queryType: UrlToPdfQueryType): "preview" | "download" {
-  return queryType === "d" ? "preview" : "download";
-}
-
 export function buildWkhtmlPayload(
   state: WkhtmlFormState,
-  queryType: UrlToPdfQueryType,
+  _queryType: UrlToPdfQueryType,
   files: File[],
 ): Record<string, unknown> | FormData {
-  const mode = modeFromQuery(queryType);
   const out = state.outputName.trim();
   const pwd = state.pdfPassword.trim();
-  const base: Record<string, unknown> = {
-    mode,
-    ...(out ? { outputFileName: out } : {}),
-    ...(pwd ? { password: pwd } : {}),
-  };
 
+  /** POST /wkhtmltopdf/url_pdf?type=<d|p>&r=0022 — body uses urlFetchMode / fileName per API. */
   if (state.variant === "url") {
-    return {
-      ...base,
+    const body: Record<string, unknown> = {
       url: state.url.trim(),
-      urlLoadMode: state.urlLoadMode,
+      urlFetchMode: state.urlLoadMode,
     };
+    if (out) body.fileName = out;
+    if (pwd) body.password = pwd;
+    return body;
   }
 
+  /** POST /wkhtmltopdf/html_pdf?type=<d|p>&r=0023 — body uses htmlCode / fileName per API. */
   if (state.variant === "html-code") {
-    return {
-      ...base,
-      html: state.html,
-      ...(state.baseUrl.trim() ? { baseUrl: state.baseUrl.trim() } : {}),
+    const body: Record<string, unknown> = {
+      htmlCode: state.html,
     };
+    const bu = state.baseUrl.trim();
+    if (bu) body.baseUrl = bu;
+    if (out) body.fileName = out;
+    if (pwd) body.password = pwd;
+    return body;
   }
 
+  /** POST /wkhtmltopdf/htmlfile_pdf?type=<d|p>&r=0024 — multipart file + fields (no mode body param). */
   const fd = new FormData();
   const file = files[0];
   if (!file) {
     throw new Error("HTML file is required.");
   }
   fd.append("file", file);
-  fd.append("mode", mode);
-  if (out) fd.append("outputFileName", out);
+  if (out) fd.append("fileName", out);
   if (pwd) fd.append("password", pwd);
   if (state.baseUrl.trim()) fd.append("baseUrl", state.baseUrl.trim());
   return fd;

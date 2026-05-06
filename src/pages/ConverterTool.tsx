@@ -497,7 +497,7 @@ const ConverterTool = () => {
       return;
     }
     if (files.length < 2) {
-      showToast("Select at least two PDF files.", "info");
+      showToast("Please select min two files.", "info");
       return;
     }
     setUrlToPdfDownloadComplete(false);

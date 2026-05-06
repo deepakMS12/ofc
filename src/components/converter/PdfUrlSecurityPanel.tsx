@@ -134,8 +134,6 @@ const PdfUrlSecurityPanel = forwardRef<PdfUrlSecurityHandle, PdfUrlSecurityPanel
         >
           <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pb: 1 }}>
             <SettingsAccordion id="unlock-pdf-source" title="Source PDF" defaultExpanded>
-          
-
               <Typography component="span" sx={fieldLabelSx}>
                 Unlock password (optional)
               </Typography>
