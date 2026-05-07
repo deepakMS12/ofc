@@ -46,42 +46,11 @@ const ConverterCard = ({
       );
     }
 
-    if (layout === "from-pdf" && TargetIcon) {
-      return (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.75,
-            mb: 2,
-          }}
-        >
-          <PictureAsPdfOutlined
-            sx={{
-              fontSize: 36,
-              color: PDF_RED,
-              flexShrink: 0,
-            }}
-          />
-          <ChevronRightOutlined
-            sx={{
-              fontSize: 20,
-              color: "text.disabled",
-              flexShrink: 0,
-            }}
-          />
-          <TargetIcon
-            sx={{
-              fontSize: 36,
-              color: targetColor,
-              flexShrink: 0,
-            }}
-          />
-        </Box>
-      );
-    }
+    const ResolvedTargetIcon = TargetIcon ?? PictureAsPdfOutlined;
+    const resolvedTargetColor = targetColor ?? PDF_RED;
+    const LeadingIcon = layout === "from-pdf" ? PictureAsPdfOutlined : SourceIcon;
+    const leadingColor = layout === "from-pdf" ? PDF_RED : sourceColor;
 
-    /* to-pdf */
     return (
       <Box
         sx={{
@@ -91,10 +60,10 @@ const ConverterCard = ({
           mb: 2,
         }}
       >
-        <SourceIcon
+        <LeadingIcon
           sx={{
             fontSize: 36,
-            color: sourceColor,
+            color: leadingColor,
             flexShrink: 0,
           }}
         />
@@ -105,10 +74,10 @@ const ConverterCard = ({
             flexShrink: 0,
           }}
         />
-        <PictureAsPdfOutlined
+        <ResolvedTargetIcon
           sx={{
             fontSize: 36,
-            color: PDF_RED,
+            color: resolvedTargetColor,
             flexShrink: 0,
           }}
         />
