@@ -53,7 +53,6 @@ const UnlockExcelPanel = forwardRef<UnlockExcelHandle, UnlockExcelPanelProps>(
             file,
             currentSheetPassword,
             outputName,
-            responseMode === "preview" ? "preview" : "download",
           );
         },
       }),

@@ -1,17 +1,15 @@
 export function buildPdfToDocxFormData(
   file: File,
-  outputBaseName: string,
+  outputFileName: string,
   pdfPassword: string,
-  mode: "download" | "preview",
 ): FormData {
   const fd = new FormData();
   fd.append("file", file);
-  if (outputBaseName.trim()) {
-    fd.append("baseName", outputBaseName.trim());
+  if (outputFileName.trim()) {
+    fd.append("fileName", outputFileName.trim());
   }
   if (pdfPassword.trim()) {
     fd.append("password", pdfPassword.trim());
   }
-  fd.append("mode", mode);
   return fd;
 }

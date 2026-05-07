@@ -130,11 +130,11 @@ const SOURCE_ENDPOINT_MAP: Partial<Record<SourceType, string>> = {
     "pdf-lock-url": "/convert/pdf-url",
     "pdf-unlock-url": "/convert/pdf-unlock-url",
     "pdf-unlock-upload": "/convert/pdf-unlock",
-    "pdf-to-docx": "/libreoffice/pdf_doc",
-    "excel-to-pdf": "/libreoffice/xlsx_pdf",
-    "lock-excel": "/libreoffice/lock_excel",
-    "unlock-excel": "/libreoffice/unlock_excel",
-    "pdf-to-html": "/libreoffice/pdf_html",
+    "pdf-to-docx": "/convert/pdf-doc",
+    "excel-to-pdf": "/convert/excel-pdf",
+    "lock-excel": "/convert/excel-lock",
+    "unlock-excel": "/convert/excel-unlock",
+    "pdf-to-html": "/convert/pdf-html",
     "text-to-qr": "/qrcode/text",
     "text-to-barcode": "/barcode/text",
     "scan-qr-barcode-upload": "/qrcode/scan",
@@ -143,12 +143,7 @@ const SOURCE_ENDPOINT_MAP: Partial<Record<SourceType, string>> = {
 };
 
 const SOURCES_WITHOUT_QUERY_PARAM = new Set<SourceType>([
-  "pdf-to-docx",
   "pdf-compress",
-  "excel-to-pdf",
-  "lock-excel",
-  "unlock-excel",
-  "pdf-to-html",
   "text-to-qr",
   "text-to-barcode",
   "scan-qr-barcode-upload",
@@ -166,12 +161,18 @@ const SOURCE_QUERY_R_MAP: Partial<Record<SourceType, string>> = {
     "docx-template": "0006",
     "images-pdf": "0011",
     "merge-pdf": "0010",
+    "pdf-to-image": "0012",
     "html-variable": "0028",
     "html-to-word": "0025",
     "html-to-excel": "0026",
     "pdf-lock-url": "0007",
     "pdf-unlock-url": "0008",
     "pdf-unlock-upload": "0009",
+    "pdf-to-docx": "0013",
+    "excel-to-pdf": "0014",
+    "pdf-to-html": "0016",
+    "lock-excel": "0020",
+    "unlock-excel": "0021",
 };
 
 const SOURCE_FIXED_EXT_MAP: Partial<Record<SourceType, OutputFileExt>> = {
@@ -357,6 +358,10 @@ export const convertUrlToPdf = createAsyncThunk<
   { rejectValue: string }
 >("urlToPdf/convert", async (arg, { rejectWithValue }) => {
   try {
+    // UI currently emits queryType with opposite semantics; normalize to API contract:
+    // download => d, preview => p.
+    const apiQueryType: UrlToPdfQueryType = arg.queryType === "d" ? "p" : "d";
+
     const endpoint = arg.sourceType
       ? SOURCE_ENDPOINT_MAP[arg.sourceType] ?? "/convert/html"
       : "/convert/html";
@@ -371,8 +376,8 @@ export const convertUrlToPdf = createAsyncThunk<
       params: skipQueryParam
         ? undefined
         : queryCode
-          ? { type: arg.queryType, r: queryCode }
-          : { type: arg.queryType },
+          ? { type: apiQueryType, r: queryCode }
+          : { type: apiQueryType },
       responseType: "blob",
       headers: {
         Accept: "*/*",

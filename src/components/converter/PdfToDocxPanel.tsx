@@ -56,7 +56,6 @@ const PdfToDocxPanel = forwardRef<PdfToDocxHandle, PdfToDocxPanelProps>(
             file,
             outputName,
             pdfPassword,
-            isPreview ? "preview" : "download",
           );
         },
       }),

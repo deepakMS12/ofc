@@ -54,7 +54,6 @@ const LockExcelPanel = forwardRef<LockExcelHandle, LockExcelPanelProps>(
             file,
             sheetPassword,
             outputName,
-            responseMode === "preview" ? "preview" : "download",
           );
         },
       }),

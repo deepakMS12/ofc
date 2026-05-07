@@ -81,27 +81,24 @@ function buildWatermarkJson(
 export function buildPdfToImageFormData(
   file: File,
   fields: PdfToImageFormFields,
-  mode: "preview" | "download",
 ): FormData {
   const fd = new FormData();
   fd.append("file", file);
   if (fields.pdfPassword.trim()) {
     fd.append("password", fields.pdfPassword.trim());
   }
-  fd.append("dpi", fields.dpi.trim() || "300");
-  fd.append("format", fields.downloadFormat);
   if (fields.outputFileName.trim()) {
-    fd.append("outputFileName", fields.outputFileName.trim());
+    fd.append("fileName", fields.outputFileName.trim());
   }
-  fd.append("mode", mode);
 
   const wm = buildWatermarkJson(fields);
-  if (wm) {
-    fd.append("watermark", JSON.stringify(wm));
-  }
-  if (fields.stampFooter.trim()) {
-    fd.append("stamp", fields.stampFooter.trim());
-  }
+  const options: Record<string, unknown> = {
+    dpi: Number(fields.dpi.trim() || "300"),
+    format: fields.downloadFormat,
+    ...(wm ? { watermark: wm } : {}),
+    ...(fields.stampFooter.trim() ? { stampText: fields.stampFooter.trim() } : {}),
+  };
+  fd.append("options", JSON.stringify(options));
 
   return fd;
 }
@@ -111,9 +108,8 @@ export function buildPdfToImagePayload(
   fields: PdfToImageFormFields,
   queryType: UrlToPdfQueryType,
 ): { queryType: UrlToPdfQueryType; body: FormData } {
-  const mode: "preview" | "download" = queryType === "d" ? "preview" : "download";
   return {
     queryType,
-    body: buildPdfToImageFormData(file, fields, mode),
+    body: buildPdfToImageFormData(file, fields),
   };
 }

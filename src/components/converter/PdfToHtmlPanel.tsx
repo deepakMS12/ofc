@@ -53,7 +53,6 @@ const PdfToHtmlPanel = forwardRef<PdfToHtmlHandle, PdfToHtmlPanelProps>(
             file,
             pdfPassword,
             outputName,
-            responseMode === "preview" ? "preview" : "download",
           );
         },
       }),

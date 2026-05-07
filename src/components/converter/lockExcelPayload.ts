@@ -1,12 +1,13 @@
-import { buildHtmlOfficeFormData } from "./htmlToOfficePayload";
-
 export function buildLockExcelFormData(
   file: File,
   sheetPassword: string,
-  outputBaseName: string,
-  mode: "download" | "preview",
+  outputFileName: string,
 ): FormData {
-  const fd = buildHtmlOfficeFormData(file, outputBaseName, mode);
+  const fd = new FormData();
+  fd.append("file", file);
+  if (outputFileName.trim()) {
+    fd.append("fileName", outputFileName.trim());
+  }
   fd.append("password", sheetPassword.trim());
   return fd;
 }

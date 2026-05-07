@@ -13,6 +13,7 @@ import { SettingsAccordion } from "./pdfSettings/SettingsAccordion";
 import { SettingsOutlinedField } from "./pdfSettings/SettingsOutlinedField";
 import { colors } from "@/utils/customColor";
 import { buildExcelToPdfFormData } from "./excelToPdfPayload";
+import type { EncryptionLevelId } from "./rightsEncryptionOptions";
 
 const PANEL_BG = "#ffffff";
 const PANEL_BORDER = "#ececf2";
@@ -61,7 +62,7 @@ const ExcelToPdfPanel = forwardRef<ExcelToPdfHandle, ExcelToPdfPanelProps>(
     const [watermarkUrl, setWatermarkUrl] = useState("");
     const [stampText, setStampText] = useState("");
     const [simpleOpenPassword, setSimpleOpenPassword] = useState("");
-    const [encryptionLevel, setEncryptionLevel] = useState("none");
+    const [encryptionLevel, setEncryptionLevel] = useState<EncryptionLevelId>("none");
     const [userPassword, setUserPassword] = useState("");
     const [ownerPassword, setOwnerPassword] = useState("");
     const [disallowPrint, setDisallowPrint] = useState(false);
@@ -81,12 +82,54 @@ const ExcelToPdfPanel = forwardRef<ExcelToPdfHandle, ExcelToPdfPanelProps>(
           }
           return buildExcelToPdfFormData(
             file,
-            outputName,
-            responseMode === "preview" ? "preview" : "download",
+            {
+              outputFileName: outputName,
+              scaling,
+              pageSize,
+              orientation,
+              marginTop,
+              marginRight,
+              marginBottom,
+              marginLeft,
+              watermarkType: watermarkType === "text" ? "text" : "image",
+              watermarkPosition,
+              watermarkUrl,
+              stampText,
+              simpleOpenPassword,
+              encryptionLevel,
+              userPassword,
+              ownerPassword,
+              disallowPrint,
+              disallowAnnotation,
+              disallowContentCopy,
+              disableEditingPdf,
+            },
           );
         },
       }),
-      [outputName, responseMode],
+      [
+        outputName,
+        responseMode,
+        scaling,
+        pageSize,
+        orientation,
+        marginTop,
+        marginRight,
+        marginBottom,
+        marginLeft,
+        watermarkType,
+        watermarkPosition,
+        watermarkUrl,
+        stampText,
+        simpleOpenPassword,
+        encryptionLevel,
+        userPassword,
+        ownerPassword,
+        disallowPrint,
+        disallowAnnotation,
+        disallowContentCopy,
+        disableEditingPdf,
+      ],
     );
 
     useEffect(() => {
