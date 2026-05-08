@@ -7,7 +7,10 @@ export function buildScanQrUploadFormData(
 ): FormData {
   const fd = new FormData();
   fd.append("file", file);
-  if (outputName.trim()) fd.append("outputName", outputName.trim());
+  if (outputName.trim()) {
+    fd.append("fileName", outputName.trim());
+    fd.append("outputName", outputName.trim());
+  }
   fd.append("mode", mode);
   return fd;
 }
@@ -21,6 +24,9 @@ export function buildScanQrUrlBody(
     imageUrl: imageUrl.trim(),
     mode,
   };
-  if (outputName.trim()) body.outputName = outputName.trim();
+  if (outputName.trim()) {
+    body.fileName = outputName.trim();
+    body.outputName = outputName.trim();
+  }
   return body;
 }

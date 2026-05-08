@@ -10,6 +10,7 @@ export function buildPdfCompressFormData(
     fd.append("password", pdfPassword.trim());
   }
   if (outputName.trim()) {
+    fd.append("fileName", outputName.trim());
     fd.append("outputName", outputName.trim());
   }
   fd.append("mode", mode);

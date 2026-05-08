@@ -121,7 +121,7 @@ const SOURCE_ENDPOINT_MAP: Partial<Record<SourceType, string>> = {
     "images-pdf": "/convert/images-pdf",
     "merge-pdf": "/convert/merge-pdf",
     "pdf-to-image": "/convert/pdf-jpg",
-    "pdf-compress": "/convert/pdf-compress",
+    "pdf-compress": "/convert/compress-pdf",
     "wkhtml-url": "/wkhtmltopdf/url_pdf",
     "wkhtml-html-code": "/wkhtmltopdf/html_pdf",
     "wkhtml-html-file": "/wkhtmltopdf/htmlfile_pdf",
@@ -135,20 +135,14 @@ const SOURCE_ENDPOINT_MAP: Partial<Record<SourceType, string>> = {
     "lock-excel": "/convert/excel-lock",
     "unlock-excel": "/convert/excel-unlock",
     "pdf-to-html": "/convert/pdf-html",
-    "text-to-qr": "/qrcode/text",
-    "text-to-barcode": "/barcode/text",
-    "scan-qr-barcode-upload": "/qrcode/scan",
-    "scan-qr-barcode-url": "/qrcode/scan",
+    "text-to-qr": "/qr-code",
+    "text-to-barcode": "/convert/barcode",
+    "scan-qr-barcode-upload": "/convert/scan-qr-barcode",
+    "scan-qr-barcode-url": "/convert/scan-qr-barcode",
     "docx-template": "/convert/docx-template",
 };
 
-const SOURCES_WITHOUT_QUERY_PARAM = new Set<SourceType>([
-  "pdf-compress",
-  "text-to-qr",
-  "text-to-barcode",
-  "scan-qr-barcode-upload",
-  "scan-qr-barcode-url",
-]);
+const SOURCES_WITHOUT_QUERY_PARAM = new Set<SourceType>([]);
 
 const SOURCE_QUERY_R_MAP: Partial<Record<SourceType, string>> = {
     url: "0001",
@@ -171,6 +165,11 @@ const SOURCE_QUERY_R_MAP: Partial<Record<SourceType, string>> = {
     "pdf-to-docx": "0013",
     "excel-to-pdf": "0014",
     "pdf-to-html": "0016",
+    "text-to-qr": "0017",
+    "text-to-barcode": "0018",
+    "scan-qr-barcode-upload": "0027",
+    "scan-qr-barcode-url": "0027",
+    "pdf-compress": "0019",
     "lock-excel": "0020",
     "unlock-excel": "0021",
 };
