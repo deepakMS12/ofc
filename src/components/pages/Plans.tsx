@@ -1,21 +1,10 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Grid,
-  Paper,
-  Stack,
-  Typography,
-} from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import BoltIcon from '@mui/icons-material/Bolt';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import { useEffect, useMemo, useState } from 'react';
+import { Box, Button, Chip, Grid, Paper, Stack, Typography } from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import conversionCosts from '../../../conversion_costs.json';
 
-type PlanTier = 'bronze' | 'silver' | 'gold' | 'enterprise';
+type PlanTier = 'free' | 'bronze' | 'silver' | 'gold' | 'enterprise';
 
 type ConversionPlan = {
   maxUpload: number;
@@ -34,10 +23,11 @@ type ConversionCostsFile = {
 type PlanMetrics = {
   tier: PlanTier;
   label: string;
-  description: string;
-  icon: ReactNode;
-  gradient: string;
-  accentColor: string;
+  recommendation?: string;
+  creditsLabel: string;
+  overageLabel: string;
+  maxFileSizeLabel: string;
+  timeoutLabel: string;
   cta: string;
   highlight?: boolean;
   conversionCount: number;
@@ -47,56 +37,102 @@ type PlanMetrics = {
   maxUploadMax: number;
   rateLimitMin: number;
   rateLimitMax: number;
+  includedFeatures: string[];
+  excludedFeatures: string[];
 };
+
+const PURPLE = '#7349F8';
+const PURPLE_DARK = '#5f3ad6';
 
 const tierMeta: Record<
   PlanTier,
   {
     label: string;
-    description: string;
-    icon: ReactNode;
-    gradient: string;
-    accentColor: string;
+    recommendation?: string;
+    creditsLabel: string;
     cta: string;
     highlight?: boolean;
+    includedFeatures: string[];
+    excludedFeatures: string[];
   }
 > = {
+  free: {
+    label: 'Free',
+    recommendation: 'We recommend the Free plan',
+    creditsLabel: '50 Credits',
+    cta: 'Get Started',
+    highlight: true,
+    includedFeatures: [
+      'CSS & Javascript injection',
+      'Advanced header & footer',
+      'Encryption and Watermark',
+    ],
+    excludedFeatures: [
+      'No file size limit',
+      'AWS S3 delivery',
+      'Parallel & Asynchronous responses',
+    ],
+  },
   bronze: {
-    label: 'BRONZE',
-    description: 'Starter automation for small conversion volume',
-    icon: <BoltIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #7a4b2f 0%, #b77846 100%)',
-    accentColor: '#8b5e3c',
-    cta: 'Start Bronze',
+    label: 'Bronze',
+    creditsLabel: '100 Credits',
+    cta: 'Get Started',
+    includedFeatures: [
+      'CSS & Javascript injection',
+      'Advanced header & footer',
+      'Encryption and Watermark',
+    ],
+    excludedFeatures: [
+      'No file size limit',
+      'AWS S3 delivery',
+      'Parallel & Asynchronous responses',
+    ],
   },
   silver: {
-    label: 'SILVER',
-    description: 'Balanced speed and cost for growing teams',
-    icon: <AutoAwesomeIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #5f6675 0%, #9ba3b2 100%)',
-    accentColor: '#6366f1',
-    cta: 'Choose Silver',
+    label: 'Silver',
+    recommendation: 'We recommend the Silver plan',
+    creditsLabel: '250 Credits',
+    cta: 'Get Started',
     highlight: true,
+    includedFeatures: [
+      'CSS & Javascript injection',
+      'Advanced header & footer',
+      'Encryption and Watermark',
+      'No file size limit',
+    ],
+    excludedFeatures: ['AWS S3 delivery', 'Parallel & Asynchronous responses'],
   },
   gold: {
-    label: 'GOLD',
-    description: 'Best value for high-volume production use',
-    icon: <WorkspacePremiumIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #846300 0%, #d5a500 100%)',
-    accentColor: '#ca8a04',
-    cta: 'Choose Gold',
+    label: 'Gold',
+    creditsLabel: '500 Credits',
+    cta: 'Get Started',
+    includedFeatures: [
+      'CSS & Javascript injection',
+      'Advanced header & footer',
+      'Encryption and Watermark',
+      'No file size limit',
+      'AWS S3 delivery',
+    ],
+    excludedFeatures: ['Parallel & Asynchronous responses'],
   },
   enterprise: {
-    label: 'ENTERPRISE',
-    description: 'Scale-ready throughput and priority handling',
-    icon: <BusinessCenterIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #1a5f73 0%, #2aa5c9 100%)',
-    accentColor: '#0e7490',
+    label: 'Enterprise',
+    creditsLabel: 'Custom Credits',
     cta: 'Contact Sales',
+    includedFeatures: [
+      'CSS & Javascript injection',
+      'Advanced header & footer',
+      'Encryption and Watermark',
+      'No file size limit',
+      'AWS S3 delivery',
+      'Parallel & Asynchronous responses',
+    ],
+    excludedFeatures: [],
   },
 };
 
-const TIERS: PlanTier[] = ['bronze', 'silver', 'gold', 'enterprise'];
+const TIERS: PlanTier[] = ['free', 'bronze', 'silver', 'gold', 'enterprise'];
+const pricingData = conversionCosts as ConversionCostsFile;
 
 const formatRange = (min: number, max: number, suffix = '') => {
   if (min === max) {
@@ -113,47 +149,13 @@ const formatPriceRange = (min: number, max: number) => {
 };
 
 export default function Plans() {
-  const [pricingData, setPricingData] = useState<ConversionCostsFile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<PlanTier | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    const loadPricing = async () => {
-      try {
-        setIsLoading(true);
-        setLoadError(null);
-        const response = await fetch('/conversion_costs.json', { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Failed to load conversion pricing (${response.status})`);
-        }
-        const json = (await response.json()) as ConversionCostsFile;
-        if (active) {
-          setPricingData(json);
-        }
-      } catch (error) {
-        if (active) {
-          setLoadError(error instanceof Error ? error.message : 'Unable to load pricing data.');
-        }
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadPricing();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
+
     const normalizeTier = (value: unknown): PlanTier | null => {
       if (typeof value !== 'string') {
         return null;
@@ -217,7 +219,7 @@ export default function Plans() {
   }, []);
 
   const planMetrics = useMemo<PlanMetrics[]>(() => {
-    const conversions = Object.values(pricingData?.conversions ?? {});
+    const conversions = Object.values(pricingData.conversions ?? {});
 
     return TIERS.map((tier) => {
       const tierPoints = conversions
@@ -230,36 +232,38 @@ export default function Plans() {
       const maxUploadPoints = tierPoints.map((point) => point.maxUpload);
       const rateLimitPoints = tierPoints.map((point) => point.rateLimit);
 
+      const perPageMin = perPagePoints.length ? Math.min(...perPagePoints) : 0;
+      const perPageMax = perPagePoints.length ? Math.max(...perPagePoints) : 0;
+      const maxUploadMin = maxUploadPoints.length ? Math.min(...maxUploadPoints) : 0;
+      const maxUploadMax = maxUploadPoints.length ? Math.max(...maxUploadPoints) : 0;
+      const rateLimitMin = rateLimitPoints.length ? Math.min(...rateLimitPoints) : 0;
+      const rateLimitMax = rateLimitPoints.length ? Math.max(...rateLimitPoints) : 0;
+
+      const meta = tierMeta[tier];
+
       return {
         tier,
-        ...tierMeta[tier],
+        label: meta.label,
+        recommendation: meta.recommendation,
+        creditsLabel: meta.creditsLabel,
+        overageLabel: tier === 'free' ? 'N/A/credits' : formatPriceRange(perPageMin, perPageMax),
+        maxFileSizeLabel:
+          tier === 'free' ? '2Mb' : `${formatRange(maxUploadMin, maxUploadMax)} uploads`,
+        timeoutLabel: '30s',
+        cta: meta.cta,
+        highlight: meta.highlight,
         conversionCount: tierPoints.length,
-        perPageMin: perPagePoints.length ? Math.min(...perPagePoints) : 0,
-        perPageMax: perPagePoints.length ? Math.max(...perPagePoints) : 0,
-        maxUploadMin: maxUploadPoints.length ? Math.min(...maxUploadPoints) : 0,
-        maxUploadMax: maxUploadPoints.length ? Math.max(...maxUploadPoints) : 0,
-        rateLimitMin: rateLimitPoints.length ? Math.min(...rateLimitPoints) : 0,
-        rateLimitMax: rateLimitPoints.length ? Math.max(...rateLimitPoints) : 0,
+        perPageMin,
+        perPageMax,
+        maxUploadMin,
+        maxUploadMax,
+        rateLimitMin,
+        rateLimitMax,
+        includedFeatures: meta.includedFeatures,
+        excludedFeatures: meta.excludedFeatures,
       };
     });
-  }, [pricingData]);
-
-  const getUnavailableSpecs = (tier: PlanTier) => {
-    if (tier === 'enterprise') {
-      return [];
-    }
-    if (tier === 'gold') {
-      return ['Unlimited enterprise throughput'];
-    }
-    if (tier === 'silver') {
-      return ['Unlimited enterprise throughput', 'Dedicated enterprise support'];
-    }
-    return [
-      'Unlimited enterprise throughput',
-      'Dedicated enterprise support',
-      'Priority enterprise queue',
-    ];
-  };
+  }, []);
 
   return (
     <Box
@@ -269,278 +273,199 @@ export default function Plans() {
         p: { xs: 2, md: 4 },
       }}
     >
-      <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: '#1f2937', mb: 1 }}>
-          Choose the plan that matches your conversion volume
-        </Typography>
-        <Typography variant="body1" sx={{ color: '#4b5563' }}>
-          Pricing is generated directly from conversion costs and reflects per-page rates, request
-          limits, and upload caps across available conversion tools.
-        </Typography>
-      </Box>
-
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-          <CircularProgress />
-        </Box>
-      ) : loadError ? (
-        <Alert severity="error" sx={{ maxWidth: 800, mx: 'auto' }}>
-          {loadError}
-        </Alert>
-      ) : (
-        <Stack spacing={3}>
-          {planMetrics.map((plan, index) => {
-            const unavailable = getUnavailableSpecs(plan.tier);
-            const included = [
-              `Per page pricing: ${formatPriceRange(plan.perPageMin, plan.perPageMax)}`,
-              `Conversion tools covered: ${plan.conversionCount}`,
-              `Max uploads per request: ${formatRange(plan.maxUploadMin, plan.maxUploadMax)}`,
-              `API rate limit: ${formatRange(plan.rateLimitMin, plan.rateLimitMax)} req/min`,
-            ];
-
-            return (
-              <Paper
-                key={plan.tier}
-                elevation={0}
-                sx={{
-                  boxShadow: '0 1px 5px #c8c8c8',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  overflow: 'hidden',
-                  backgroundColor: '#fff',
-                }}
-              >
-                <Grid container>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Box sx={{ height: '100%' }}>
-                      <Box
-                        sx={{
-                          background: plan.gradient,
-                          color: 'white',
-                          py: 1.6,
-                          px: 2,
-                          textAlign: 'center',
-                          fontWeight: 700,
-                          position: 'relative',
-                        }}
-                      >
-                        {plan.tier === 'silver' && (
-                          <Box
-                            className="ribbon"
-                            sx={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              display: 'inline-block',
-                              minWidth: 200,
-                              height: 24,
-                              lineHeight: '24px',
-                              mt: 2.5,
-                              pl: 2.5,
-                              backgroundColor: '#32864c',
-                              fontSize: 12,
-                              color: '#fff',
-                              textAlign: 'left',
-                            }}
-                          >
-                            Recommended
-                          </Box>
-                        )}
-                        {currentPlan === plan.tier && (
-                          <Chip
-                            size="small"
-                            label="Current plan"
-                            sx={{
-                              position: 'absolute',
-                              top: 10,
-                              right: 10,
-                              backgroundColor: 'rgba(17,24,39,0.28)',
-                              color: 'white',
-                              fontWeight: 700,
-                            }}
-                          />
-                        )}
-                        <Typography sx={{ fontWeight: 700, fontSize: 30, mt: 0.5 }}>{index + 1}</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                          {plan.label}
-                        </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                          {plan.description}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          p: 3,
-                          pb: currentPlan !== plan.tier ? 9 : 3,
-                          position: 'relative',
-                          minHeight: 260,
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <Typography sx={{ color: '#6d28d9', fontWeight: 700, mb: 0.7 }}>
-                          {plan.conversionCount} Credits
-                        </Typography>
-                        <Typography variant="h4" sx={{ fontWeight: 700, color: '#111827', mb: 2 }}>
-                          {plan.label}
-                        </Typography>
-                        <Box component="ul" sx={{ m: 0, pl: 2.5, color: '#6d28d9' }}>
-                          <Typography component="li" sx={{ color: '#374151' }}>
-                            Total Overage: <strong>{formatPriceRange(plan.perPageMin, plan.perPageMax)}</strong>
-                          </Typography>
-                          <Typography component="li" sx={{ color: '#374151' }}>
-                            Max uploads: <strong>{formatRange(plan.maxUploadMin, plan.maxUploadMax)}</strong>
-                          </Typography>
-                          <Typography component="li" sx={{ color: '#374151' }}>
-                            Timeout: <strong>30s</strong>
-                          </Typography>
-                        </Box>
-                        {currentPlan !== plan.tier && (
-                          <Button
-                            variant="contained"
-                            sx={{
-                              position: 'absolute',
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              bottom: 5,
-                              width: '50%',
-                              py: 1.8,
-                              textTransform: 'none',
-                              fontWeight: 700,
-                              backgroundColor: plan.accentColor,
-                              '&:hover': {
-                                filter: 'brightness(0.92)',
-                                backgroundColor: plan.accentColor,
-                              },
-                            }}
-                          >
-                            SELECT
-                          </Button>
-                        )}
-                      </Box>
-                    </Box>
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 8 }}>
+      <Stack spacing={3} sx={{ maxWidth: 1180, mx: 'auto' }}>
+        {planMetrics.map((plan) => (
+          <Paper
+            key={plan.tier}
+            elevation={0}
+            sx={{
+              border: `1px solid ${PURPLE}`,
+              borderRadius: '8px',
+              overflow: 'hidden',
+              backgroundColor: '#fff',
+            }}
+          >
+            <Grid container>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  {plan.recommendation && (
                     <Box
                       sx={{
-                        p: { xs: 2.5, md: 3 },
-                        pb: { xs: 7, md: 8 },
-                        position: 'relative',
-                        height: '100%',
-                        minHeight: 260,
-                        boxSizing: 'border-box',
+                        backgroundColor: PURPLE,
+                        color: '#fff',
+                        py: 1.5,
+                        px: 2,
+                        textAlign: 'center',
+                        fontWeight: 700,
+                        fontSize: 15,
                       }}
                     >
-                      <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827', mb: 2 }}>
-                        Basic features:
+                      {plan.recommendation}
+                    </Box>
+                  )}
+
+                  <Box
+                    sx={{
+                      p: 3,
+                      pb: currentPlan !== plan.tier ? 10 : 3,
+                      position: 'relative',
+                      flex: 1,
+                      minHeight: 260,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {currentPlan === plan.tier && (
+                      <Chip
+                        size="small"
+                        label="Current plan"
+                        sx={{
+                          position: 'absolute',
+                          top: 16,
+                          right: 16,
+                          backgroundColor: 'rgba(115, 73, 248, 0.12)',
+                          color: PURPLE_DARK,
+                          fontWeight: 700,
+                        }}
+                      />
+                    )}
+
+                    <Typography sx={{ color: '#1f2937', fontWeight: 600, mb: 0.5 }}>
+                      {plan.creditsLabel}
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#111827', mb: 2 }}>
+                      {plan.label}
+                    </Typography>
+
+                    <Box component="ul" sx={{ m: 0, pl: 2.2, color: PURPLE }}>
+                      <Typography component="li" sx={{ color: '#374151', mb: 0.8 }}>
+                        Total Overage:{' '}
+                        <Box component="span" sx={{ color: PURPLE, fontWeight: 700 }}>
+                          {plan.overageLabel}
+                        </Box>
                       </Typography>
-                      <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, md: unavailable.length ? 6 : 12 }}>
-                          <Stack spacing={1.2}>
-                            {included.map((item) => (
-                              <Stack key={`${plan.tier}-${item}`} direction="row" spacing={1.2} alignItems="center">
+                      <Typography component="li" sx={{ color: '#374151', mb: 0.8 }}>
+                        Max file size:{' '}
+                        <Box component="span" sx={{ color: PURPLE, fontWeight: 700 }}>
+                          {plan.maxFileSizeLabel}
+                        </Box>
+                      </Typography>
+                      <Typography component="li" sx={{ color: '#374151' }}>
+                        Timeout:{' '}
+                        <Box component="span" sx={{ color: PURPLE, fontWeight: 700 }}>
+                          {plan.timeoutLabel}
+                        </Box>
+                      </Typography>
+                    </Box>
+
+                    {currentPlan !== plan.tier && (
+                      <Button
+                        variant="contained"
+                        sx={{
+                          position: 'absolute',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          bottom: 20,
+                          minWidth: 180,
+                          px: 4,
+                          py: 1.2,
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          borderRadius: '6px',
+                          backgroundColor: PURPLE,
+                          boxShadow: 'none',
+                          '&:hover': {
+                            backgroundColor: PURPLE_DARK,
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        {plan.cta}
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 8 }}>
+                <Box
+                  sx={{
+                    p: { xs: 2.5, md: 3 },
+                    height: '100%',
+                    minHeight: 260,
+                    boxSizing: 'border-box',
+                    borderLeft: { md: `1px solid ${PURPLE}` },
+                  }}
+                >
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827', mb: 2 }}>
+                    Basic features:
+                  </Typography>
+
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: plan.excludedFeatures.length ? 6 : 12 }}>
+                      <Stack spacing={1.4}>
+                        {plan.includedFeatures.map((item) => (
+                          <Stack key={`${plan.tier}-included-${item}`} direction="row" spacing={1.2} alignItems="center">
+                            <Box
+                              sx={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: '50%',
+                                backgroundColor: PURPLE,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <CheckIcon sx={{ width: 14, height: 14, color: '#fff' }} />
+                            </Box>
+                            <Typography sx={{ color: '#1f2937' }}>{item}</Typography>
+                          </Stack>
+                        ))}
+                      </Stack>
+                    </Grid>
+
+                    {plan.excludedFeatures.length > 0 && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Box sx={{ borderLeft: { md: '1px solid #d8d8e4' }, pl: { md: 2 } }}>
+                          <Stack spacing={1.4}>
+                            {plan.excludedFeatures.map((item) => (
+                              <Stack key={`${plan.tier}-excluded-${item}`} direction="row" spacing={1.2} alignItems="center">
                                 <Box
                                   sx={{
                                     width: 22,
                                     height: 22,
                                     borderRadius: '50%',
                                     backgroundColor: '#fff',
+                                    border: `1px solid ${PURPLE}`,
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     flexShrink: 0,
                                   }}
                                 >
-                                  <Box
-                                    component="img"
-                                    src="/assets/images/icon-tick.svg"
-                                    alt="Included"
-                                    sx={{ width: 12, height: 12 }}
-                                  />
+                                  <CloseIcon sx={{ width: 13, height: 13, color: PURPLE }} />
                                 </Box>
-                                <Typography sx={{ color: '#1f2937' }}>{item}</Typography>
+                                <Typography sx={{ color: '#4b5563', textDecoration: 'line-through' }}>
+                                  {item}
+                                </Typography>
                               </Stack>
                             ))}
                           </Stack>
-                        </Grid>
-
-                        {unavailable.length > 0 && (
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Box sx={{ borderLeft: { md: '1px solid #c7cbe0' }, pl: { md: 2 } }}>
-                              <Stack spacing={1.2}>
-                                {unavailable.map((item) => (
-                                  <Stack key={`${plan.tier}-${item}`} direction="row" spacing={1.2} alignItems="center">
-                                    <Box
-                                      sx={{
-                                        width: 22,
-                                        height: 22,
-                                        borderRadius: '50%',
-                                        backgroundColor: '#fff',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        flexShrink: 0
-                                      }}
-                                    >
-                                      <Box
-                                        component="img"
-                                        src="/assets/images/icon-cross.svg"
-                                        alt="Not included"
-                                        sx={{ width: 11, height: 11 }}
-                                      />
-                                    </Box>
-                                    <Typography sx={{ color: '#4b5563', textDecoration: 'line-through' }}>
-                                      {item}
-                                    </Typography>
-                                  </Stack>
-                                ))}
-                              </Stack>
-                            </Box>
-                          </Grid>
-                        )}
+                        </Box>
                       </Grid>
-                      <Typography sx={{ mt: 4, color: '#374151', fontSize: 14 }}>
-                        * We count 1 credit per request unit; billing varies by tier and conversion type.
-                      </Typography>
-                      <Box
-                        sx={{
-                          mt: 1.5,
-                          position: 'absolute',
-                          left: 0,
-                          right: 5,
-                          bottom: 5,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          gap: 1,
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: 14,
-                          px: 2,
-                          py: 0.6,
-                          backgroundColor: plan.accentColor,
-                        }}
-                      >
-                        <Typography component="span" sx={{ fontSize: 14, fontWeight: 700, color: 'inherit' }}>
-                          1 /
-                        </Typography>
-                        <Box
-                          component="img"
-                          src="/assets/images/user.png"
-                          alt="Max login one"
-                          sx={{ width: 14, height: 14, filter: 'brightness(0) invert(1)' }}
-                        />
-                      </Box>
-                    </Box>
+                    )}
                   </Grid>
-                </Grid>
-              </Paper>
-            );
-          })}
-        </Stack>
-      )}
+
+                  <Typography sx={{ mt: 4, color: '#374151', fontSize: 14 }}>
+                    * We count 1 credit per 5Mb. For example, a 14Mb PDF will consume 3 credits.
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
+        ))}
+      </Stack>
     </Box>
   );
 }
-
-
