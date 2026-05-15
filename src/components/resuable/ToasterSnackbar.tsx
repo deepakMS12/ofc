@@ -13,6 +13,7 @@ import {
   Typography,
   type SlideProps,
 } from "@mui/material";
+import { APP_FONT_FAMILY } from "@/lib/theme";
 import { forwardRef } from "react";
 
 type ToasterSnackbarProps = {
@@ -98,6 +99,8 @@ const ToasterSnackbar = ({
           maxWidth: "100%",
           bgcolor: variant.bg,
           color: variant.textColor,
+          fontFamily: APP_FONT_FAMILY,
+          fontWeight: 400,
           borderRadius: 3,
           border: "1px solid",
           borderColor: variant.borderColor,
@@ -139,7 +142,13 @@ const ToasterSnackbar = ({
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography
-            sx={{ fontSize: 15, lineHeight: 1.2, fontWeight: 600, mb: 0.5 }}
+            sx={{
+              fontFamily: APP_FONT_FAMILY,
+              fontSize: 15,
+              lineHeight: 1.2,
+              fontWeight: 400,
+              mb: 0.5,
+            }}
           >
             {message}
           </Typography>

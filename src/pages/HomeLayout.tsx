@@ -1,10 +1,12 @@
 import { Outlet } from "react-router-dom";
 import { Box } from "@mui/material";
 import { Header, Sidebar, Footer } from "@/components/layout";
+import { ConverterSearchProvider } from "@/contexts/ConverterSearchContext";
 import { colors } from "@/utils/customColor";
 
 export default function HomeLayout() {
   return (
+    <ConverterSearchProvider>
     <Box
       sx={{
         display: "flex",
@@ -33,5 +35,6 @@ export default function HomeLayout() {
         </Box>
       </Box>
     </Box>
+    </ConverterSearchProvider>
   );
 }

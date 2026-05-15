@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import {
   Box,
   AppBar,
@@ -18,6 +18,7 @@ import { Clock, User, LogOut, Bell } from 'lucide-react';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsDrawer from '@/components/dialogs/NotificationsDrawer';
 import { ConfirmDialog } from '@/components/common';
+import { useConverterSearch } from '@/contexts/ConverterSearchContext';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
 import { clearUser } from '@/store/slices/userSlice';
@@ -25,14 +26,13 @@ import { colors } from '@/utils/customColor';
 
 export default function Header() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { openSearch } = useConverterSearch();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user.profile);
   const [time, setTime] = useState('--:--:--');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
-  const isConverterPage = location.pathname.startsWith('/home/converter');
 
   useEffect(() => {
 
@@ -61,25 +61,8 @@ export default function Header() {
   };
 
   const triggerConverterSearch = () => {
-    if (isConverterPage) {
-      window.dispatchEvent(new Event('open-converter-search'));
-      return;
-    }
-    sessionStorage.setItem('openConverterSearchOnLoad', '1');
-    navigate('/home/converter');
+    openSearch();
   };
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        triggerConverterSearch();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isConverterPage]);
 
   return (
     <>
@@ -168,30 +151,75 @@ export default function Header() {
               </Typography>
             </Box>
             <Box
+              role="button"
+              tabIndex={0}
+              aria-label="Search converters"
               onClick={triggerConverterSearch}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  triggerConverterSearch();
+                }
+              }}
               sx={{
                 margin: '0 0 0 200px',
-                height: 36,
-                minWidth: 210,
-                px: 1.5,
-                borderRadius: 3,
-                border: '1px solid #d1d5db',
-                backgroundColor: '#f3f4f6',
+                height: 40,
+                minWidth: 280,
+                px: 1.25,
+                borderRadius: '10px',
+                border: '1px solid',
+                borderColor: 'hsla(215, 15%, 88%, 0.95)',
+                backgroundColor: 'hsla(215, 15%, 97%, 0.9)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                color: '#6b7280',
+                color: '#64748b',
                 cursor: 'pointer',
                 alignSelf: 'center',
+                transition: (theme) =>
+                  theme.transitions.create(['border-color', 'background-color', 'box-shadow'], {
+                    duration: 150,
+                  }),
+                '&:hover': {
+                  backgroundColor: '#fff',
+                  borderColor: '#60a5fa',
+                  boxShadow: '0 0 0 3px rgba(96, 165, 250, 0.18)',
+                  '& .header-search-shortcut': {
+                    backgroundColor: '#eef2ff',
+                    color: '#1d4ed8',
+                  },
+                },
+                '&:focus-visible': {
+                  outline: 'none',
+                  backgroundColor: '#fff',
+                  borderColor: '#2563eb',
+                  boxShadow: '0 0 0 3px rgba(37, 99, 235, 0.22)',
+                },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <SearchIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
-                <Typography variant="body2" sx={{ fontSize: 15, color: '#6b7280', lineHeight: 1 }}>
-                  Search...
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '8px',
+                    border: '1px solid',
+                    borderColor: 'hsla(215, 15%, 92%, 0.9)',
+                    backgroundColor: '#f8fafc',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <SearchIcon sx={{ fontSize: 16, color: '#2563eb' }} />
+                </Box>
+                <Typography variant="body2" sx={{ fontSize: 15, color: 'inherit', lineHeight: 1 }}>
+                  What are you looking for?
                 </Typography>
               </Box>
               <Chip
+                className="header-search-shortcut"
                 label="Ctrl+K"
                 size="small"
                 onClick={(event) => {
@@ -200,11 +228,15 @@ export default function Header() {
                 }}
                 sx={{
                   height: 24,
-                  borderRadius: 2,
+                  borderRadius: '8px',
                   fontWeight: 700,
-                  backgroundColor: '#e5e7eb',
-                  color: '#374151',
-                  '& .MuiChip-label': { px: 1 },
+                  fontSize: 12,
+                  backgroundColor: '#f1f5f9',
+                  color: '#475569',
+                  border: '1px solid #e2e8f0',
+                  transition: (theme) =>
+                    theme.transitions.create(['background-color', 'color'], { duration: 150 }),
+                  '& .MuiChip-label': { px: 0.9 },
                 }}
               />
             </Box>

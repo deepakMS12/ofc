@@ -35,7 +35,7 @@ const Converter = ({ title, converters: convertersProp = [] }:any) => {
   }, []);
 
   return (
-    <Box sx={{ px: 4 }}>
+    <Box sx={{ px: 2, mb:2 }}>
       <Box
         sx={{
           mb: 2,
@@ -70,7 +70,7 @@ const Converter = ({ title, converters: convertersProp = [] }:any) => {
       <Box
         sx={{
           display: "grid",
-          gap: 3,
+          gap: 2,
           gridTemplateColumns: {
             xs: "1fr",
             sm: "repeat(2, minmax(0, 1fr))",
@@ -78,6 +78,7 @@ const Converter = ({ title, converters: convertersProp = [] }:any) => {
             lg: "repeat(4, minmax(0, 1fr))",
             xl: "repeat(4, minmax(0, 1fr))",
           },
+          
         }}
       >
         {visibleList.map((item:any) => (

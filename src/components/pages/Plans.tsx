@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Chip,
-  Grid,
   Paper,
   Stack,
   Typography,
@@ -12,7 +11,81 @@ import conversionCosts from '../../../conversion_costs.json';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import BoltIcon from '@mui/icons-material/Bolt';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
+import Check from '@mui/icons-material/Check';
+import Close from '@mui/icons-material/Close';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+
+/** Plan page palette — solid colors from reference (no gradients). */
+const PLAN_PURPLE = '#7047EB';
+const PLAN_NAVY = '#1A1A40';
+const PLAN_BODY = '#4A5568';
+const PLAN_MUTED = '#9CA3AF';
+const PLAN_BORDER = PLAN_PURPLE;
+const PLAN_PAGE_BG = '#F5F5F8';
+
+const planPanelSx = {
+  border: `1px solid ${PLAN_BORDER}`,
+  borderRadius: '10px',
+  overflow: 'hidden',
+  backgroundColor: '#fff',
+  boxShadow: '0 2px 10px rgba(112, 71, 235, 0.12)',
+} as const;
+
+const planBulletListSx = {
+  m: 0,
+  pl: 2.2,
+  listStyleType: 'disc',
+  '& li': {
+    color: PLAN_NAVY,
+    fontSize: 14,
+    lineHeight: 1.65,
+    mb: 0.75,
+    pl: 0.25,
+    '&::marker': { color: PLAN_PURPLE, fontSize: 12 },
+  },
+} as const;
+
+function PlanHeaderMessage({
+  label,
+  description,
+  highlight,
+}: {
+  label: string;
+  description: string;
+  highlight?: boolean;
+}) {
+  if (highlight) {
+    return (
+      <Typography
+        sx={{
+          color: '#fff',
+          fontSize: 15,
+          fontWeight: 400,
+          lineHeight: 1.45,
+          textAlign: 'center',
+          px: 1,
+        }}
+      >
+        We recommend the {label.charAt(0) + label.slice(1).toLowerCase()} plan
+      </Typography>
+    );
+  }
+
+  return (
+    <Typography
+      sx={{
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 400,
+        lineHeight: 1.45,
+        textAlign: 'center',
+        px: 1,
+      }}
+    >
+      {description}
+    </Typography>
+  );
+}
 
 type PlanTier = 'bronze' | 'silver' | 'gold' | 'enterprise';
 
@@ -29,6 +102,8 @@ type ConversionEntry = {
 type ConversionCostsFile = {
   conversions?: Record<string, ConversionEntry>;
 };
+
+
 
 type PlanMetrics = {
   tier: PlanTier;
@@ -64,16 +139,16 @@ const tierMeta: Record<
     label: 'BRONZE',
     description: 'Starter automation for small conversion volume',
     icon: <BoltIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #7a4b2f 0%, #b77846 100%)',
-    accentColor: '#8b5e3c',
+    gradient: PLAN_PURPLE,
+    accentColor: PLAN_PURPLE,
     cta: 'Start Bronze',
   },
   silver: {
     label: 'SILVER',
     description: 'Balanced speed and cost for growing teams',
     icon: <AutoAwesomeIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #5f6675 0%, #9ba3b2 100%)',
-    accentColor: '#6366f1',
+    gradient: PLAN_PURPLE,
+    accentColor: PLAN_PURPLE,
     cta: 'Choose Silver',
     highlight: true,
   },
@@ -81,16 +156,16 @@ const tierMeta: Record<
     label: 'GOLD',
     description: 'Best value for high-volume production use',
     icon: <WorkspacePremiumIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #846300 0%, #d5a500 100%)',
-    accentColor: '#ca8a04',
+    gradient: PLAN_PURPLE,
+    accentColor: PLAN_PURPLE,
     cta: 'Choose Gold',
   },
   enterprise: {
     label: 'ENTERPRISE',
     description: 'Scale-ready throughput and priority handling',
     icon: <BusinessCenterIcon fontSize="small" />,
-    gradient: 'linear-gradient(135deg, #1a5f73 0%, #2aa5c9 100%)',
-    accentColor: '#0e7490',
+    gradient: PLAN_PURPLE,
+    accentColor: PLAN_PURPLE,
     cta: 'Contact Sales',
   },
 };
@@ -230,23 +305,23 @@ export default function Plans() {
   return (
     <Box
       sx={{
-        background: 'linear-gradient(180deg, #f8fbff 0%, #edf2f7 100%)',
+        backgroundColor: PLAN_PAGE_BG,
         minHeight: '100vh',
         p: { xs: 2, md: 4 },
       }}
     >
       <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: '#1f2937', mb: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: PLAN_NAVY, mb: 1 }}>
           Choose the plan that matches your conversion volume
         </Typography>
-        <Typography variant="body1" sx={{ color: '#4b5563' }}>
+        <Typography variant="body1" sx={{ color: PLAN_BODY }}>
           Pricing is generated directly from conversion costs and reflects per-page rates, request
           limits, and upload caps across available conversion tools.
         </Typography>
       </Box>
 
       <Stack spacing={3}>
-          {planMetrics.map((plan, index) => {
+          {planMetrics.map((plan) => {
             const unavailable = getUnavailableSpecs(plan.tier);
             const included = [
               `Per page pricing: ${formatPriceRange(plan.perPageMin, plan.perPageMax)}`,
@@ -255,243 +330,291 @@ export default function Plans() {
               `API rate limit: ${formatRange(plan.rateLimitMin, plan.rateLimitMax)} req/min`,
             ];
 
+            const planTitle =
+              plan.label.charAt(0) + plan.label.slice(1).toLowerCase();
+
             return (
-              <Paper
+              <Box
                 key={plan.tier}
-                elevation={0}
                 sx={{
-                  boxShadow: '0 1px 5px #c8c8c8',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  overflow: 'hidden',
-                  backgroundColor: '#fff',
+                  display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' },
+                  gap: 2,
+                  alignItems: 'stretch',
                 }}
               >
-                <Grid container>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Box sx={{ height: '100%' }}>
-                      <Box
+                {/* Left — plan summary card (narrow) */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    ...planPanelSx,
+                    flex: { xs: '1 1 auto', md: '0 0 300px' },
+                    maxWidth: { md: 320 },
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: PLAN_PURPLE,
+                      py: 2.25,
+                      px: 2,
+                      position: 'relative',
+                      borderRadius: '9px 9px 0 0',
+                    }}
+                  >
+                    {currentPlan === plan.tier && (
+                      <Chip
+                        size="small"
+                        label="Current plan"
                         sx={{
-                          background: plan.gradient,
-                          color: 'white',
-                          py: 1.6,
-                          px: 2,
-                          textAlign: 'center',
-                          fontWeight: 700,
-                          position: 'relative',
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          backgroundColor: 'rgba(255,255,255,0.22)',
+                          color: '#fff',
+                          fontWeight: 400,
+                          fontSize: 11,
+                          height: 22,
                         }}
-                      >
-                        {plan.tier === 'silver' && (
-                          <Box
-                            className="ribbon"
-                            sx={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              display: 'inline-block',
-                              minWidth: 200,
-                              height: 24,
-                              lineHeight: '24px',
-                              mt: 2.5,
-                              pl: 2.5,
-                              backgroundColor: '#32864c',
-                              fontSize: 12,
-                              color: '#fff',
-                              textAlign: 'left',
-                            }}
-                          >
-                            Recommended
-                          </Box>
-                        )}
-                        {currentPlan === plan.tier && (
-                          <Chip
-                            size="small"
-                            label="Current plan"
-                            sx={{
-                              position: 'absolute',
-                              top: 10,
-                              right: 10,
-                              backgroundColor: 'rgba(17,24,39,0.28)',
-                              color: 'white',
-                              fontWeight: 700,
-                            }}
-                          />
-                        )}
-                        <Typography sx={{ fontWeight: 700, fontSize: 30, mt: 0.5 }}>{index + 1}</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                          {plan.label}
-                        </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                          {plan.description}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          p: 3,
-                          pb: currentPlan !== plan.tier ? 9 : 3,
-                          position: 'relative',
-                          minHeight: 260,
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <Typography sx={{ color: '#6d28d9', fontWeight: 700, mb: 0.7 }}>
-                          {plan.conversionCount} Credits
-                        </Typography>
-                        <Typography variant="h4" sx={{ fontWeight: 700, color: '#111827', mb: 2 }}>
-                          {plan.label}
-                        </Typography>
-                        <Box component="ul" sx={{ m: 0, pl: 2.5, color: '#6d28d9' }}>
-                          <Typography component="li" sx={{ color: '#374151' }}>
-                            Total Overage: <strong>{formatPriceRange(plan.perPageMin, plan.perPageMax)}</strong>
-                          </Typography>
-                          <Typography component="li" sx={{ color: '#374151' }}>
-                            Max uploads: <strong>{formatRange(plan.maxUploadMin, plan.maxUploadMax)}</strong>
-                          </Typography>
-                          <Typography component="li" sx={{ color: '#374151' }}>
-                            Timeout: <strong>30s</strong>
-                          </Typography>
-                        </Box>
-                        {currentPlan !== plan.tier && (
-                          <Button
-                            variant="contained"
-                            sx={{
-                              position: 'absolute',
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              bottom: 5,
-                              width: '50%',
-                              py: 1.8,
-                              textTransform: 'none',
-                              fontWeight: 700,
-                              backgroundColor: plan.accentColor,
-                              '&:hover': {
-                                filter: 'brightness(0.92)',
-                                backgroundColor: plan.accentColor,
-                              },
-                            }}
-                          >
-                            SELECT
-                          </Button>
-                        )}
-                      </Box>
-                    </Box>
-                  </Grid>
+                      />
+                    )}
+                    <PlanHeaderMessage
+                      label={plan.label}
+                      description={plan.description}
+                      highlight={plan.highlight}
+                    />
+                  </Box>
 
-                  <Grid size={{ xs: 12, md: 8 }}>
-                    <Box
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      pt: 2,
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Typography
                       sx={{
-                        p: { xs: 2.5, md: 3 },
-                        pb: { xs: 7, md: 8 },
-                        position: 'relative',
-                        height: '100%',
-                        minHeight: 260,
-                        boxSizing: 'border-box',
+                        color: PLAN_NAVY,
+                        fontWeight: 400,
+                        fontSize: 15,
+                        mb: 0.25,
                       }}
                     >
-                      <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827', mb: 2 }}>
-                        Basic features:
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, md: unavailable.length ? 6 : 12 }}>
-                          <Stack spacing={1.2}>
-                            {included.map((item) => (
-                              <Stack key={`${plan.tier}-${item}`} direction="row" spacing={1.2} alignItems="center">
-                                <Box
+                      {plan.conversionCount} Credits
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: PLAN_NAVY,
+                        fontSize: 36,
+                        lineHeight: 1.1,
+                        mb: 1.75,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {planTitle}
+                    </Typography>
+
+                    <Box component="ul" sx={{ ...planBulletListSx, flex: 1 }}>
+                      <Box component="li">
+                        Total Overage:{' '}
+                        <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
+                          {formatPriceRange(plan.perPageMin, plan.perPageMax)}
+                        </Box>
+                      </Box>
+                      <Box component="li">
+                        Max uploads:{' '}
+                        <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
+                          {formatRange(plan.maxUploadMin, plan.maxUploadMax)}
+                        </Box>
+                      </Box>
+                      <Box component="li">
+                        Timeout:{' '}
+                        <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
+                          30s
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {currentPlan !== plan.tier && (
+                      <Button
+                        variant="contained"
+                        disableElevation
+                        fullWidth
+                        sx={{
+                          mt: 2,
+                          py: 1.35,
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          fontWeight: 400,
+                          fontSize: 16,
+                          backgroundColor: PLAN_PURPLE,
+                          boxShadow: 'none',
+                          '&:hover': {
+                            backgroundColor: PLAN_PURPLE,
+                            filter: 'brightness(0.94)',
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        SELECT
+                      </Button>
+                    )}
+                  </Box>
+                </Paper>
+
+                {/* Right — features card (wider) */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    ...planPanelSx,
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minWidth: 0,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      p: { xs: 2.5, md: 3 },
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: PLAN_NAVY,
+                        fontSize: 20,
+                        mb: 2.5,
+                      }}
+                    >
+                      Basic features:
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        flex: 1,
+                        gap: 0,
+                      }}
+                    >
+                      <Box sx={{ flex: 1, pr: { md: unavailable.length ? 2.5 : 0 } }}>
+                        <Stack spacing={1.75}>
+                          {included.map((item) => (
+                            <Stack
+                              key={`${plan.tier}-${item}`}
+                              direction="row"
+                              spacing={1.25}
+                              alignItems="flex-start"
+                            >
+                              <Box
+                                sx={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: '50%',
+                                  backgroundColor: PLAN_PURPLE,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0,
+                                  mt: 0.1,
+                                }}
+                              >
+                                <Check sx={{ fontSize: 14, color: '#fff' }} aria-hidden />
+                              </Box>
+                              <Typography
+                                sx={{
+                                  color: PLAN_BODY,
+                                  fontSize: 14,
+                                  lineHeight: 1.55,
+                                  fontWeight: 400,
+                                }}
+                              >
+                                {item}
+                              </Typography>
+                            </Stack>
+                          ))}
+                        </Stack>
+                      </Box>
+
+                      {unavailable.length > 0 && (
+                        <Box
+                          sx={{
+                            flex: 1,
+                            borderLeft: { xs: 'none', md: `1px solid ${PLAN_BORDER}` },
+                            borderTop: { xs: `1px solid ${PLAN_BORDER}`, md: 'none' },
+                            mt: { xs: 2.5, md: 0 },
+                            pt: { xs: 2.5, md: 0 },
+                            pl: { md: 2.5 },
+                          }}
+                        >
+                          <Stack spacing={1.75}>
+                            {unavailable.map((item) => (
+                              <Stack
+                                key={`${plan.tier}-${item}`}
+                                direction="row"
+                                spacing={1.25}
+                                alignItems="flex-start"
+                              >
+                                <Close
                                   sx={{
-                                    width: 22,
-                                    height: 22,
-                                    borderRadius: '50%',
-                                    backgroundColor: '#fff',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
+                                    fontSize: 20,
+                                    color: PLAN_PURPLE,
                                     flexShrink: 0,
+                                    mt: 0.05,
+                                  }}
+                                  aria-hidden
+                                />
+                                <Typography
+                                  sx={{
+                                    color: PLAN_BODY,
+                                    fontSize: 14,
+                                    lineHeight: 1.55,
+                                    textDecoration: 'line-through',
+                                    fontWeight: 400,
                                   }}
                                 >
-                                  <Box
-                                    component="img"
-                                    src="/assets/images/icon-tick.svg"
-                                    alt="Included"
-                                    sx={{ width: 12, height: 12 }}
-                                  />
-                                </Box>
-                                <Typography sx={{ color: '#1f2937' }}>{item}</Typography>
+                                  {item}
+                                </Typography>
                               </Stack>
                             ))}
                           </Stack>
-                        </Grid>
+                        </Box>
+                      )}
+                    </Box>
 
-                        {unavailable.length > 0 && (
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Box sx={{ borderLeft: { md: '1px solid #c7cbe0' }, pl: { md: 2 } }}>
-                              <Stack spacing={1.2}>
-                                {unavailable.map((item) => (
-                                  <Stack key={`${plan.tier}-${item}`} direction="row" spacing={1.2} alignItems="center">
-                                    <Box
-                                      sx={{
-                                        width: 22,
-                                        height: 22,
-                                        borderRadius: '50%',
-                                        backgroundColor: '#fff',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        flexShrink: 0
-                                      }}
-                                    >
-                                      <Box
-                                        component="img"
-                                        src="/assets/images/icon-cross.svg"
-                                        alt="Not included"
-                                        sx={{ width: 11, height: 11 }}
-                                      />
-                                    </Box>
-                                    <Typography sx={{ color: '#4b5563', textDecoration: 'line-through' }}>
-                                      {item}
-                                    </Typography>
-                                  </Stack>
-                                ))}
-                              </Stack>
-                            </Box>
-                          </Grid>
-                        )}
-                      </Grid>
-                      <Typography sx={{ mt: 4, color: '#374151', fontSize: 14 }}>
-                        * We count 1 credit per request unit; billing varies by tier and conversion type.
+                    <Typography
+                      sx={{
+                        mt: 'auto',
+                        pt: 3,
+                        color: PLAN_MUTED,
+                        fontSize: 13,
+                        lineHeight: 1.55,
+                        fontWeight: 400,
+                      }}
+                    >
+                      * We count 1 credit per request unit; billing varies by tier and conversion type.
+                    </Typography>
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.75 }}>
+                      <Typography component="span" sx={{ fontSize: 13, color: PLAN_MUTED, fontWeight: 400 }}>
+                        1 /
                       </Typography>
                       <Box
-                        sx={{
-                          mt: 1.5,
-                          position: 'absolute',
-                          left: 0,
-                          right: 5,
-                          bottom: 5,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          gap: 1,
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: 14,
-                          px: 2,
-                          py: 0.6,
-                          backgroundColor: plan.accentColor,
-                        }}
-                      >
-                        <Typography component="span" sx={{ fontSize: 14, fontWeight: 700, color: 'inherit' }}>
-                          1 /
-                        </Typography>
-                        <Box
-                          component="img"
-                          src="/assets/images/user.png"
-                          alt="Max login one"
-                          sx={{ width: 14, height: 14, filter: 'brightness(0) invert(1)' }}
-                        />
-                      </Box>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
+                        component="img"
+                        src="/assets/images/user.png"
+                        alt="Max login one"
+                        sx={{ width: 14, height: 14, opacity: 0.7 }}
+                      />
+                    </Stack>
+                  </Box>
+                </Paper>
+              </Box>
             );
           })}
       </Stack>
