@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Paper,
   Stack,
   Typography,
@@ -29,6 +28,28 @@ const planPanelSx = {
   overflow: 'hidden',
   backgroundColor: '#fff',
   boxShadow: '0 2px 10px rgba(112, 71, 235, 0.12)',
+} as const;
+
+const currentPlanBadgeSx = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  zIndex: 3,
+  px: 1.75,
+  py: 0.65,
+  bgcolor: '#fff',
+  color: PLAN_PURPLE,
+  border: `2px solid ${PLAN_PURPLE}`,
+  borderTop: 'none',
+  borderLeft: 'none',
+  borderRadius: '0 0 10px 0',
+  boxShadow: '0 4px 12px rgba(112, 71, 235, 0.22)',
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  lineHeight: 1.2,
+  whiteSpace: 'nowrap',
 } as const;
 
 const planBulletListSx = {
@@ -348,37 +369,28 @@ export default function Plans() {
                   elevation={0}
                   sx={{
                     ...planPanelSx,
+                    position: 'relative',
                     flex: { xs: '1 1 auto', md: '0 0 300px' },
                     maxWidth: { md: 320 },
                     display: 'flex',
                     flexDirection: 'column',
                   }}
                 >
+                  {currentPlan === plan.tier && (
+                    <Box component="span" sx={currentPlanBadgeSx}>
+                      Current plan
+                    </Box>
+                  )}
                   <Box
                     sx={{
                       backgroundColor: PLAN_PURPLE,
                       py: 2.25,
                       px: 2,
+                      pt: currentPlan === plan.tier ? 3.5 : 2.25,
                       position: 'relative',
                       borderRadius: '9px 9px 0 0',
                     }}
                   >
-                    {currentPlan === plan.tier && (
-                      <Chip
-                        size="small"
-                        label="Current plan"
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          backgroundColor: 'rgba(255,255,255,0.22)',
-                          color: '#fff',
-                          fontWeight: 400,
-                          fontSize: 11,
-                          height: 22,
-                        }}
-                      />
-                    )}
                     <PlanHeaderMessage
                       label={plan.label}
                       description={plan.description}
