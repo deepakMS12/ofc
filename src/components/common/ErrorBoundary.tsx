@@ -1,9 +1,15 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
-import { Box, Typography, Button, Container } from '@mui/material';
-import { ArrowForward } from '@mui/icons-material';
-import { colors } from '@/utils/customColor';
-const errorImg = '../../assets/images/error.webp';
+import {
+  Button,
+  Container,
+  Typography,
+  Box,
+  Grid,
+} from '@mui/material';
+import { Home as HomeIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+
+const PAGE_CRASH_IMAGE = '/assets/images/page-crash.webp';
 
 interface Props {
   children: ReactNode;
@@ -14,8 +20,6 @@ interface State {
   error: Error | null;
   errorInfo: ErrorInfo | null;
 }
-
-const DASHBOARD_PATH = '/home/dashboard';
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
@@ -36,112 +40,155 @@ class ErrorBoundary extends Component<Props, State> {
     });
   }
 
- 
-  /** Full page navigation so the app remounts and this boundary’s error state is cleared. */
-  private handleGoToDashboard = () => {
-    window.location.assign(DASHBOARD_PATH);
-  };
-
-  private handleReset = () => {
+  private handleReload = () => {
     window.location.reload();
   };
 
   public render() {
     if (this.state.hasError) {
       return (
-       <Container
-      maxWidth="md"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        minHeight: "calc(100vh - 0px)",
-      }}
-    >
-      <Box
-        component="img"
-        src={errorImg}
-        alt="Error"
-        sx={{
-          width: { xs: 100, sm: 200, md: 300 },
-          height: { xs: 100, sm: 180, md: 250 },
-          opacity: 0.8,
-          mb: 1,
-        }}
-      />
-
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: 700,
-          mb: 1.5,
-          color: "text.primary",
-        }}
-      >
-        Oops! Something didn’t go as planned
-      </Typography>
-
-      <Typography
-        variant="body1"
-        sx={{
-          maxWidth: 520,
-
-          color: "text.secondary",
-          lineHeight: 1.6,
-          animation: "fadeIn 0.4s ease-in",
-        }}
-      >
-        We ran into an unexpected issue while loading this page. Don’t worry —
-        your data is safe. You can try refreshing the page or return to the home
-        screen to continue.
-      </Typography>
-      <Typography variant="caption" sx={{ my: 2, color: "text.disabled" }}>
-        If the issue persists, please contact support.
-      </Typography>
-
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
-       
-      <Button
-          variant="contained"
-          onClick={this.handleReset}
+        <Box
           sx={{
-            px: 4,
-            py: 1.5,
-            fontSize: "1rem",
-            textTransform: "none",
-            borderRadius: 2,
-            backgroundColor: colors.primary,
+            minHeight: '100vh',
+            backgroundColor: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            py: 4,
           }}
         >
-          Try Again
-        </Button>
-        <Button
-          variant="outlined"
-          onClick={this.handleGoToDashboard}
-          sx={{
-            px: 4,
-            py: 1.5,
-            fontSize: "1rem",
-            textTransform: "none",
-            borderRadius: 2,
-            color: colors.primary,
-            borderColor: colors.primary,
-          }}
-          endIcon={<ArrowForward />}
-        >
-          Go to Home
-        </Button>
-      </Box>
-    </Container>
+          <Container maxWidth="lg">
+            <Grid container spacing={4} alignItems="center">
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Box sx={{ pr: { md: 4 } }}>
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: '#2c3e50',
+                      mb: 2,
+                      fontSize: { xs: '2.5rem', md: '3.5rem' },
+                    }}
+                  >
+                    Oops!
+                  </Typography>
+
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      color: '#34495e',
+                      mb: 2,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Well, this is unexpected...
+                  </Typography>
+
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: '#2566b0',
+                      mb: 3,
+                      fontWeight: 600,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    Sorry, it&apos;s not you. It&apos;s us.
+                  </Typography>
+
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: '#2c3e50',
+                      mb: 3,
+                      lineHeight: 1.6,
+                      fontSize: '1.1rem',
+                    }}
+                  >
+                    An error has occurred and we&apos;re working to fix the problem!
+                    <br />
+                    We&apos;ll be up and running shortly.
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#7f8c8d',
+                      mb: 4,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    Our team has been notified and is working to fix the problem.
+                    <br />
+                    Thanks for your patience!
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={this.handleReload}
+                      startIcon={<RefreshIcon />}
+                      sx={{
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Reload Page
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => {
+                        window.location.href = '/';
+                      }}
+                      startIcon={<HomeIcon />}
+                      sx={{
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Go Home
+                    </Button>
+                  </Box>
+                </Box>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: { xs: '300px', md: '500px' },
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={PAGE_CRASH_IMAGE}
+                    alt="Page crashed illustration"
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      maxWidth: '500px',
+                      maxHeight: '500px',
+                      objectFit: 'contain',
+                      borderRadius: 2,
+                    }}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
+          </Container>
+        </Box>
       );
     }
 
@@ -150,4 +197,3 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
-

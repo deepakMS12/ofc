@@ -15,7 +15,7 @@ import Close from '@mui/icons-material/Close';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 
 /** Plan page palette — solid colors from reference (no gradients). */
-const PLAN_PURPLE = '#7047EB';
+const PLAN_PURPLE = '#1156a6';
 const PLAN_NAVY = '#1A1A40';
 const PLAN_BODY = '#4A5568';
 const PLAN_MUTED = '#9CA3AF';
@@ -530,7 +530,7 @@ export default function Plans() {
                                   width: 22,
                                   height: 22,
                                   borderRadius: '50%',
-                                  backgroundColor: PLAN_PURPLE,
+                                  backgroundColor: "#e3f2fd",
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -538,7 +538,7 @@ export default function Plans() {
                                   mt: 0.1,
                                 }}
                               >
-                                <Check sx={{ fontSize: 14, color: '#fff' }} aria-hidden />
+                                <Check sx={{ fontSize: 14, color: '#1156a6' }} aria-hidden />
                               </Box>
                               <Typography
                                 sx={{
@@ -576,8 +576,8 @@ export default function Plans() {
                               >
                                 <Close
                                   sx={{
-                                    fontSize: 20,
-                                    color: PLAN_PURPLE,
+                                    fontSize: 18,
+                                    color: "#1156a6",
                                     flexShrink: 0,
                                     mt: 0.05,
                                   }}
@@ -601,18 +601,8 @@ export default function Plans() {
                       )}
                     </Box>
 
-                    <Typography
-                      sx={{
-                        mt: 'auto',
-                        pt: 3,
-                        color: PLAN_MUTED,
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        fontWeight: 400,
-                      }}
-                    >
-                      * We count 1 credit per request unit; billing varies by tier and conversion type.
-                    </Typography>
+                 <Box sx={{width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                
                     <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.75 }}>
                       <Typography component="span" sx={{ fontSize: 13, color: PLAN_MUTED, fontWeight: 400 }}>
                         1 /
@@ -624,6 +614,19 @@ export default function Plans() {
                         sx={{ width: 14, height: 14, opacity: 0.7 }}
                       />
                     </Stack>
+                         <Typography
+                      sx={{
+                        mt: 'auto',
+                        pt: 3,
+                        color: PLAN_MUTED,
+                        fontSize: 13,
+                        lineHeight: 1.55,
+                        fontWeight: 400,
+                      }}
+                    >
+                      * We count 1 credit per request unit; billing varies by tier and conversion type.
+                    </Typography>
+                 </Box>
                   </Box>
                 </Paper>
               </Box>
