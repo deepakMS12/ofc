@@ -4,8 +4,11 @@ import {
   Button,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   Typography,
 } from '@mui/material';
+import PlanTransactionHistory from './PlanTransactionHistory';
 import conversionCosts from '../../../conversion_costs.json';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import BoltIcon from '@mui/icons-material/Bolt';
@@ -209,7 +212,10 @@ const formatPriceRange = (min: number, max: number) => {
 
 const pricingData = conversionCosts as ConversionCostsFile;
 
+type PlansTab = 'plans' | 'history';
+
 export default function Plans() {
+  const [activeTab, setActiveTab] = useState<PlansTab>('plans');
   const [currentPlan, setCurrentPlan] = useState<PlanTier | null>(null);
 
   useEffect(() => {
@@ -328,20 +334,57 @@ export default function Plans() {
       sx={{
         backgroundColor: PLAN_PAGE_BG,
         minHeight: '100vh',
-        p: { xs: 2, md: 4 },
       }}
     >
-      <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: PLAN_NAVY, mb: 1 }}>
-          Choose the plan that matches your conversion volume
-        </Typography>
-        <Typography variant="body1" sx={{ color: PLAN_BODY }}>
-          Pricing is generated directly from conversion costs and reflects per-page rates, request
-          limits, and upload caps across available conversion tools.
-        </Typography>
-      </Box>
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 0,
+          borderBottom: `1px solid ${PLAN_BORDER}`,
+          bgcolor: '#fff',
+        }}
+      >
+        <Tabs
+          value={activeTab}
+          onChange={(_, value: PlansTab) => setActiveTab(value)}
+          sx={{
+            px: { xs: 1, md: 2 },
+            '& .MuiTab-root': {
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              fontSize: 13,
+              letterSpacing: '0.06em',
+              minHeight: 52,
+            },
+            '& .Mui-selected': {
+              color: `${PLAN_PURPLE} !important`,
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: PLAN_PURPLE,
+              height: 3,
+            },
+          }}
+        >
+          <Tab label="Plans" value="plans" />
+          <Tab label="History" value="history" />
+        </Tabs>
+      </Paper>
 
-      <Stack spacing={3}>
+      {activeTab === 'history' ? (
+        <PlanTransactionHistory />
+      ) : (
+        <Box sx={{ p: { xs: 2, md: 4 } }}>
+          <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: PLAN_NAVY, mb: 1 }}>
+              Choose the plan that matches your conversion volume
+            </Typography>
+            <Typography variant="body1" sx={{ color: PLAN_BODY }}>
+              Pricing is generated directly from conversion costs and reflects per-page rates,
+              request limits, and upload caps across available conversion tools.
+            </Typography>
+          </Box>
+
+          <Stack spacing={3}>
           {planMetrics.map((plan) => {
             const unavailable = getUnavailableSpecs(plan.tier);
             const included = [
@@ -632,7 +675,9 @@ export default function Plans() {
               </Box>
             );
           })}
-      </Stack>
+          </Stack>
+        </Box>
+      )}
     </Box>
   );
 }

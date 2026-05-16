@@ -2421,13 +2421,14 @@ const ConverterTool = () => {
   ]);
 
   return (
-    <Box sx={{}}>
+    <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       {tool ? (
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "1fr 2fr" },
-            minHeight: { xs: "auto", md: "calc(100vh - 120px)" },
+            flex: 1,
+            minHeight: { xs: "auto", md: "calc(100vh - 64px)" },
             border: "1px solid #ececf2",
             borderRadius: 1,
             overflow: "visible",
@@ -2439,7 +2440,7 @@ const ConverterTool = () => {
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
-              minHeight: { xs: 220, md: "calc(100vh - 120px)" },
+              minHeight: { xs: 220, md: "calc(100vh - 64px)" },
               borderRight: "1px solid #ececf2",
               position: "relative",
               zIndex: 2,
@@ -2712,12 +2713,12 @@ const ConverterTool = () => {
               position: "relative",
               p: { xs: 2, md: 3 },
               borderRight: { xs: "none", md: "1px solid #ececf2" },
-              minHeight: { xs: 380, md: "calc(100vh - 120px)" },
+              minHeight: { xs: 380, md: "calc(100vh - 64px)" },
             }}
           >
             <Box
               sx={{
-                minHeight: { xs: 340, md: "calc(100vh - 200px)" },
+                minHeight: { xs: 340, md: "calc(100vh - 144px)" },
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

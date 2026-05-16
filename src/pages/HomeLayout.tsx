@@ -1,10 +1,12 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useMatch } from "react-router-dom";
 import { Box } from "@mui/material";
 import { Header, Sidebar, Footer } from "@/components/layout";
 import { ConverterSearchProvider } from "@/contexts/ConverterSearchContext";
 import { colors } from "@/utils/customColor";
 
 export default function HomeLayout() {
+  const isConverterToolRoute = Boolean(useMatch("/home/converter/:slug"));
+
   return (
     <ConverterSearchProvider>
     <Box
@@ -12,12 +14,11 @@ export default function HomeLayout() {
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        backgroundColor: colors.secondary,
-        
+        backgroundColor: isConverterToolRoute ? "#fff" : colors.secondary,
       }}
     >
       <Header />
-      <Box sx={{ display: "flex", flex: 1, pt: "64px" }}>
+      <Box sx={{ display: "flex", flex: 1, pt: "62px" }}>
         <Sidebar />
         <Box
           sx={{
@@ -25,13 +26,28 @@ export default function HomeLayout() {
             flexDirection: "column",
             flex: 1,
             minWidth: 0,
+            minHeight: 0,
             ml: "80px",
+            ...(isConverterToolRoute && {
+              bgcolor: "#fff",
+              minHeight: "calc(100vh - 64px)",
+            }),
           }}
         >
-          <Box component="main" sx={{ flex: 1, overflow: "auto" }}>
+          <Box
+            component="main"
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: isConverterToolRoute ? "hidden" : "auto",
+              display: "flex",
+              flexDirection: "column",
+              ...(isConverterToolRoute && { bgcolor: "#fff" }),
+            }}
+          >
             <Outlet />
           </Box>
-          <Footer />
+          {!isConverterToolRoute && <Footer />}
         </Box>
       </Box>
     </Box>
