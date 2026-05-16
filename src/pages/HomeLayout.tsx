@@ -1,11 +1,15 @@
-import { Outlet, useMatch } from "react-router-dom";
+import { Outlet, useLocation, useMatch } from "react-router-dom";
 import { Box } from "@mui/material";
 import { Header, Sidebar, Footer } from "@/components/layout";
 import { ConverterSearchProvider } from "@/contexts/ConverterSearchContext";
 import { colors } from "@/utils/customColor";
 
 export default function HomeLayout() {
+  const { hash } = useLocation();
   const isConverterToolRoute = Boolean(useMatch("/home/converter/:slug"));
+  const isSslManageRoute = Boolean(useMatch("/home/ssl-manage"));
+  const isPlansHistoryRoute = Boolean(useMatch("/home/plans")) && hash === "#history";
+  const hideFooter = isConverterToolRoute || isSslManageRoute || isPlansHistoryRoute;
 
   return (
     <ConverterSearchProvider>
@@ -18,7 +22,7 @@ export default function HomeLayout() {
       }}
     >
       <Header />
-      <Box sx={{ display: "flex", flex: 1, pt: "62px" }}>
+      <Box sx={{ display: "flex", flex: 1, pt: "4.625rem" }}>
         <Sidebar />
         <Box
           sx={{
@@ -47,7 +51,7 @@ export default function HomeLayout() {
           >
             <Outlet />
           </Box>
-          {!isConverterToolRoute && <Footer />}
+          {!hideFooter && <Footer />}
         </Box>
       </Box>
     </Box>

@@ -17,6 +17,7 @@ import {
   Settings,
   ApiPortal,
   Plans,
+  SslManage,
 } from '@/components/pages';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from '@/pages/SignUpPage';
@@ -54,6 +55,7 @@ export default function App() {
             >
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="ssl-manage" element={<SslManage />} />
               <Route path="converter" element={<ConverterPage />} />
               <Route path="converter/:slug" element={<ConverterTool />} />
               <Route path="settings" element={<Settings />} />

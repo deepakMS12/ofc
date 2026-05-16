@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -16,6 +17,8 @@ import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
+import { colors } from '@/utils/customColor';
 
 /** Plan page palette — solid colors from reference (no gradients). */
 const PLAN_PURPLE = '#1156a6';
@@ -23,8 +26,6 @@ const PLAN_NAVY = '#1A1A40';
 const PLAN_BODY = '#4A5568';
 const PLAN_MUTED = '#9CA3AF';
 const PLAN_BORDER = PLAN_PURPLE;
-const PLAN_PAGE_BG = '#F5F5F8';
-
 const planPanelSx = {
   border: `1px solid ${PLAN_BORDER}`,
   borderRadius: '10px',
@@ -215,8 +216,20 @@ const pricingData = conversionCosts as ConversionCostsFile;
 type PlansTab = 'plans' | 'history';
 
 export default function Plans() {
-  const [activeTab, setActiveTab] = useState<PlansTab>('plans');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<PlansTab>(
+    location.hash === '#history' ? 'history' : 'plans'
+  );
   const [currentPlan, setCurrentPlan] = useState<PlanTier | null>(null);
+
+  useEffect(() => {
+    if (location.hash === '#history') {
+      setActiveTab('history');
+    } else {
+      setActiveTab('plans');
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -332,48 +345,88 @@ export default function Plans() {
   return (
     <Box
       sx={{
-        backgroundColor: PLAN_PAGE_BG,
-        minHeight: '100vh',
+        p: 0,
+        backgroundColor: '#fffdf5',
+        minHeight: 'calc(100vh - 164px)',
+        overflow: 'hidden',
       }}
     >
       <Paper
         elevation={0}
         sx={{
-          borderRadius: 0,
-          borderBottom: `1px solid ${PLAN_BORDER}`,
-          bgcolor: '#fff',
+          overflow: 'hidden',
+          backgroundColor: 'white',
         }}
       >
         <Tabs
           value={activeTab}
-          onChange={(_, value: PlansTab) => setActiveTab(value)}
+          onChange={(_, value: PlansTab) => {
+            navigate({ hash: value === 'history' ? 'history' : '' }, { replace: true });
+          }}
+          variant="scrollable"
+          scrollButtons="auto"
           sx={{
-            px: { xs: 1, md: 2 },
+            borderBottom: '1px solid #e5e7eb',
             '& .MuiTab-root': {
-              textTransform: 'uppercase',
-              fontWeight: 700,
-              fontSize: 13,
-              letterSpacing: '0.06em',
-              minHeight: 52,
+              textTransform: 'none',
+              fontWeight: 600,
+              minHeight: 44,
+              py: 0.75,
+              px: 2,
             },
             '& .Mui-selected': {
-              color: `${PLAN_PURPLE} !important`,
+              color: `${colors.primary} !important`,
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: PLAN_PURPLE,
+              backgroundColor: colors.primary,
               height: 3,
             },
           }}
         >
-          <Tab label="Plans" value="plans" />
-          <Tab label="History" value="history" />
+          <Tab
+            value="plans"
+            iconPosition="start"
+            icon={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <WorkspacePremiumIcon sx={{ fontSize: 16 }} />
+              </Box>
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                Plans
+              </Box>
+            }
+            sx={{ gap: 1, '& svg': { color: 'inherit' } }}
+          />
+          <Tab
+            value="history"
+            iconPosition="start"
+            icon={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <ReceiptLongOutlinedIcon sx={{ fontSize: 16 }} />
+              </Box>
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                History
+              </Box>
+            }
+            sx={{ gap: 1, '& svg': { color: 'inherit' } }}
+          />
         </Tabs>
-      </Paper>
 
+        <Box
+          sx={{
+            py: 3,
+            maxHeight: 'calc(100vh - 200px)',
+            minHeight: 'calc(100vh - 190px)',
+            overflow: 'auto',
+          }}
+        >
       {activeTab === 'history' ? (
-        <PlanTransactionHistory />
+        <PlanTransactionHistory embedded />
       ) : (
-        <Box sx={{ p: { xs: 2, md: 4 } }}>
+        <Box sx={{ px: { xs: 3, md: 4 } }}>
           <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 800, color: PLAN_NAVY, mb: 1 }}>
               Choose the plan that matches your conversion volume
@@ -678,6 +731,8 @@ export default function Plans() {
           </Stack>
         </Box>
       )}
+        </Box>
+      </Paper>
     </Box>
   );
 }

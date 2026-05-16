@@ -326,22 +326,23 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
                         },
                       }}
                     />
-                    <Button
-                      variant="outlined"
+                    <IconButton
                       onClick={handleRegenerateApiKey}
-                      startIcon={<RefreshCw size={18} />}
                       disabled={loading || !apiKeyEnabled}
+                      aria-label="Regenerate API key"
                       sx={{
-                        borderColor: "#e0e0e0",
-                        color: "#666",
-                        textTransform: "none",
+                        color: "#333",
                         "&:hover": {
-                          borderColor: "#bdbdbd",
-                          backgroundColor: "#fafafa",
+                          backgroundColor: "transparent",
+                          color: "#111",
+                        },
+                        "&.Mui-disabled": {
+                          color: "#bdbdbd",
                         },
                       }}
                     >
-                    </Button>
+                      <RefreshCw size={20} strokeWidth={2.75} />
+                    </IconButton>
                   </Box>
 
                   <Divider sx={{ my: 4 }} />

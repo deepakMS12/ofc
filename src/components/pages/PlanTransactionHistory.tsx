@@ -3,11 +3,7 @@ import {
   Box,
   Button,
   Chip,
-  FormControl,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Stack,
   TextField,
   Typography,
@@ -83,7 +79,14 @@ function TypeChip({ type }: { type?: string }) {
   );
 }
 
-export default function PlanTransactionHistory() {
+type PlanTransactionHistoryProps = {
+  /** When true, renders inside Plans tab panel (no standalone page chrome). */
+  embedded?: boolean;
+};
+
+export default function PlanTransactionHistory({
+  embedded = false,
+}: PlanTransactionHistoryProps) {
   const { showToast } = useToast();
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -91,8 +94,6 @@ export default function PlanTransactionHistory() {
   const [invoiceId, setInvoiceId] = useState('');
   const [fromDate, setFromDate] = useState(dayjs().subtract(3, 'month').format('YYYY-MM-DD'));
   const [toDate, setToDate] = useState(dayjs().format('YYYY-MM-DD'));
-  const [amount, setAmount] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
 
   const loadTransactions = useCallback(async () => {
     setLoading(true);
@@ -103,7 +104,6 @@ export default function PlanTransactionHistory() {
       };
       if (fromDate) params.fromDate = fromDate;
       if (toDate) params.toDate = toDate;
-      if (typeFilter !== 'all') params.type = typeFilter;
       if (invoiceId.trim()) params.transactionId = invoiceId.trim();
 
       const data = await accountApi.getTransactions(params);
@@ -124,7 +124,7 @@ export default function PlanTransactionHistory() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, invoiceId, showToast, toDate, typeFilter]);
+  }, [fromDate, invoiceId, showToast, toDate]);
 
   useEffect(() => {
     void loadTransactions();
@@ -134,20 +134,9 @@ export default function PlanTransactionHistory() {
     setInvoiceId('');
     setFromDate(dayjs().subtract(3, 'month').format('YYYY-MM-DD'));
     setToDate(dayjs().format('YYYY-MM-DD'));
-    setAmount('');
-    setTypeFilter('all');
   };
 
-  const filteredRows = useMemo(() => {
-    const amountValue = amount.trim() ? Number(amount) : null;
-    if (amountValue == null || Number.isNaN(amountValue)) {
-      return transactions;
-    }
-    return transactions.filter((row) => {
-      const price = row.price ?? row.amount ?? 0;
-      return Math.abs(price - amountValue) < 0.01;
-    });
-  }, [amount, transactions]);
+  const filteredRows = useMemo(() => transactions, [transactions]);
 
   const columns: GridColDef<TransactionRow>[] = [
     {
@@ -203,43 +192,51 @@ export default function PlanTransactionHistory() {
   ];
 
   return (
-    <Box sx={{ bgcolor: PAGE_BG, minHeight: 'calc(100vh - 152px)' }}>
-      <Box
-        sx={{
-          px: { xs: 2, md: 3 },
-          py: 2.5,
-          bgcolor: '#fff',
-          borderBottom: `1px solid ${BORDER}`,
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={1.25}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: '10px',
-              bgcolor: 'rgba(17, 86, 166, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <ReceiptLongOutlinedIcon sx={{ fontSize: 22, color: PRIMARY }} />
-          </Box>
-          <Box>
-            <Typography sx={{ fontWeight: 700, color: NAVY, fontSize: 22, lineHeight: 1.2 }}>
-              Transactions
-            </Typography>
-            <Typography sx={{ color: BODY, fontSize: 14, mt: 0.25 }}>
-              View and manage your transaction history. Filter by date, amount, or type.
-            </Typography>
-          </Box>
-        </Stack>
-      </Box>
+    <Box
+      sx={
+        embedded
+          ? undefined
+          : { bgcolor: PAGE_BG, minHeight: 'calc(100vh - 152px)' }
+      }
+    >
+      {!embedded && (
+        <Box
+          sx={{
+            px: { xs: 2, md: 3 },
+            py: 2.5,
+            bgcolor: '#fff',
+            borderBottom: `1px solid ${BORDER}`,
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1.25}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: '10px',
+                bgcolor: 'rgba(17, 86, 166, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ReceiptLongOutlinedIcon sx={{ fontSize: 22, color: PRIMARY }} />
+            </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 700, color: NAVY, fontSize: 22, lineHeight: 1.2 }}>
+                Transactions
+              </Typography>
+              <Typography sx={{ color: BODY, fontSize: 14, mt: 0.25 }}>
+                View and manage your transaction history. Filter by date, amount, or type.
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+      )}
 
       <Box
         sx={{
-          p: { xs: 2, md: 3 },
+          ...(embedded ? { px: { xs: 3, md: 4 } } : { p: { xs: 2, md: 3 } }),
           display: 'flex',
           flexDirection: { xs: 'column', lg: 'row' },
           gap: 2,
@@ -289,29 +286,6 @@ export default function PlanTransactionHistory() {
               InputLabelProps={{ shrink: true }}
               sx={fieldSx}
             />
-            <TextField
-              label="Amount"
-              size="small"
-              fullWidth
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              inputProps={{ min: 0, step: '0.01' }}
-              sx={fieldSx}
-            />
-            <FormControl fullWidth size="small" sx={fieldSx}>
-              <InputLabel>Type</InputLabel>
-              <Select
-                label="Type"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-              >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="credit">Credit</MenuItem>
-                <MenuItem value="debit">Debit</MenuItem>
-              </Select>
-            </FormControl>
-
             <Stack spacing={1} sx={{ pt: 0.5 }}>
               <Button
                 variant="contained"

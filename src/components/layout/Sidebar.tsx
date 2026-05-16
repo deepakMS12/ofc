@@ -1,24 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Box, Tooltip } from '@mui/material';
 import { LayoutDashboard, CodeXml, ArrowLeftRight, Settings } from 'lucide-react';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
+import HttpsIcon from '@mui/icons-material/Https';
 
 import ApiDrawer from '@/components/dialogs/ApiDrawer';
 import { colors } from '@/utils/customColor';
 
 const navLinks = [
   { slug: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-
+  { slug: 'ssl-manage', label: 'SSL Manage', icon: HttpsIcon, mui: true },
   { slug: 'converter', label: 'Converter', icon: ArrowLeftRight },
   { slug: 'api', label: 'Dev API', icon: CodeXml },
 ];
 
 export default function Sidebar() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
+  const navigate = useNavigate();
   const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (hash === '#api') {
+      setApiDrawerOpen(true);
+    }
+  }, [hash]);
   const isSettingsActive = pathname?.includes('settings');
   const isPlansActive = pathname?.includes('plans');
 
@@ -35,7 +43,7 @@ export default function Sidebar() {
         gap: 2,
         position: 'fixed',
         left: 0,
-        top: 64,
+        top: "4.625rem",
         bottom: 0,
         zIndex: 1100,
         overflowY: 'auto',
@@ -107,7 +115,15 @@ export default function Sidebar() {
       </Box>
 
       {/* Drawers */}
-      <ApiDrawer open={apiDrawerOpen} onClose={() => setApiDrawerOpen(false)} />
+      <ApiDrawer
+        open={apiDrawerOpen}
+        onClose={() => {
+          setApiDrawerOpen(false);
+          if (hash === '#api') {
+            navigate({ hash: '' }, { replace: true });
+          }
+        }}
+      />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
         <Tooltip title="Upgrade Plan" placement="right" arrow>

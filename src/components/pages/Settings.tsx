@@ -1015,7 +1015,9 @@ export default function SettingsPage() {
             "& .MuiTab-root": {
               textTransform: "none",
               fontWeight: 600,
-              py: 2,
+              minHeight: 44,
+              py: 0.75,
+              px: 2,
             },
             "& .Mui-selected": {
               color:
@@ -1037,14 +1039,14 @@ export default function SettingsPage() {
               iconPosition="start"
               icon={
                 <Box
-                  sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}
+                  sx={{ display: "flex", alignItems: "center" }}
                 >
                   {item.icon}
                 </Box>
               }
               label={
                 <Box
-                  sx={{ display: "flex", alignItems: "center", paddingTop: 1 }}
+                  sx={{ display: "flex", alignItems: "center" }}
                 >
                   {item.label}
                 </Box>

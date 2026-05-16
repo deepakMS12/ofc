@@ -1,10 +1,9 @@
 import axios from "axios";
 import { clearDemoAuthStorage, isDemoAuthSession } from "@/lib/demoAuth";
 import { getGlobalToast } from "@/contexts/ToastContext";
+import { NODE_API_BASE_URL } from "@/lib/env";
 
-const API_BASE_URL = (
-  import.meta.env.VITE_NODE_API_BASE 
-).replace(/\/$/, "");
+const API_BASE_URL = NODE_API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
