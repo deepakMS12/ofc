@@ -83,7 +83,7 @@ const TemplateFillToPDF = forwardRef<TemplateFillToPdfHandle>(function TemplateF
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 340px)",
+        height: "calc(100vh - 280px)",
         maxHeight: "100%",
         minHeight: 0,
         width: "100%",

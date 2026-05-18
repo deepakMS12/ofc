@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -7,7 +7,9 @@ import {
   Drawer,
   IconButton,
   Link,
+  Pagination,
   Paper,
+  Stack,
   Step,
   StepLabel,
   Stepper,
@@ -20,6 +22,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import HttpsIcon from "@mui/icons-material/Https";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -39,6 +42,7 @@ const HERO_BLUE = "#1156a6";
 const SSL_MANAGE_PATH = "/home/ssl-manage";
 const DASHBOARD_HASH = "dashboard";
 const CREATE_STEPS = ["Upload", "Verify", "Download"];
+const STATUS_DRAWER_PAGE_SIZE = 2;
 
 type DummyCert = {
   domain: string;
@@ -80,6 +84,11 @@ type CertStatus =
   | "Issued"
   | "Pending Validation"
   | "Expired";
+
+type ActiveDrawer =
+  | { type: "status"; status: CertStatus }
+  | { type: "create" }
+  | null;
 
 const statusMeta: Record<
   CertStatus,
@@ -226,23 +235,41 @@ function StatusCard({
 /* ── Status Drawer ── */
 
 function StatusDrawer({
+  open,
   status,
   onClose,
 }: {
-  status: CertStatus | null;
+  open: boolean;
+  status: CertStatus;
   onClose: () => void;
 }) {
-  if (!status) return null;
   const { icon, iconBg, iconColor } = statusMeta[status];
+  const [page, setPage] = useState(1);
+  const certs = dummyCertsByStatus[status];
+  const totalPages = Math.max(1, Math.ceil(certs.length / STATUS_DRAWER_PAGE_SIZE));
+  const pageCerts = certs.slice(
+    (page - 1) * STATUS_DRAWER_PAGE_SIZE,
+    page * STATUS_DRAWER_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [status, open]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   return (
     <Drawer
       anchor="right"
-      open={Boolean(status)}
+      open={open}
       onClose={onClose}
       PaperProps={{ sx: { width: "75%", maxWidth: "90vw" } }}
     >
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column", overflow: "auto" }}>
+      <Box sx={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <Box
           sx={{
             display: "flex",
@@ -277,9 +304,9 @@ function StatusDrawer({
           </IconButton>
         </Box>
 
-        <Box sx={{ flex: 1, overflow: "auto", p: 4, backgroundColor: "#fafafa" }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", p: 4, backgroundColor: "#fafafa" }}>
           <Box sx={{ maxWidth: 900, mx: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
-            {dummyCertsByStatus[status].length === 0 ? (
+            {certs.length === 0 ? (
               <Box
                 sx={{
                   textAlign: "center",
@@ -313,9 +340,9 @@ function StatusDrawer({
                 </Typography>
               </Box>
             ) : (
-              dummyCertsByStatus[status].map((cert, i) => (
+              pageCerts.map((cert, i) => (
                 <Paper
-                  key={i}
+                  key={`${cert.domain}-${(page - 1) * STATUS_DRAWER_PAGE_SIZE + i}`}
                   variant="outlined"
                   sx={{
                     borderRadius: 1,
@@ -382,6 +409,50 @@ function StatusDrawer({
             )}
           </Box>
         </Box>
+
+        {certs.length > 0 && (
+          <Box
+            sx={{
+              flexShrink: 0,
+              borderTop: "1px solid #e0e0e0",
+              bgcolor: "#fff",
+              px: 2,
+              py: 1.5,
+            }}
+          >
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="center"
+              spacing={0.5}
+            >
+            
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(_, value) => setPage(value)}
+                color="primary"
+                shape="rounded"
+                size="small"
+                siblingCount={0}
+                boundaryCount={1}
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    minWidth: 28,
+                    height: 28,
+                    fontSize: 13,
+                  },
+                  "& .MuiPaginationItem-root.Mui-selected": {
+                    bgcolor: colors.primary,
+                    color: "#fff",
+                    "&:hover": { bgcolor: colors.primary },
+                  },
+                }}
+              />
+           
+            </Stack>
+          </Box>
+        )}
       </Box>
     </Drawer>
   );
@@ -1207,8 +1278,15 @@ function SslHeroIntro({ onNext }: { onNext: () => void }) {
 /* ── Dashboard ── */
 
 function SslManageDashboard() {
-  const [drawerStatus, setDrawerStatus] = useState<CertStatus | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>(null);
+  const [statusDrawerStatus, setStatusDrawerStatus] =
+    useState<CertStatus>("Issued");
+  const closeDrawer = () => setActiveDrawer(null);
+
+  const openStatusDrawer = (status: CertStatus) => {
+    setStatusDrawerStatus(status);
+    setActiveDrawer({ type: "status", status });
+  };
 
   return (
     <Box
@@ -1324,7 +1402,7 @@ function SslManageDashboard() {
                 <StatusCard
                   key={status}
                   label={status}
-                  onViewAll={() => setDrawerStatus(status)}
+                  onViewAll={() => openStatusDrawer(status)}
                 />
               ))}
             </Box>
@@ -1382,7 +1460,7 @@ function SslManageDashboard() {
             </Box>
             <Button
               variant="contained"
-              onClick={() => setCreateOpen(true)}
+              onClick={() => setActiveDrawer({ type: "create" })}
               sx={{
                 alignSelf: "center",
                 flexShrink: 0,
@@ -1409,10 +1487,18 @@ function SslManageDashboard() {
       </Box>
 
       <StatusDrawer
-        status={drawerStatus}
-        onClose={() => setDrawerStatus(null)}
+        open={activeDrawer?.type === "status"}
+        status={
+          activeDrawer?.type === "status"
+            ? activeDrawer.status
+            : statusDrawerStatus
+        }
+        onClose={closeDrawer}
       />
-      <CreateSslDrawer open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateSslDrawer
+        open={activeDrawer?.type === "create"}
+        onClose={closeDrawer}
+      />
     </Box>
   );
 }

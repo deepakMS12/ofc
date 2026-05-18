@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useMatch } from "react-router-dom";
+import { Outlet, useMatch } from "react-router-dom";
 import { Box } from "@mui/material";
 import { Header, Sidebar, Footer } from "@/components/layout";
 import { ConverterSearchProvider } from "@/contexts/ConverterSearchContext";
@@ -9,14 +9,13 @@ import {
 import { colors } from "@/utils/customColor";
 
 export default function HomeLayout() {
-  const { hash } = useLocation();
   const isConverterToolRoute = Boolean(useMatch("/home/converter/:slug"));
   const isSslManageRoute = Boolean(useMatch("/home/ssl-manage"));
-  const isPlansHistoryRoute = Boolean(useMatch("/home/plans")) && hash === "#history";
+  const isPlansRoute = Boolean(useMatch("/home/plans"));
   const footerVisible = !(
     isConverterToolRoute ||
     isSslManageRoute ||
-    isPlansHistoryRoute
+    isPlansRoute
   );
 
   return (

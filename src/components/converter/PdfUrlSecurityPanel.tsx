@@ -10,7 +10,6 @@ import {
 } from "./pdfUrlSecurityPayload";
 
 const PANEL_BG = "#ffffff";
-const PANEL_BORDER = "#ececf2";
 
 const fieldLabelSx = {
   fontSize: 11,
@@ -114,22 +113,22 @@ const PdfUrlSecurityPanel = forwardRef<PdfUrlSecurityHandle, PdfUrlSecurityPanel
           sx={{
             display: "flex",
             flexDirection: "column",
-            height: "calc(100vh - 340px)",
+            height: "calc(100vh - 280px)",
             maxHeight: "100%",
             minHeight: 0,
             width: "100%",
-            overflow: "hidden",
-            bgcolor: PANEL_BG,
-            borderRadius: 2,
-            border: `1px solid ${PANEL_BORDER}`,
-            color: "#1e293b",
-            "& .MuiAccordion-root": {
-              bgcolor: PANEL_BG,
-              color: "#1e293b",
-              "&:before": { display: "none" },
-            },
-            "& .MuiAccordionSummary-root": { minHeight: 48 },
-            "& .MuiAccordionDetails-root": { pt: 0 },
+          //   overflow: "hidden",
+          //   bgcolor: PANEL_BG,
+          //   borderRadius: 2,
+          //   border: `1px solid ${PANEL_BORDER}`,
+          //   color: "#1e293b",
+          //   "& .MuiAccordion-root": {
+          //     bgcolor: PANEL_BG,
+          //     color: "#1e293b",
+          //     "&:before": { display: "none" },
+          //   },
+          //   "& .MuiAccordionSummary-root": { minHeight: 48 },
+          //   "& .MuiAccordionDetails-root": { pt: 0 },
           }}
         >
           <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pb: 1 }}>
@@ -171,18 +170,18 @@ const PdfUrlSecurityPanel = forwardRef<PdfUrlSecurityHandle, PdfUrlSecurityPanel
           maxHeight: "100%",
           minHeight: 0,
           width: "100%",
-          overflow: "hidden",
-          bgcolor: PANEL_BG,
-          borderRadius: 2,
-          border: `1px solid ${PANEL_BORDER}`,
-          color: "#1e293b",
-          "& .MuiAccordion-root": {
-            bgcolor: PANEL_BG,
-            color: "#1e293b",
-            "&:before": { display: "none" },
-          },
-          "& .MuiAccordionSummary-root": { minHeight: 48 },
-          "& .MuiAccordionDetails-root": { pt: 0 },
+        //   overflow: "hidden",
+        //   bgcolor: PANEL_BG,
+        //   borderRadius: 2,
+        //   border: `1px solid ${PANEL_BORDER}`,
+        //   color: "#1e293b",
+        //   "& .MuiAccordion-root": {
+        //     bgcolor: PANEL_BG,
+        //     color: "#1e293b",
+        //     "&:before": { display: "none" },
+        //   },
+        //   "& .MuiAccordionSummary-root": { minHeight: 48 },
+        //   "& .MuiAccordionDetails-root": { pt: 0 },
         }}
       >
         <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pb: 1 }}>

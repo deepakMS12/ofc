@@ -167,7 +167,7 @@ const TextToQrPanel = forwardRef<TextToQrHandle, TextToQrPanelProps>(
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "calc(100vh - 340px)",
+          height: "calc(100vh - 280px)",
           maxHeight: "100%",
           minHeight: 0,
           width: "100%",
@@ -365,46 +365,53 @@ const TextToQrPanel = forwardRef<TextToQrHandle, TextToQrPanelProps>(
               }}
             />
 
-            <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.25 }}>
-              <Box>
-                <Typography component="span" sx={fieldLabelSx}>Output name</Typography>
-                <SettingsOutlinedField value={outputName} placeholder="qr-out" onChange={(e) => setOutputName(e.target.value)} />
-              </Box>
-              <Box>
-                <Typography component="span" sx={fieldLabelSx}>Response</Typography>
-                <ToggleButtonGroup
-                  color="primary"
-                  exclusive
-                  fullWidth
-                  size="small"
-                  value={responseMode}
-                  onChange={(_, v: "download" | "preview" | null) => {
-                    if (v) setResponseMode(v);
-                  }}
-                  sx={{
-                    "& .MuiToggleButton-root": {
-                      textTransform: "none",
-                      fontWeight: 600,
-                      color: "#64748b",
-                      borderColor: PANEL_BORDER,
-                      bgcolor: PANEL_BG,
-                    },
-                    "& .MuiToggleButton-root.Mui-selected": {
-                      bgcolor: `${colors.primary} !important`,
-                      color: "#fff !important",
-                      borderColor: `${colors.primary} !important`,
-                    },
-                    "& .MuiToggleButton-root.Mui-selected:hover": {
-                      bgcolor: `${colors.primary} !important`,
-                    },
-                  }}
-                >
-                  <ToggleButton value="download">Download</ToggleButton>
-                  <ToggleButton value="preview">Preview</ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography component="span" sx={fieldLabelSx}>Response</Typography>
+              <ToggleButtonGroup
+                color="primary"
+                exclusive
+                fullWidth
+                size="small"
+                value={responseMode}
+                onChange={(_, v: "download" | "preview" | null) => {
+                  if (v) setResponseMode(v);
+                }}
+                sx={{
+                  "& .MuiToggleButton-root": {
+                    textTransform: "none",
+                    fontWeight: 600,
+                    color: "#64748b",
+                    borderColor: PANEL_BORDER,
+                    bgcolor: PANEL_BG,
+                  },
+                  "& .MuiToggleButton-root.Mui-selected": {
+                    bgcolor: `${colors.primary} !important`,
+                    color: "#fff !important",
+                    borderColor: `${colors.primary} !important`,
+                  },
+                  "& .MuiToggleButton-root.Mui-selected:hover": {
+                    bgcolor: `${colors.primary} !important`,
+                  },
+                }}
+              >
+                <ToggleButton value="download">Download</ToggleButton>
+                <ToggleButton value="preview">Preview</ToggleButton>
+              </ToggleButtonGroup>
             </Box>
           </SettingsAccordion>
+        </Box>
+
+        <Box sx={{ flexShrink: 0, px: 2, pt: 0.8 }}>
+          <Typography component="span" sx={fieldLabelSx}>
+            Output name
+          </Typography>
+          <SettingsOutlinedField
+            id="text-to-qr-output-name"
+            placeholder="qr-out"
+            value={outputName}
+            onChange={(e) => setOutputName(e.target.value)}
+            sx={{ mt: 0.5, "& .MuiOutlinedInput-root": { bgcolor: PANEL_BG } }}
+          />
         </Box>
       </Box>
     );
