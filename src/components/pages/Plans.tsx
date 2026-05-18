@@ -3,12 +3,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
+  CircularProgress,
   Paper,
   Stack,
   Tab,
   Tabs,
   Typography,
 } from '@mui/material';
+import { paymentApi } from '@/lib/api/payment';
+import { accountApi } from '@/lib/api/account';
+import { useToast } from '@/hooks/useToast';
 import { Crown, Receipt } from 'lucide-react';
 import PlanTransactionHistory from './PlanTransactionHistory';
 import conversionCosts from '../../../conversion_costs.json';
@@ -198,6 +202,12 @@ const tierMeta: Record<
 
 const TIERS: PlanTier[] = ['bronze', 'silver', 'gold', 'enterprise'];
 
+const PLAN_PRICES: Partial<Record<PlanTier, string>> = {
+  bronze: '999.00',
+  silver: '1999.00',
+  gold: '3999.00',
+};
+
 const formatRange = (min: number, max: number, suffix = '') => {
   if (min === max) {
     return `${min}${suffix}`;
@@ -246,8 +256,35 @@ export default function Plans() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pageShellMinHeight, pageContentMaxHeight } = useLayoutShell();
+  const { showToast } = useToast();
   const [tab, setTab] = useState<PlansTab>(getInitialTabFromHash);
   const [currentPlan, setCurrentPlan] = useState<PlanTier | null>(null);
+  const [payingTier, setPayingTier] = useState<PlanTier | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    accountApi.getBalance().then((d: { balance: number }) => setWalletBalance(d.balance)).catch(() => {});
+  }, []);
+
+  const handleSelectPlan = useCallback(async (tier: PlanTier) => {
+    if (!PLAN_PRICES[tier]) return;
+
+    if (walletBalance !== null && walletBalance <= 0) {
+      showToast('Please top up your wallet first.', 'error');
+      return;
+    }
+
+    setPayingTier(tier);
+    try {
+      await paymentApi.purchasePlan(tier);
+      showToast('Plan activated successfully!', 'success');
+      setCurrentPlan(tier);
+    } catch {
+      showToast('Failed to activate plan. Please try again.', 'error');
+    } finally {
+      setPayingTier(null);
+    }
+  }, [showToast, walletBalance]);
 
   useEffect(() => {
     const normalized = location.hash.replace(/^#/, '').toLowerCase();
@@ -503,28 +540,56 @@ export default function Plans() {
                   </Box>
 
                   {currentPlan !== plan.tier && (
-                    <Button
-                      variant="contained"
-                      disableElevation
-                      fullWidth
-                      sx={{
-                        mt: 2,
-                        py: 1.35,
-                        borderRadius: '8px',
-                        textTransform: 'none',
-                        fontWeight: 400,
-                        fontSize: 16,
-                        backgroundColor: PLAN_PURPLE,
-                        boxShadow: 'none',
-                        '&:hover': {
+                    plan.tier === 'enterprise' ? (
+                      <Button
+                        variant="outlined"
+                        disableElevation
+                        fullWidth
+                        sx={{
+                          mt: 2,
+                          py: 1.35,
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          fontSize: 15,
+                          borderColor: PLAN_PURPLE,
+                          color: PLAN_PURPLE,
+                          '&:hover': { bgcolor: 'rgba(17,86,166,0.06)', borderColor: PLAN_PURPLE },
+                        }}
+                      >
+                        Contact Sales
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        disableElevation
+                        fullWidth
+                        disabled={payingTier !== null}
+                        onClick={() => void handleSelectPlan(plan.tier)}
+                        sx={{
+                          mt: 2,
+                          py: 1.35,
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          fontWeight: 400,
+                          fontSize: 16,
                           backgroundColor: PLAN_PURPLE,
-                          filter: 'brightness(0.94)',
                           boxShadow: 'none',
-                        },
-                      }}
-                    >
-                      SELECT
-                    </Button>
+                          '&:hover': {
+                            backgroundColor: PLAN_PURPLE,
+                            filter: 'brightness(0.94)',
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        {payingTier === plan.tier ? (
+                          <CircularProgress size={20} sx={{ color: '#fff' }} />
+                        ) : (
+                          <>SELECT</>
+
+                        )}
+                      </Button>
+                    )
                   )}
                 </Box>
               </Paper>

@@ -10,10 +10,12 @@ import { colors } from "@/utils/customColor";
 
 export default function HomeLayout() {
   const isConverterToolRoute = Boolean(useMatch("/home/converter/:slug"));
+  const isConverterRoute = Boolean(useMatch("/home/converter"));
   const isSslManageRoute = Boolean(useMatch("/home/ssl-manage"));
   const isPlansRoute = Boolean(useMatch("/home/plans"));
   const footerVisible = !(
     isConverterToolRoute ||
+    isConverterRoute ||
     isSslManageRoute ||
     isPlansRoute
   );
@@ -45,9 +47,10 @@ export default function HomeLayout() {
                 flexDirection: "column",
                 flex: 1,
                 minWidth: 0,
-                minHeight: 0,
                 ml: "80px",
-                height: `calc(100vh - ${LAYOUT_HEADER_OFFSET})`,
+                ...(footerVisible
+                  ? { minHeight: `calc(100vh - ${LAYOUT_HEADER_OFFSET})` }
+                  : { height: `calc(100vh - ${LAYOUT_HEADER_OFFSET})`, minHeight: 0 }),
                 ...(isConverterToolRoute && { bgcolor: "#fff" }),
               }}
             >
@@ -58,7 +61,7 @@ export default function HomeLayout() {
                   minHeight: 0,
                   display: "flex",
                   flexDirection: "column",
-                  overflow: footerVisible ? "auto" : "hidden",
+                  overflow: (isConverterToolRoute || isSslManageRoute || isPlansRoute) ? "hidden" : "auto",
                   ...(isConverterToolRoute && { bgcolor: "#fff" }),
                 }}
               >
