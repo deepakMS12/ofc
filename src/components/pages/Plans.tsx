@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -9,6 +9,7 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
+import { Crown, Receipt } from 'lucide-react';
 import PlanTransactionHistory from './PlanTransactionHistory';
 import conversionCosts from '../../../conversion_costs.json';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -17,8 +18,8 @@ import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import { colors } from '@/utils/customColor';
+import { useLayoutShell } from '@/contexts/LayoutShellContext';
 
 /** Plan page palette — solid colors from reference (no gradients). */
 const PLAN_PURPLE = '#1156a6';
@@ -215,21 +216,59 @@ const pricingData = conversionCosts as ConversionCostsFile;
 
 type PlansTab = 'plans' | 'history';
 
+const tabHashMap: Record<PlansTab, string> = {
+  plans: 'plans',
+  history: 'history',
+};
+
+const hashToTabMap: Record<string, PlansTab> = Object.entries(tabHashMap).reduce(
+  (acc, [tabKey, hashValue]) => {
+    acc[hashValue.toLowerCase()] = tabKey as PlansTab;
+    return acc;
+  },
+  {} as Record<string, PlansTab>,
+);
+
+const getInitialTabFromHash = (): PlansTab => {
+  if (typeof window === 'undefined') {
+    return 'plans';
+  }
+  const normalized = window.location.hash.replace(/^#/, '').toLowerCase();
+  return hashToTabMap[normalized] || 'plans';
+};
+
+const tabConfig: { key: PlansTab; label: string; icon: React.ReactNode }[] = [
+  { key: 'plans', label: 'Plans', icon: <Crown size={16} /> },
+  { key: 'history', label: 'History', icon: <Receipt size={16} /> },
+];
+
 export default function Plans() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<PlansTab>(
-    location.hash === '#history' ? 'history' : 'plans'
-  );
+  const { pageShellMinHeight, pageContentMaxHeight } = useLayoutShell();
+  const [tab, setTab] = useState<PlansTab>(getInitialTabFromHash);
   const [currentPlan, setCurrentPlan] = useState<PlanTier | null>(null);
 
   useEffect(() => {
-    if (location.hash === '#history') {
-      setActiveTab('history');
-    } else {
-      setActiveTab('plans');
-    }
+    const normalized = location.hash.replace(/^#/, '').toLowerCase();
+    setTab(hashToTabMap[normalized] || 'plans');
   }, [location.hash]);
+
+  const handleTabChange = useCallback(
+    (_: React.SyntheticEvent, newValue: PlansTab) => {
+      setTab(newValue);
+      const hashValue = tabHashMap[newValue];
+      navigate(
+        {
+          pathname: location.pathname,
+          search: location.search,
+          hash: hashValue ? `#${hashValue}` : '',
+        },
+        { replace: true },
+      );
+    },
+    [navigate, location.pathname, location.search],
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -342,13 +381,341 @@ export default function Plans() {
     ];
   };
 
+  const renderPlansContent = () => (
+    <Box sx={{ px: { xs: 3, md: 4 } }}>
+      <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: PLAN_NAVY, mb: 1 }}>
+          Choose the plan that matches your conversion volume
+        </Typography>
+        <Typography variant="body1" sx={{ color: PLAN_BODY }}>
+          Pricing is generated directly from conversion costs and reflects per-page rates,
+          request limits, and upload caps across available conversion tools.
+        </Typography>
+      </Box>
+
+      <Stack spacing={3}>
+        {planMetrics.map((plan) => {
+          const unavailable = getUnavailableSpecs(plan.tier);
+          const included = [
+            `Per page pricing: ${formatPriceRange(plan.perPageMin, plan.perPageMax)}`,
+            `Conversion tools covered: ${plan.conversionCount}`,
+            `Max uploads per request: ${formatRange(plan.maxUploadMin, plan.maxUploadMax)}`,
+            `API rate limit: ${formatRange(plan.rateLimitMin, plan.rateLimitMax)} req/min`,
+          ];
+
+          const planTitle =
+            plan.label.charAt(0) + plan.label.slice(1).toLowerCase();
+
+          return (
+            <Box
+              key={plan.tier}
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                gap: 2,
+                alignItems: 'stretch',
+              }}
+            >
+              <Paper
+                elevation={0}
+                sx={{
+                  ...planPanelSx,
+                  position: 'relative',
+                  flex: { xs: '1 1 auto', md: '0 0 300px' },
+                  maxWidth: { md: 320 },
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {currentPlan === plan.tier && (
+                  <Box component="span" sx={currentPlanBadgeSx}>
+                    Current plan
+                  </Box>
+                )}
+                <Box
+                  sx={{
+                    backgroundColor: PLAN_PURPLE,
+                    py: 2.25,
+                    px: 2,
+                    pt: currentPlan === plan.tier ? 3.5 : 2.25,
+                    position: 'relative',
+                    borderRadius: '9px 9px 0 0',
+                  }}
+                >
+                  <PlanHeaderMessage
+                    label={plan.label}
+                    description={plan.description}
+                    highlight={plan.highlight}
+                  />
+                </Box>
+
+                <Box
+                  sx={{
+                    p: 2.5,
+                    pt: 2,
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: PLAN_NAVY,
+                      fontWeight: 400,
+                      fontSize: 15,
+                      mb: 0.25,
+                    }}
+                  >
+                    {plan.conversionCount} Credits
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      color: PLAN_NAVY,
+                      fontSize: 36,
+                      lineHeight: 1.1,
+                      mb: 1.75,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {planTitle}
+                  </Typography>
+
+                  <Box component="ul" sx={{ ...planBulletListSx, flex: 1 }}>
+                    <Box component="li">
+                      Total Overage:{' '}
+                      <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
+                        {formatPriceRange(plan.perPageMin, plan.perPageMax)}
+                      </Box>
+                    </Box>
+                    <Box component="li">
+                      Max uploads:{' '}
+                      <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
+                        {formatRange(plan.maxUploadMin, plan.maxUploadMax)}
+                      </Box>
+                    </Box>
+                    <Box component="li">
+                      Timeout:{' '}
+                      <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
+                        30s
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  {currentPlan !== plan.tier && (
+                    <Button
+                      variant="contained"
+                      disableElevation
+                      fullWidth
+                      sx={{
+                        mt: 2,
+                        py: 1.35,
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontWeight: 400,
+                        fontSize: 16,
+                        backgroundColor: PLAN_PURPLE,
+                        boxShadow: 'none',
+                        '&:hover': {
+                          backgroundColor: PLAN_PURPLE,
+                          filter: 'brightness(0.94)',
+                          boxShadow: 'none',
+                        },
+                      }}
+                    >
+                      SELECT
+                    </Button>
+                  )}
+                </Box>
+              </Paper>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  ...planPanelSx,
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: 0,
+                }}
+              >
+                <Box
+                  sx={{
+                    p: { xs: 2.5, md: 3 },
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      color: PLAN_NAVY,
+                      fontSize: 20,
+                      mb: 2.5,
+                    }}
+                  >
+                    Basic features:
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', md: 'row' },
+                      flex: 1,
+                      gap: 0,
+                    }}
+                  >
+                    <Box sx={{ flex: 1, pr: { md: unavailable.length ? 2.5 : 0 } }}>
+                      <Stack spacing={1.75}>
+                        {included.map((item) => (
+                          <Stack
+                            key={`${plan.tier}-${item}`}
+                            direction="row"
+                            spacing={1.25}
+                            alignItems="flex-start"
+                          >
+                            <Box
+                              sx={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: '50%',
+                                backgroundColor: '#e3f2fd',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                mt: 0.1,
+                              }}
+                            >
+                              <Check sx={{ fontSize: 14, color: '#1156a6' }} aria-hidden />
+                            </Box>
+                            <Typography
+                              sx={{
+                                color: PLAN_BODY,
+                                fontSize: 14,
+                                lineHeight: 1.55,
+                                fontWeight: 400,
+                              }}
+                            >
+                              {item}
+                            </Typography>
+                          </Stack>
+                        ))}
+                      </Stack>
+                    </Box>
+
+                    {unavailable.length > 0 && (
+                      <Box
+                        sx={{
+                          flex: 1,
+                          borderLeft: { xs: 'none', md: `1px solid ${PLAN_BORDER}` },
+                          borderTop: { xs: `1px solid ${PLAN_BORDER}`, md: 'none' },
+                          mt: { xs: 2.5, md: 0 },
+                          pt: { xs: 2.5, md: 0 },
+                          pl: { md: 2.5 },
+                        }}
+                      >
+                        <Stack spacing={1.75}>
+                          {unavailable.map((item) => (
+                            <Stack
+                              key={`${plan.tier}-${item}`}
+                              direction="row"
+                              spacing={1.25}
+                              alignItems="flex-start"
+                            >
+                              <Close
+                                sx={{
+                                  fontSize: 18,
+                                  color: '#1156a6',
+                                  flexShrink: 0,
+                                  mt: 0.05,
+                                }}
+                                aria-hidden
+                              />
+                              <Typography
+                                sx={{
+                                  color: PLAN_BODY,
+                                  fontSize: 14,
+                                  lineHeight: 1.55,
+                                  textDecoration: 'line-through',
+                                  fontWeight: 400,
+                                }}
+                              >
+                                {item}
+                              </Typography>
+                            </Stack>
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                  </Box>
+
+                  <Box
+                    sx={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.75 }}>
+                      <Typography
+                        component="span"
+                        sx={{ fontSize: 13, color: PLAN_MUTED, fontWeight: 400 }}
+                      >
+                        1 /
+                      </Typography>
+                      <Box
+                        component="img"
+                        src="/assets/images/user.png"
+                        alt="Max login one"
+                        sx={{ width: 14, height: 14, opacity: 0.7 }}
+                      />
+                    </Stack>
+                    <Typography
+                      sx={{
+                        mt: 'auto',
+                        pt: 3,
+                        color: PLAN_MUTED,
+                        fontSize: 13,
+                        lineHeight: 1.55,
+                        fontWeight: 400,
+                      }}
+                    >
+                      * We count 1 credit per request unit; billing varies by tier and conversion
+                      type.
+                    </Typography>
+                  </Box>
+                </Box>
+              </Paper>
+            </Box>
+          );
+        })}
+      </Stack>
+    </Box>
+  );
+
+  const renderTabContent = () => {
+    switch (tab) {
+      case 'history':
+        return <PlanTransactionHistory embedded />;
+      case 'plans':
+      default:
+        return renderPlansContent();
+    }
+  };
+
   return (
     <Box
       sx={{
         p: 0,
         backgroundColor: '#fffdf5',
-        minHeight: 'calc(100vh - 164px)',
+        minHeight: pageShellMinHeight,
+        height: pageShellMinHeight,
         overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <Paper
@@ -356,13 +723,15 @@ export default function Plans() {
         sx={{
           overflow: 'hidden',
           backgroundColor: 'white',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
         }}
       >
         <Tabs
-          value={activeTab}
-          onChange={(_, value: PlansTab) => {
-            navigate({ hash: value === 'history' ? 'history' : '' }, { replace: true });
-          }}
+          value={tab}
+          onChange={handleTabChange}
           variant="scrollable"
           scrollButtons="auto"
           sx={{
@@ -383,354 +752,36 @@ export default function Plans() {
             },
           }}
         >
-          <Tab
-            value="plans"
-            iconPosition="start"
-            icon={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <WorkspacePremiumIcon sx={{ fontSize: 16 }} />
-              </Box>
-            }
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                Plans
-              </Box>
-            }
-            sx={{ gap: 1, '& svg': { color: 'inherit' } }}
-          />
-          <Tab
-            value="history"
-            iconPosition="start"
-            icon={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <ReceiptLongOutlinedIcon sx={{ fontSize: 16 }} />
-              </Box>
-            }
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                History
-              </Box>
-            }
-            sx={{ gap: 1, '& svg': { color: 'inherit' } }}
-          />
+          {tabConfig.map((item) => (
+            <Tab
+              key={item.key}
+              value={item.key}
+              iconPosition="start"
+              icon={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {item.icon}
+                </Box>
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {item.label}
+                </Box>
+              }
+              sx={{ gap: 1, '& svg': { color: 'inherit' } }}
+            />
+          ))}
         </Tabs>
 
         <Box
           sx={{
             py: 3,
-            maxHeight: 'calc(100vh - 200px)',
-            minHeight: 'calc(100vh - 190px)',
+            flex: 1,
+            minHeight: 0,
+            maxHeight: pageContentMaxHeight,
             overflow: 'auto',
           }}
         >
-      {activeTab === 'history' ? (
-        <PlanTransactionHistory embedded />
-      ) : (
-        <Box sx={{ px: { xs: 3, md: 4 } }}>
-          <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: PLAN_NAVY, mb: 1 }}>
-              Choose the plan that matches your conversion volume
-            </Typography>
-            <Typography variant="body1" sx={{ color: PLAN_BODY }}>
-              Pricing is generated directly from conversion costs and reflects per-page rates,
-              request limits, and upload caps across available conversion tools.
-            </Typography>
-          </Box>
-
-          <Stack spacing={3}>
-          {planMetrics.map((plan) => {
-            const unavailable = getUnavailableSpecs(plan.tier);
-            const included = [
-              `Per page pricing: ${formatPriceRange(plan.perPageMin, plan.perPageMax)}`,
-              `Conversion tools covered: ${plan.conversionCount}`,
-              `Max uploads per request: ${formatRange(plan.maxUploadMin, plan.maxUploadMax)}`,
-              `API rate limit: ${formatRange(plan.rateLimitMin, plan.rateLimitMax)} req/min`,
-            ];
-
-            const planTitle =
-              plan.label.charAt(0) + plan.label.slice(1).toLowerCase();
-
-            return (
-              <Box
-                key={plan.tier}
-                sx={{
-                  display: 'flex',
-                  flexDirection: { xs: 'column', md: 'row' },
-                  gap: 2,
-                  alignItems: 'stretch',
-                }}
-              >
-                {/* Left — plan summary card (narrow) */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    ...planPanelSx,
-                    position: 'relative',
-                    flex: { xs: '1 1 auto', md: '0 0 300px' },
-                    maxWidth: { md: 320 },
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  {currentPlan === plan.tier && (
-                    <Box component="span" sx={currentPlanBadgeSx}>
-                      Current plan
-                    </Box>
-                  )}
-                  <Box
-                    sx={{
-                      backgroundColor: PLAN_PURPLE,
-                      py: 2.25,
-                      px: 2,
-                      pt: currentPlan === plan.tier ? 3.5 : 2.25,
-                      position: 'relative',
-                      borderRadius: '9px 9px 0 0',
-                    }}
-                  >
-                    <PlanHeaderMessage
-                      label={plan.label}
-                      description={plan.description}
-                      highlight={plan.highlight}
-                    />
-                  </Box>
-
-                  <Box
-                    sx={{
-                      p: 2.5,
-                      pt: 2,
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        color: PLAN_NAVY,
-                        fontWeight: 400,
-                        fontSize: 15,
-                        mb: 0.25,
-                      }}
-                    >
-                      {plan.conversionCount} Credits
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: PLAN_NAVY,
-                        fontSize: 36,
-                        lineHeight: 1.1,
-                        mb: 1.75,
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      {planTitle}
-                    </Typography>
-
-                    <Box component="ul" sx={{ ...planBulletListSx, flex: 1 }}>
-                      <Box component="li">
-                        Total Overage:{' '}
-                        <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
-                          {formatPriceRange(plan.perPageMin, plan.perPageMax)}
-                        </Box>
-                      </Box>
-                      <Box component="li">
-                        Max uploads:{' '}
-                        <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
-                          {formatRange(plan.maxUploadMin, plan.maxUploadMax)}
-                        </Box>
-                      </Box>
-                      <Box component="li">
-                        Timeout:{' '}
-                        <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
-                          30s
-                        </Box>
-                      </Box>
-                    </Box>
-
-                    {currentPlan !== plan.tier && (
-                      <Button
-                        variant="contained"
-                        disableElevation
-                        fullWidth
-                        sx={{
-                          mt: 2,
-                          py: 1.35,
-                          borderRadius: '8px',
-                          textTransform: 'none',
-                          fontWeight: 400,
-                          fontSize: 16,
-                          backgroundColor: PLAN_PURPLE,
-                          boxShadow: 'none',
-                          '&:hover': {
-                            backgroundColor: PLAN_PURPLE,
-                            filter: 'brightness(0.94)',
-                            boxShadow: 'none',
-                          },
-                        }}
-                      >
-                        SELECT
-                      </Button>
-                    )}
-                  </Box>
-                </Paper>
-
-                {/* Right — features card (wider) */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    ...planPanelSx,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minWidth: 0,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      p: { xs: 2.5, md: 3 },
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: PLAN_NAVY,
-                        fontSize: 20,
-                        mb: 2.5,
-                      }}
-                    >
-                      Basic features:
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: { xs: 'column', md: 'row' },
-                        flex: 1,
-                        gap: 0,
-                      }}
-                    >
-                      <Box sx={{ flex: 1, pr: { md: unavailable.length ? 2.5 : 0 } }}>
-                        <Stack spacing={1.75}>
-                          {included.map((item) => (
-                            <Stack
-                              key={`${plan.tier}-${item}`}
-                              direction="row"
-                              spacing={1.25}
-                              alignItems="flex-start"
-                            >
-                              <Box
-                                sx={{
-                                  width: 22,
-                                  height: 22,
-                                  borderRadius: '50%',
-                                  backgroundColor: "#e3f2fd",
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  flexShrink: 0,
-                                  mt: 0.1,
-                                }}
-                              >
-                                <Check sx={{ fontSize: 14, color: '#1156a6' }} aria-hidden />
-                              </Box>
-                              <Typography
-                                sx={{
-                                  color: PLAN_BODY,
-                                  fontSize: 14,
-                                  lineHeight: 1.55,
-                                  fontWeight: 400,
-                                }}
-                              >
-                                {item}
-                              </Typography>
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </Box>
-
-                      {unavailable.length > 0 && (
-                        <Box
-                          sx={{
-                            flex: 1,
-                            borderLeft: { xs: 'none', md: `1px solid ${PLAN_BORDER}` },
-                            borderTop: { xs: `1px solid ${PLAN_BORDER}`, md: 'none' },
-                            mt: { xs: 2.5, md: 0 },
-                            pt: { xs: 2.5, md: 0 },
-                            pl: { md: 2.5 },
-                          }}
-                        >
-                          <Stack spacing={1.75}>
-                            {unavailable.map((item) => (
-                              <Stack
-                                key={`${plan.tier}-${item}`}
-                                direction="row"
-                                spacing={1.25}
-                                alignItems="flex-start"
-                              >
-                                <Close
-                                  sx={{
-                                    fontSize: 18,
-                                    color: "#1156a6",
-                                    flexShrink: 0,
-                                    mt: 0.05,
-                                  }}
-                                  aria-hidden
-                                />
-                                <Typography
-                                  sx={{
-                                    color: PLAN_BODY,
-                                    fontSize: 14,
-                                    lineHeight: 1.55,
-                                    textDecoration: 'line-through',
-                                    fontWeight: 400,
-                                  }}
-                                >
-                                  {item}
-                                </Typography>
-                              </Stack>
-                            ))}
-                          </Stack>
-                        </Box>
-                      )}
-                    </Box>
-
-                 <Box sx={{width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-                
-                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.75 }}>
-                      <Typography component="span" sx={{ fontSize: 13, color: PLAN_MUTED, fontWeight: 400 }}>
-                        1 /
-                      </Typography>
-                      <Box
-                        component="img"
-                        src="/assets/images/user.png"
-                        alt="Max login one"
-                        sx={{ width: 14, height: 14, opacity: 0.7 }}
-                      />
-                    </Stack>
-                         <Typography
-                      sx={{
-                        mt: 'auto',
-                        pt: 3,
-                        color: PLAN_MUTED,
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        fontWeight: 400,
-                      }}
-                    >
-                      * We count 1 credit per request unit; billing varies by tier and conversion type.
-                    </Typography>
-                 </Box>
-                  </Box>
-                </Paper>
-              </Box>
-            );
-          })}
-          </Stack>
-        </Box>
-      )}
+          {renderTabContent()}
         </Box>
       </Paper>
     </Box>

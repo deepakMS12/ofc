@@ -1,7 +1,8 @@
 import axios from "axios";
 import { clearDemoAuthStorage, isDemoAuthSession } from "@/lib/demoAuth";
 import { getGlobalToast } from "@/contexts/ToastContext";
-import { NODE_API_BASE_URL } from "@/lib/env";
+
+const NODE_API_BASE_URL = import.meta.env.VITE_NODE_API_BASE;
 
 const API_BASE_URL = NODE_API_BASE_URL;
 

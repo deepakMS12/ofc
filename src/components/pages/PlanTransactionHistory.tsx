@@ -16,6 +16,7 @@ import dayjs from 'dayjs';
 import { accountApi, type Transaction } from '@/lib/api/account';
 import { useToast } from '@/hooks/useToast';
 import { colors } from '@/utils/customColor';
+import { useLayoutShell } from '@/contexts/LayoutShellContext';
 
 const PRIMARY = colors.primary;
 const NAVY = '#1A1A40';
@@ -88,6 +89,7 @@ export default function PlanTransactionHistory({
   embedded = false,
 }: PlanTransactionHistoryProps) {
   const { showToast } = useToast();
+  const { mainAreaHeight } = useLayoutShell();
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -195,8 +197,13 @@ export default function PlanTransactionHistory({
     <Box
       sx={
         embedded
-          ? undefined
-          : { bgcolor: PAGE_BG, minHeight: 'calc(100vh - 152px)' }
+          ? {
+              height: '100%',
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+            }
+          : { bgcolor: PAGE_BG, minHeight: mainAreaHeight }
       }
     >
       {!embedded && (
@@ -241,6 +248,7 @@ export default function PlanTransactionHistory({
           flexDirection: { xs: 'column', lg: 'row' },
           gap: 2,
           alignItems: 'stretch',
+          ...(embedded && { flex: 1, minHeight: 0 }),
         }}
       >
         <Paper elevation={0} sx={{ ...panelSx, flex: { lg: '0 0 300px' }, p: 0 }}>
@@ -333,10 +341,11 @@ export default function PlanTransactionHistory({
             ...panelSx,
             flex: 1,
             minWidth: 0,
-            height: { xs: 520, lg: 'calc(100vh - 220px)' },
+            height: { xs: 520, lg: embedded ? '100%' : `calc(${mainAreaHeight} - 5.5rem)` },
             minHeight: 440,
             display: 'flex',
             flexDirection: 'column',
+            ...(embedded && { flex: 1 }),
           }}
         >
           <DataGrid
