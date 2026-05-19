@@ -18,6 +18,7 @@ import {
 } from "../components/auth/AuthUi";
 import { AuthActionButton, ValidatedTextField } from "@/components/common";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { openSidebarOnLogin } from "@/contexts/SidebarContext";
 import { loginUser } from "@/store/thunks/authThunks";
 import { useToast } from "@/hooks/useToast";
 
@@ -72,6 +73,8 @@ const SignInPage = () => {
       if (response?.message) {
         showToast(response.message, "success");
       }
+
+      openSidebarOnLogin();
 
       const from =
         (location.state as { from?: string } | null)?.from ?? "/home/dashboard";

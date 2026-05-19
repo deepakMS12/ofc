@@ -12,7 +12,7 @@ export const SIDEBAR_WIDTH = 260;
 /** Shared easing — sidebar slide + content shift stay in sync (Gofile-style). */
 export const SIDEBAR_TRANSITION = '0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
-const STORAGE_KEY = 'ofc-sidebar-collapsed';
+export const SIDEBAR_COLLAPSED_KEY = 'ofc-sidebar-collapsed';
 
 type SidebarContextValue = {
   /** true = drawer closed */
@@ -20,30 +20,42 @@ type SidebarContextValue = {
   /** 0 when closed (drawer overlay); width when open for optional layout */
   sidebarWidth: number;
   toggleSidebar: () => void;
+  openSidebar: () => void;
   closeSidebar: () => void;
 };
+
+/** Call after login so the nav drawer opens by default. */
+export function openSidebarOnLogin() {
+  if (typeof globalThis.window === 'undefined') return;
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'false');
+}
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 function readCollapsedPreference(): boolean {
-  if (typeof globalThis.window === 'undefined') return true;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === null) return true;
+  if (typeof globalThis.window === 'undefined') return false;
+  const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+  if (stored === null) return false;
   return stored === 'true';
 }
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(readCollapsedPreference);
 
+  const openSidebar = useCallback(() => {
+    setIsCollapsed(false);
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'false');
+  }, []);
+
   const closeSidebar = useCallback(() => {
     setIsCollapsed(true);
-    localStorage.setItem(STORAGE_KEY, 'true');
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'true');
   }, []);
 
   const toggleSidebar = useCallback(() => {
     setIsCollapsed((prev) => {
       const next = !prev;
-      localStorage.setItem(STORAGE_KEY, String(next));
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
       return next;
     });
   }, []);
@@ -53,9 +65,10 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       isCollapsed,
       sidebarWidth: isCollapsed ? 0 : SIDEBAR_WIDTH,
       toggleSidebar,
+      openSidebar,
       closeSidebar,
     }),
-    [isCollapsed, toggleSidebar, closeSidebar],
+    [isCollapsed, toggleSidebar, openSidebar, closeSidebar],
   );
 
   return (

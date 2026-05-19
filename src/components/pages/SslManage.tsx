@@ -1159,7 +1159,7 @@ function SslHeroIntro({ onNext }: { onNext: () => void }) {
     <Box
       sx={{
         minHeight: "100%",
-        bgcolor: "#f4f6f8",
+        bgcolor: colors.secondary,
         display: "flex",
         flexDirection: "column",
       }}
@@ -1293,7 +1293,7 @@ function SslManageDashboard() {
       sx={{
         width: "100%",
         minHeight: "calc(100vh - 64px)",
-        bgcolor: "#fff",
+        bgcolor: colors.secondary,
         display: "flex",
         flexDirection: "column",
       }}
@@ -1349,7 +1349,7 @@ function SslManageDashboard() {
           justifyContent: "center",
           px: { xs: 2, sm: 3, md: 4 },
           py: { xs: 3, md: 4 },
-          bgcolor: "#f7f8fa",
+          bgcolor: colors.secondary,
         }}
       >
         <Box
@@ -1515,7 +1515,7 @@ export default function SslManage() {
   };
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100%", bgcolor: "#fff" }}>
+    <Box sx={{ width: "100%", minHeight: "100%", bgcolor: colors.secondary }}>
       {showDashboard ? (
         <SslManageDashboard />
       ) : (
