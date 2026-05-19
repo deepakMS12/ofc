@@ -50,6 +50,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { isCollapsed } = useSidebar();
   const user = useAppSelector((s) => s.user.profile);
+  const profileLoading = useAppSelector((s) => s.user.isLoading);
 
   const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
@@ -60,8 +61,13 @@ export default function Sidebar() {
     }
   }, [hash]);
 
-  const displayName = user?.name || user?.username || 'Guest';
-  const displayHandle = user?.username ? `@${user.username}` : user?.email || 'Account';
+  const displayName =
+    profileLoading && !user?.name && !user?.username
+      ? 'Loading...'
+      : user?.name || user?.username || 'Guest';
+  const displayHandle = user?.username
+    ? `@${user.username}`
+    : user?.email || (profileLoading ? '...' : 'Account');
 
   const renderNavIcon = (
     link: (typeof navLinks)[number] | (typeof bottomLinks)[number],

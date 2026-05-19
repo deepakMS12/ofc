@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { loginUser } from '../thunks/authThunks';
+import { fetchUserProfile } from '../thunks/profileThunks';
 
 interface UserProfile {
   username: string;
@@ -69,22 +70,37 @@ const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(loginUser.fulfilled, (state, action) => {
-      const p = action.payload.profile;
-      if (p) {
-        state.profile = {
-          username: p.username,
-          name: p.name,
-          email: p.email,
-          pendingEmail: p.pendingEmail ?? null,
-          pendingEmailRequestedAt: p.pendingEmailRequestedAt ?? null,
-          lastPasswordChange: p.lastPasswordChange ?? null,
-          lastEmailChange: p.lastEmailChange ?? null,
-          lastLogin: p.lastLogin ?? null,
-        };
-        localStorage.setItem('user', JSON.stringify(state.profile));
-      }
-    });
+    builder
+      .addCase(loginUser.fulfilled, (state, action) => {
+        const p = action.payload.profile;
+        if (p && (p.username || p.name)) {
+          state.profile = {
+            username: p.username ?? '',
+            name: p.name ?? '',
+            email: p.email,
+            pendingEmail: p.pendingEmail ?? null,
+            pendingEmailRequestedAt: p.pendingEmailRequestedAt ?? null,
+            lastPasswordChange: p.lastPasswordChange ?? null,
+            lastEmailChange: p.lastEmailChange ?? null,
+            lastLogin: p.lastLogin ?? null,
+          };
+          localStorage.setItem('user', JSON.stringify(state.profile));
+        }
+      })
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.profile = action.payload;
+        state.error = null;
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      })
+      .addCase(fetchUserProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload ?? 'Failed to load profile';
+      });
   },
 });
 

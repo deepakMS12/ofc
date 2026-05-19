@@ -23,7 +23,8 @@ import dayjs from "dayjs";
 import { authApi, type LoginActivityEntry } from "@/lib/api/auth";
 import { showConfirm, showSuccessAlert } from "@/lib/utils/sweetalert";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { clearUser, setUser } from "@/store/slices/userSlice";
+import { clearUser } from "@/store/slices/userSlice";
+import { fetchUserProfile } from "@/store/thunks/profileThunks";
 import { colors } from "@/utils/customColor";
 import { useToast } from "@/hooks/useToast";
 
@@ -137,41 +138,8 @@ export default function SettingsPage() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const response = await authApi.getProfile();
-      if (response.success && response.data) {
-        const cachedUser =
-          typeof window !== "undefined"
-            ? (JSON.parse(localStorage.getItem("user") || "null") as {
-                username?: string;
-                name?: string;
-                email?: string;
-                pendingEmail?: string | null;
-                pendingEmailRequestedAt?: string | null;
-                lastPasswordChange?: string | null;
-                lastEmailChange?: string | null;
-                lastLogin?: string | null;
-              } | null)
-            : null;
-
-        dispatch(
-          setUser({
-            username: response.data.username || cachedUser?.username || "",
-            name: response.data.name || cachedUser?.name || "",
-            email: response.data.email || cachedUser?.email || "",
-            pendingEmail: response.data.pendingEmail ?? cachedUser?.pendingEmail ?? null,
-            pendingEmailRequestedAt:
-              response.data.pendingEmailRequestedAt ??
-              cachedUser?.pendingEmailRequestedAt ??
-              null,
-            lastPasswordChange:
-              response.data.lastPasswordChange ?? cachedUser?.lastPasswordChange ?? null,
-            lastEmailChange:
-              response.data.lastEmailChange ?? cachedUser?.lastEmailChange ?? null,
-            lastLogin: response.data.lastLogin ?? cachedUser?.lastLogin ?? null,
-          }),
-        );
-      }
-    } catch (error) {
+      await dispatch(fetchUserProfile()).unwrap();
+    } catch {
       showToast("Failed to load user profile. Please try again.", "error");
     }
   }, [dispatch, showToast]);

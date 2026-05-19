@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet, useMatch } from "react-router-dom";
 import { Box } from "@mui/material";
 import { Header, Sidebar, Footer } from "@/components/layout";
@@ -7,10 +8,17 @@ import {
   LayoutShellProvider,
 } from "@/contexts/LayoutShellContext";
 import { SIDEBAR_TRANSITION, SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchUserProfile } from "@/store/thunks/profileThunks";
 import { colors } from "@/utils/customColor";
 
 function HomeLayoutContent() {
+  const dispatch = useAppDispatch();
   const { sidebarWidth } = useSidebar();
+
+  useEffect(() => {
+    void dispatch(fetchUserProfile());
+  }, [dispatch]);
 
   const isConverterToolRoute = Boolean(useMatch("/home/converter/:slug"));
   const isConverterRoute = Boolean(useMatch("/home/converter"));
