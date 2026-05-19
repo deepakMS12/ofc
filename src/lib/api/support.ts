@@ -3,10 +3,7 @@ import apiClient from './client';
 export type SupportCategory =
   | 'general_question'
   | 'technical_support'
-  | 'billing_issue'
   | 'feature_request'
-  | 'report_abuse'
-  | 'api_request'
   | 'bug_report'
   | 'account_related'
   | 'billing_related'
@@ -18,10 +15,7 @@ export const SUPPORT_CATEGORY_OPTIONS: ReadonlyArray<{
 }> = [
   { value: 'general_question', label: 'General Question' },
   { value: 'technical_support', label: 'Technical Support' },
-  { value: 'billing_issue', label: 'Billing Issue' },
   { value: 'feature_request', label: 'Feature Request' },
-  { value: 'report_abuse', label: 'Report Abuse' },
-  { value: 'api_request', label: 'API Request' },
   { value: 'bug_report', label: 'Bug Report' },
   { value: 'account_related', label: 'Account Related' },
   { value: 'billing_related', label: 'Billing Related' },

@@ -1,20 +1,21 @@
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  Checkbox,
   Divider,
   Drawer,
+  FormControlLabel,
   IconButton,
   Link,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Pagination,
   Paper,
   Stack,
-  Step,
-  StepLabel,
-  Stepper,
-  Tab,
-  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
@@ -29,10 +30,8 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import { ArrowBigRight } from "lucide-react";
 import { colors } from "@/utils/customColor";
 
 const SSL_HEADER_BG = "#586382";
@@ -41,7 +40,6 @@ const HERO_STEPS_IMAGE = "/assets/images/hero_steps.svg";
 const HERO_BLUE = "#1156a6";
 const SSL_MANAGE_PATH = "/home/ssl-manage";
 const DASHBOARD_HASH = "dashboard";
-const CREATE_STEPS = ["Upload", "Verify", "Download"];
 const STATUS_DRAWER_PAGE_SIZE = 2;
 
 type DummyCert = {
@@ -73,10 +71,6 @@ const dummyCertsByStatus: Record<CertStatus, DummyCert[]> = {
     { domain: "legacy.company.com", type: "90-Day", issued: "2025-01-10", expires: "2025-04-10" },
   ],
 };
-
-function isDashboardView(hash: string) {
-  return hash === `#${DASHBOARD_HASH}` || hash === DASHBOARD_HASH;
-}
 
 type CertStatus =
   | "Expiring Soon"
@@ -121,13 +115,14 @@ const statusMeta: Record<
   },
 };
 
-const statusOrder: CertStatus[] = [
-  "Expiring Soon",
-  "Draft",
-  "Issued",
-  "Pending Validation",
-  "Expired",
-];
+const statusOrder: CertStatus[] = ["Issued", "Expiring Soon", "Expired"];
+
+const TOOL_NAV = [
+  { hash: "ssl-verify",   label: "SSL Verify"   },
+  { hash: "csr-decoder",  label: "CSR Decoder"  },
+  { hash: "cert-decoder", label: "Cert Decoder" },
+  { hash: "key-matcher",  label: "Key Matcher"  },
+] as const;
 
 const headlineBlockSx = {
   display: "inline-block",
@@ -460,53 +455,6 @@ function StatusDrawer({
 
 /* ── Create SSL Drawer ── */
 
-function CsrUploadZone({
-  file,
-  onChange,
-}: {
-  file: File | null;
-  onChange: (f: File | null) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  return (
-    <Box
-      onClick={() => inputRef.current?.click()}
-      sx={{
-        border: "2px dashed #e0e0e0",
-        borderRadius: 1,
-        p: 4,
-        textAlign: "center",
-        cursor: "pointer",
-        bgcolor: "#fafafa",
-        transition: "border-color 0.2s",
-        "&:hover": { borderColor: colors.primary },
-      }}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".csr,.pem,.txt"
-        style={{ display: "none" }}
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
-      />
-      <CloudUploadOutlinedIcon sx={{ fontSize: 40, color: "#bdbdbd", mb: 1 }} />
-      {file ? (
-        <Typography sx={{ fontSize: 14, fontWeight: 600, color: "#333" }}>
-          {file.name}
-        </Typography>
-      ) : (
-        <>
-          <Typography sx={{ fontSize: 14, fontWeight: 600, color: "#555" }}>
-            Click to upload CSR file
-          </Typography>
-          <Typography sx={{ fontSize: 12, color: "#aaa", mt: 0.5 }}>
-            .csr, .pem, or .txt
-          </Typography>
-        </>
-      )}
-    </Box>
-  );
-}
 
 function MonoBox({
   value,
@@ -589,6 +537,45 @@ function SelectionCard({
   );
 }
 
+/* ── Cert Config Card ── */
+function CertConfigCard({
+  emoji,
+  title,
+  sub,
+  selected,
+  onClick,
+}: {
+  emoji: string;
+  title: string;
+  sub: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Box
+      onClick={onClick}
+      sx={{
+        flex: 1,
+        border: "2px solid",
+        borderColor: selected ? colors.primary : "#e0e0e0",
+        borderRadius: 1.5,
+        p: 2,
+        cursor: "pointer",
+        bgcolor: selected ? "#eef3fb" : "#fafafa",
+        transition: "all 0.15s",
+      }}
+    >
+      <Typography sx={{ fontSize: 22, mb: 1 }}>{emoji}</Typography>
+      <Typography sx={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", color: selected ? colors.primary : "#333", mb: 0.5 }}>
+        {title}
+      </Typography>
+      <Typography sx={{ fontSize: 11, color: "#888", letterSpacing: "0.04em", lineHeight: 1.5 }}>
+        {sub}
+      </Typography>
+    </Box>
+  );
+}
+
 function CreateSslDrawer({
   open,
   onClose,
@@ -597,555 +584,554 @@ function CreateSslDrawer({
   onClose: () => void;
 }) {
   const [step, setStep] = useState(0);
-  const [domain, setDomain] = useState("");
-  const [certType, setCertType] = useState<"90-Day" | "Annual">("90-Day");
-  const [validationMethod, setValidationMethod] = useState<"DNS" | "HTTP" | "Email">("DNS");
-  const [csrTab, setCsrTab] = useState(0);
-  const [csrFile, setCsrFile] = useState<File | null>(null);
-  const [org, setOrg] = useState("");
-  const [country, setCountry] = useState("");
-  const [state, setState] = useState("");
-  const [city, setCity] = useState("");
+  const [certType, setCertType] = useState<"lets-encrypt" | "self-signed">("lets-encrypt");
+  const [domains, setDomains] = useState("");
+  const [email, setEmail] = useState("");
+  const [verificationMethod, setVerificationMethod] = useState<"dns" | "http">("dns");
+  const [useStaging, setUseStaging] = useState(true);
 
   const handleClose = () => {
     setStep(0);
-    setDomain("");
-    setCertType("90-Day");
-    setValidationMethod("DNS");
-    setCsrTab(0);
-    setCsrFile(null);
-    setOrg("");
-    setCountry("");
-    setState("");
-    setCity("");
+    setCertType("lets-encrypt");
+    setDomains("");
+    setEmail("");
+    setVerificationMethod("dns");
+    setUseStaging(true);
     onClose();
   };
 
-  const dnsRecord = {
-    hostname: `_acme-challenge.${domain || "yourdomain.com"}`,
-    type: "TXT",
-    value: "xK9mN2pQrT7vL4wJ8sY1eA5bF3hD6cU0",
-  };
+  const primaryDomain = domains.split("\n")[0]?.trim() || "yourdomain.com";
+  const dnsHost = `_acme-challenge.${primaryDomain}`;
+  const dnsTxtValue = "_U-_iKshB9-prx_p8P6_CPvaZ5RuUNyLDK5xbY0a2M0";
 
-  const httpFile = {
-    path: `/.well-known/pki-validation/ABC123DEF456.txt`,
-    content: "xK9mN2pQrT7vL4wJ8sY1eA5bF3hD6cU0\ncomodoca.com\n4567890",
-  };
+  const lbl = { fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#555", mb: 1 } as const;
 
-  /* ── Step 0: Upload / Configure ── */
-  const stepUpload = (
+  /* ── Step 0: Certificate Configuration ── */
+  const configStep = (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      {/* Domain */}
       <Box>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#555", mb: 1 }}>
-          Domain Name *
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            border: "1.5px solid #e0e0e0",
-            borderRadius: "8px",
-            overflow: "hidden",
-            bgcolor: "#fff",
-            transition: "border-color 0.2s, box-shadow 0.2s",
-            "&:focus-within": {
-              borderColor: "#2e7d32",
-              boxShadow: "0 0 0 3px rgba(46,125,50,0.12)",
-            },
-          }}
-        >
-          {/* Lock + Secure label */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.75,
-              pl: 1.5,
-              pr: 1,
-              py: 1.1,
-              borderRight: "1.5px solid #e0e0e0",
-              flexShrink: 0,
-              userSelect: "none",
-            }}
-          >
-            <Box
-              component="img"
-              src="/assets/images/lock_icon_green.svg"
-              alt="secure"
-              sx={{ width: 16, height: 16, display: "block" }}
-            />
-            <Typography
-              sx={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#2e7d32",
-                whiteSpace: "nowrap",
-                lineHeight: 1,
-              }}
-            >
-              Secure
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 13,
-                color: "#2e7d32",
-                fontWeight: 400,
-                whiteSpace: "nowrap",
-                lineHeight: 1,
-              }}
-            >
-              | https://
-            </Typography>
-          </Box>
-
-          {/* Plain input */}
-          <Box
-            component="input"
-            type="text"
-            placeholder="Enter website to secure (Example: domain.com)"
-            value={domain}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setDomain(e.target.value)
-            }
-            sx={{
-              flex: 1,
-              border: "none",
-              outline: "none",
-              px: 1.5,
-              py: 1.1,
-              fontSize: 14,
-              color: "#333",
-              bgcolor: "transparent",
-              fontFamily: "inherit",
-              "::placeholder": { color: "#aaa" },
-            }}
-          />
-        </Box>
-      </Box>
-
-      {/* Certificate type */}
-      <Box>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#555", mb: 1 }}>
-          Certificate Type
-        </Typography>
-        <Box sx={{ display: "flex", gap: 1.5 }}>
-          <SelectionCard
-            label="90-Day"
-            sub="Free · Auto-renewable"
-            selected={certType === "90-Day"}
-            onClick={() => setCertType("90-Day")}
-          />
-          <SelectionCard
-            label="Annual"
-            sub="Paid · 1-year validity"
-            selected={certType === "Annual"}
-            onClick={() => setCertType("Annual")}
-          />
-        </Box>
-      </Box>
-
-      {/* Validation method */}
-      <Box>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#555", mb: 1 }}>
-          Domain Validation Method
-        </Typography>
-        <Box sx={{ display: "flex", gap: 1.5 }}>
-          {(["DNS", "HTTP", "Email"] as const).map((m) => (
-            <SelectionCard
-              key={m}
-              label={m}
-              selected={validationMethod === m}
-              onClick={() => setValidationMethod(m)}
-            />
-          ))}
-        </Box>
-      </Box>
-
-      {/* CSR */}
-      <Box>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#555", mb: 1.5 }}>
-          Certificate Signing Request (CSR)
-        </Typography>
-        <Tabs
-          value={csrTab}
-          onChange={(_, v) => setCsrTab(v)}
-          sx={{
-            mb: 2,
-            minHeight: 36,
-            "& .MuiTab-root": {
-              minHeight: 36,
-              fontSize: 13,
-              textTransform: "none",
-              py: 0,
-            },
-            "& .MuiTabs-indicator": { backgroundColor: colors.primary },
-            "& .Mui-selected": { color: `${colors.primary} !important` },
-          }}
-        >
-          <Tab label="Generate CSR" />
-          <Tab label="Upload CSR" />
-        </Tabs>
-
-        {csrTab === 0 ? (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.75 }}>
-                  Organization
-                </Typography>
-                <TextField
-                  size="small"
-                  fullWidth
-                  placeholder="Acme Corp"
-                  value={org}
-                  onChange={(e) => setOrg(e.target.value)}
-                  sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#fff" } }}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.75 }}>
-                  Country (2-letter)
-                </Typography>
-                <TextField
-                  size="small"
-                  fullWidth
-                  placeholder="US"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#fff" } }}
-                />
-              </Box>
-            </Box>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.75 }}>
-                  State / Province
-                </Typography>
-                <TextField
-                  size="small"
-                  fullWidth
-                  placeholder="California"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#fff" } }}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.75 }}>
-                  City / Locality
-                </Typography>
-                <TextField
-                  size="small"
-                  fullWidth
-                  placeholder="San Francisco"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#fff" } }}
-                />
-              </Box>
-            </Box>
-          </Box>
-        ) : (
-          <CsrUploadZone file={csrFile} onChange={setCsrFile} />
-        )}
-      </Box>
-    </Box>
-  );
-
-  /* ── Step 1: Verify ── */
-  const stepVerify = (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <Box
-        sx={{
-          bgcolor: "#fff",
-          border: "1px solid #e0e0e0",
-          borderRadius: 1,
-          p: 2.5,
-        }}
-      >
-        <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#333", mb: 0.5 }}>
-          Verifying:{" "}
-          <Box component="span" sx={{ color: colors.primary }}>
-            {domain || "your-domain.com"}
-          </Box>
-        </Typography>
-        <Typography sx={{ fontSize: 13, color: "#666" }}>
-          {validationMethod === "DNS"
-            ? "Add the TXT record below to your DNS provider to verify domain ownership."
-            : validationMethod === "HTTP"
-              ? "Upload the file below to your web server to verify domain ownership."
-              : "Click the verification link sent to the admin email for this domain."}
-        </Typography>
-      </Box>
-
-      {validationMethod === "DNS" && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {[
-            { label: "Hostname", value: dnsRecord.hostname },
-            { label: "Record Type", value: dnsRecord.type },
-            { label: "Value", value: dnsRecord.value },
-          ].map(({ label, value }) => (
-            <Box key={label}>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.5 }}>
-                {label}
-              </Typography>
-              <MonoBox value={value} />
-            </Box>
-          ))}
-        </Box>
-      )}
-
-      {validationMethod === "HTTP" && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.5 }}>
-              File Path
-            </Typography>
-            <MonoBox value={httpFile.path} />
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.5 }}>
-              File Contents
-            </Typography>
-            <MonoBox value={httpFile.content} multiline />
-          </Box>
-        </Box>
-      )}
-
-      {validationMethod === "Email" && (
-        <Box
-          sx={{
-            textAlign: "center",
-            py: 5,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <Box
-            sx={{
-              width: 72,
-              height: 72,
-              borderRadius: "50%",
-              bgcolor: "#e3f2fd",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#1565c0",
-            }}
-          >
-            <EmailOutlinedIcon sx={{ fontSize: 36 }} />
-          </Box>
-          <Typography sx={{ fontSize: 16, fontWeight: 700, color: "#333" }}>
-            Check your inbox
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: "#666", maxWidth: 340 }}>
-            A verification email was sent to the admin email for{" "}
-            <strong>{domain || "your-domain.com"}</strong>. Click the link to
-            verify ownership.
-          </Typography>
-        </Box>
-      )}
-    </Box>
-  );
-
-  /* ── Step 2: Download ── */
-  const stepDownload = (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 3,
-        py: 2,
-      }}
-    >
-      <Box
-        sx={{
-          width: 80,
-          height: 80,
-          borderRadius: "50%",
-          bgcolor: "#e8f5e9",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#2e7d32",
-        }}
-      >
-        <CheckCircleOutlineIcon sx={{ fontSize: 44 }} />
-      </Box>
-      <Box sx={{ textAlign: "center" }}>
-        <Typography sx={{ fontSize: 20, fontWeight: 700, color: "#2e7d32", mb: 0.75 }}>
-          Certificate Issued!
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}>
+          Certificate Configuration
         </Typography>
         <Typography sx={{ fontSize: 14, color: "#666" }}>
-          Your SSL certificate for{" "}
-          <strong>{domain || "your-domain.com"}</strong> is ready to download.
+          Choose a certificate type and fill in the details below.
         </Typography>
       </Box>
 
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: 480,
-          display: "flex",
-          flexDirection: "column",
-          gap: 1.5,
-        }}
+      {/* Cert type */}
+      <Box>
+        <Typography sx={lbl}>CERTIFICATE TYPE</Typography>
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <CertConfigCard emoji="🔒" title="LET'S ENCRYPT" sub="FREE TRUSTED CERT VIA ACME V2. REQUIRES DOMAIN VERIFICATION." selected={certType === "lets-encrypt"} onClick={() => setCertType("lets-encrypt")} />
+          <CertConfigCard emoji="🛡️" title="SELF-SIGNED" sub="INSTANT CERT FOR INTERNAL USE. NOT TRUSTED BY BROWSERS." selected={certType === "self-signed"} onClick={() => setCertType("self-signed")} />
+        </Box>
+      </Box>
+
+      {/* Domains */}
+      <Box>
+        <Typography sx={lbl}>DOMAIN NAME(S) / SANS</Typography>
+        <TextField
+          fullWidth multiline rows={4}
+          placeholder={"example.com\n*.example.com\nwww.example.com"}
+          value={domains} onChange={(e) => setDomains(e.target.value)}
+          sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#fafafa", fontFamily: "monospace", fontSize: 13 } }}
+        />
+        <Typography sx={{ fontSize: 12, color: "#888", mt: 0.75 }}>
+          One per line. First entry is used as Common Name if CN is blank. Use * for wildcards.
+        </Typography>
+      </Box>
+
+      {/* Email */}
+      <Box>
+        <Typography sx={lbl}>EMAIL ADDRESS</Typography>
+        <TextField
+          fullWidth type="email" placeholder="admin@example.com"
+          value={email} onChange={(e) => setEmail(e.target.value)}
+          sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#fafafa" } }}
+        />
+        <Typography sx={{ fontSize: 12, color: "#888", mt: 0.75 }}>
+          Used for Let's Encrypt account &amp; expiry notifications.
+        </Typography>
+      </Box>
+
+      {/* Verification method */}
+      {certType === "lets-encrypt" && (
+        <Box>
+          <Typography sx={lbl}>VERIFICATION METHOD</Typography>
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            <CertConfigCard emoji="🔒" title="DNS CHALLENGE" sub="ADD TXT RECORDS TO YOUR DNS. REQUIRED FOR WILDCARDS." selected={verificationMethod === "dns"} onClick={() => setVerificationMethod("dns")} />
+            <CertConfigCard emoji="🌐" title="HTTP CHALLENGE" sub="PLACE A FILE ON YOUR WEB SERVER. SIMPLER FOR SINGLE DOMAINS." selected={verificationMethod === "http"} onClick={() => setVerificationMethod("http")} />
+          </Box>
+        </Box>
+      )}
+
+      {/* Staging */}
+      {certType === "lets-encrypt" && (
+        <FormControlLabel
+          control={<Checkbox checked={useStaging} onChange={(e) => setUseStaging(e.target.checked)} sx={{ color: colors.primary, "&.Mui-checked": { color: colors.primary } }} />}
+          label={
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", color: "#333" }}>USE LET'S ENCRYPT STAGING</Typography>
+              <Typography sx={{ fontSize: 12, color: "#999" }}>(RECOMMENDED FOR TESTING — WON'T ISSUE REAL CERTS)</Typography>
+            </Box>
+          }
+        />
+      )}
+
+      <Button
+        variant="contained" fullWidth
+        disabled={!domains.trim() || (certType === "lets-encrypt" && !email.trim())}
+        onClick={() => setStep(1)}
+        sx={{ bgcolor: colors.primary, color: "#fff", textTransform: "none", fontWeight: 700, fontSize: 15, py: 1.5, borderRadius: 1, boxShadow: "none", "&:hover": { bgcolor: colors.primary, filter: "brightness(0.92)", boxShadow: "none" } }}
       >
+        Next — Start Verification →
+      </Button>
+    </Box>
+  );
+
+  /* ── Step 1: Domain Verification ── */
+  const verifyStep = (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <Box>
+        <Typography sx={{ fontSize: 24, fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}>
+          Domain Verification
+        </Typography>
+        <Typography sx={{ fontSize: 14, color: "#666" }}>
+          Add the TXT records below to your DNS provider to prove domain ownership.
+        </Typography>
+      </Box>
+
+      {/* Info banner */}
+      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, bgcolor: "#f5f5f5", border: "1px solid #e0e0e0", borderRadius: 1, p: 2 }}>
+        <Typography sx={{ fontSize: 20 }}>📋</Typography>
+        <Box>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#333" }}>Add the following TXT records to your DNS</Typography>
+          <Typography sx={{ fontSize: 13, color: "#666" }}>DNS propagation can take 5–30 minutes. Check status after adding records.</Typography>
+        </Box>
+      </Box>
+
+      {/* DNS record card */}
+      <Box sx={{ border: "1px solid #e0e0e0", borderRadius: 1, overflow: "hidden", bgcolor: "#fff" }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5, bgcolor: "#fafafa", borderBottom: "1px solid #e0e0e0" }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: colors.primary, fontFamily: "monospace" }}>{dnsHost}</Typography>
+          <Box sx={{ px: 1.25, py: 0.35, bgcolor: "#333", color: "#f5a623", borderRadius: 0.5, fontSize: 12, fontWeight: 700, fontFamily: "monospace", letterSpacing: "0.04em" }}>
+            TXT · TTL 300
+          </Box>
+        </Box>
+        <Box sx={{ px: 2.5, py: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box>
+            <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#aaa", mb: 0.75 }}>HOST / NAME</Typography>
+            <MonoBox value={dnsHost} />
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#aaa", mb: 0.75 }}>TXT VALUE</Typography>
+            <MonoBox value={dnsTxtValue} />
+          </Box>
+        </Box>
+      </Box>
+
+      {/* How-to guide */}
+      <Box sx={{ borderLeft: `3px solid ${colors.primary}`, bgcolor: "#f8f9ff", border: "1px solid #e8ecf8", borderLeftWidth: 3, borderLeftColor: colors.primary, borderRadius: "0 4px 4px 0", px: 2.5, py: 2 }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 700, color: colors.primary, mb: 1.25 }}>How to add DNS TXT records</Typography>
         {[
-          { label: "Download Certificate (.crt)", primary: true },
-          { label: "Download Private Key (.key)", primary: false },
-          { label: "Download CA Bundle (.ca-bundle)", primary: false },
-        ].map(({ label, primary }) => (
-          <Button
-            key={label}
-            variant="outlined"
-            startIcon={<DownloadOutlinedIcon />}
-            fullWidth
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: 14,
-              borderColor: primary ? colors.primary : "#e0e0e0",
-              color: primary ? colors.primary : "#555",
-              justifyContent: "flex-start",
-              py: 1.5,
-              px: 2.5,
-              bgcolor: "#fff",
-              "&:hover": {
-                borderColor: colors.primary,
-                bgcolor: "#f0f4ff",
-              },
-            }}
-          >
-            {label}
-          </Button>
+          "Log in to your DNS provider dashboard",
+          "Navigate to DNS Management / Zone Editor",
+          <span key="3">Add a new <strong>TXT</strong> record for each entry above</span>,
+          "Save changes and wait for propagation (5–30 min)",
+          <span key="5">Click <strong>Check Verification</strong> below</span>,
+        ].map((item, i) => (
+          <Typography key={i} sx={{ fontSize: 13, color: "#555", mb: 0.5 }}>{i + 1}. {item}</Typography>
         ))}
+      </Box>
+
+      {/* Actions */}
+      <Box sx={{ display: "flex", gap: 1.5 }}>
+        <Button variant="outlined" onClick={() => setStep(0)} sx={{ textTransform: "none", fontWeight: 600, color: "#555", borderColor: "#ccc", px: 3, "&:hover": { borderColor: "#999", bgcolor: "#f5f5f5" } }}>
+          ← Back
+        </Button>
+        <Button variant="contained" fullWidth sx={{ bgcolor: colors.primary, color: "#fff", textTransform: "none", fontWeight: 700, fontSize: 15, py: 1.5, borderRadius: 1, boxShadow: "none", "&:hover": { bgcolor: colors.primary, filter: "brightness(0.92)", boxShadow: "none" } }}>
+          Check Verification
+        </Button>
       </Box>
     </Box>
   );
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={handleClose}
-      PaperProps={{ sx: { width: "75%", maxWidth: "90vw" } }}
-    >
-      <Box
-        sx={{
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "auto",
-        }}
-      >
+    <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: { width: "75%", maxWidth: "90vw" } }}>
+      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            p: 2,
-            borderBottom: "1px solid #e0e0e0",
-            backgroundColor: "#f5f5f5",
-          }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2, borderBottom: "1px solid #e0e0e0", backgroundColor: "#f5f5f5" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <HttpsIcon sx={{ fontSize: 22 }} />
-            <Typography variant="h6" sx={{ fontWeight: 600, color: "#333" }}>
-              Create SSL Certificate
-            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: "#333" }}>Create SSL Certificate</Typography>
           </Box>
           <IconButton onClick={handleClose} size="small" sx={{ color: "#666" }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
 
-        {/* Content */}
-        <Box
-          sx={{ flex: 1, overflow: "auto", p: 4, backgroundColor: "#fafafa" }}
-        >
-          <Box sx={{ maxWidth: 900, mx: "auto" }}>
-            {/* Stepper */}
-            <Stepper activeStep={step} sx={{ mb: 4 }}>
-              {CREATE_STEPS.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-
-            {/* Step content */}
-            <Box
-              sx={{
-                bgcolor: "#fff",
-                border: "1px solid #e0e0e0",
-                borderRadius: 1,
-                p: { xs: 2.5, md: 4 },
-              }}
-            >
-              {step === 0 && stepUpload}
-              {step === 1 && stepVerify}
-              {step === 2 && stepDownload}
-            </Box>
-
-            {/* Navigation */}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                mt: 3,
-              }}
-            >
-              <Button
-                onClick={() =>
-                  step === 0 ? handleClose() : setStep((s) => s - 1)
-                }
-                sx={{
-                  textTransform: "none",
-                  color: "#555",
-                  fontWeight: 600,
-                }}
-              >
-                {step === 0 ? "Cancel" : "Back"}
-              </Button>
-
-              {step < 2 ? (
-                <Button
-                  variant="contained"
-                  disabled={step === 0 && !domain.trim()}
-                  onClick={() => setStep((s) => s + 1)}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    bgcolor: colors.primary,
-                    px: 4,
-                    "&:hover": { bgcolor: colors.primary },
-                  }}
-                >
-                  {step === 1 ? "Verify & Continue" : "Next"}
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  onClick={handleClose}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    bgcolor: "#2e7d32",
-                    px: 4,
-                    "&:hover": { bgcolor: "#1b5e20" },
-                  }}
-                >
-                  Done
-                </Button>
-              )}
-            </Box>
+        {/* Body */}
+        <Box sx={{ flex: 1, overflow: "auto", p: { xs: 3, md: 4 }, bgcolor: "#fafafa" }}>
+          <Box sx={{ maxWidth: 680, mx: "auto" }}>
+            {step === 0 && configStep}
+            {step === 1 && verifyStep}
           </Box>
+        </Box>
+      </Box>
+    </Drawer>
+  );
+}
+
+/* ── Tool: shared label style ── */
+const fieldLabel = {
+  fontSize: 12,
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  color: "#555",
+  mb: 0.75,
+} as const;
+
+const toolCardSx = {
+  bgcolor: "#fff",
+  border: "1px solid #e0e0e0",
+  borderRadius: 1,
+  p: { xs: 3, md: 4 },
+  maxWidth: 680,
+} as const;
+
+const actionBtnSx = {
+  textTransform: "none",
+  fontWeight: 700,
+  fontSize: 15,
+  py: 1.5,
+  borderColor: colors.primary,
+  color: colors.primary,
+  "&:hover": { bgcolor: "#f0f4ff", borderColor: colors.primary },
+} as const;
+
+/* ── SSL Verify ── */
+function SslVerifyPanel() {
+  const [host, setHost] = useState("");
+  const [port, setPort] = useState("443");
+
+  return (
+    <Box sx={toolCardSx}>
+      <Typography sx={{ fontSize: 22, fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}>
+        Verify SSL Certificate
+      </Typography>
+      <Typography sx={{ fontSize: 14, color: "#666", mb: 3 }}>
+        Check the live SSL certificate of any domain or hostname.
+      </Typography>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Box>
+          <Typography sx={fieldLabel}>DOMAIN / HOSTNAME</Typography>
+          <TextField
+            fullWidth
+            placeholder="example.com"
+            value={host}
+            onChange={(e) => setHost(e.target.value)}
+            helperText="Hostname only — no https:// prefix required."
+            sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#fafafa" } }}
+          />
+        </Box>
+
+        <Box>
+          <Typography sx={fieldLabel}>PORT</Typography>
+          <TextField
+            placeholder="443"
+            value={port}
+            onChange={(e) => setPort(e.target.value)}
+            sx={{ width: 160, "& .MuiOutlinedInput-root": { bgcolor: "#fafafa" } }}
+          />
+        </Box>
+
+        <Button variant="outlined" fullWidth sx={actionBtnSx}>
+          Check SSL Certificate
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/* ── CSR Decoder ── */
+function CsrDecoderPanel() {
+  const [csr, setCsr] = useState("");
+
+  return (
+    <Box sx={toolCardSx}>
+      <Typography sx={{ fontSize: 22, fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}>
+        CSR Decoder
+      </Typography>
+      <Typography sx={{ fontSize: 14, color: "#666", mb: 3 }}>
+        Decode and inspect a Certificate Signing Request (CSR).
+      </Typography>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Box>
+          <Typography sx={fieldLabel}>CSR (PEM FORMAT)</Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={8}
+            placeholder={"-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----"}
+            value={csr}
+            onChange={(e) => setCsr(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": { bgcolor: "#fafafa", fontFamily: "monospace", fontSize: 13 },
+            }}
+          />
+        </Box>
+
+        <Button variant="outlined" fullWidth sx={actionBtnSx}>
+          Decode CSR
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/* ── Cert Decoder ── */
+function CertDecoderPanel() {
+  const [cert, setCert] = useState("");
+
+  return (
+    <Box sx={toolCardSx}>
+      <Typography sx={{ fontSize: 22, fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}>
+        Certificate Decoder
+      </Typography>
+      <Typography sx={{ fontSize: 14, color: "#666", mb: 3 }}>
+        Decode and inspect a PEM-encoded X.509 certificate.
+      </Typography>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Box>
+          <Typography sx={fieldLabel}>CERTIFICATE (PEM FORMAT)</Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={8}
+            placeholder={"-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"}
+            value={cert}
+            onChange={(e) => setCert(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": { bgcolor: "#fafafa", fontFamily: "monospace", fontSize: 13 },
+            }}
+          />
+        </Box>
+
+        <Button variant="outlined" fullWidth sx={actionBtnSx}>
+          Decode Certificate
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/* ── Key Matcher ── */
+function KeyMatcherPanel() {
+  const [checkType, setCheckType] = useState<"cert-key" | "csr-cert">("cert-key");
+  const [cert, setCert] = useState("");
+  const [keyOrCsr, setKeyOrCsr] = useState("");
+  const [passphrase, setPassphrase] = useState("");
+
+  return (
+    <Box sx={toolCardSx}>
+      <Typography sx={{ fontSize: 22, fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}>
+        Key Matcher
+      </Typography>
+      <Typography sx={{ fontSize: 14, color: "#666", mb: 3 }}>
+        Verify that a certificate matches a private key or a CSR.
+      </Typography>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        {/* Check type */}
+        <Box>
+          <Typography sx={fieldLabel}>CHECK TYPE</Typography>
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            <SelectionCard
+              label="CERTIFICATE & PRIVATE KEY"
+              sub="Does the private key belong to this certificate?"
+              selected={checkType === "cert-key"}
+              onClick={() => setCheckType("cert-key")}
+            />
+            <SelectionCard
+              label="CSR & CERTIFICATE"
+              sub="Was this certificate issued from this CSR?"
+              selected={checkType === "csr-cert"}
+              onClick={() => setCheckType("csr-cert")}
+            />
+          </Box>
+        </Box>
+
+        {/* Certificate */}
+        <Box>
+          <Typography sx={fieldLabel}>CERTIFICATE (PEM FORMAT)</Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={5}
+            placeholder={"-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"}
+            value={cert}
+            onChange={(e) => setCert(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": { bgcolor: "#fafafa", fontFamily: "monospace", fontSize: 13 },
+            }}
+          />
+        </Box>
+
+        {/* Private Key or CSR */}
+        <Box>
+          <Typography sx={fieldLabel}>
+            {checkType === "cert-key" ? "PRIVATE KEY (PEM FORMAT)" : "CSR (PEM FORMAT)"}
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={5}
+            placeholder={
+              checkType === "cert-key"
+                ? "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+                : "-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----"
+            }
+            value={keyOrCsr}
+            onChange={(e) => setKeyOrCsr(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": { bgcolor: "#fafafa", fontFamily: "monospace", fontSize: 13 },
+            }}
+          />
+        </Box>
+
+        {/* Passphrase (only for cert-key) */}
+        {checkType === "cert-key" && (
+          <Box>
+            <Typography sx={{ ...fieldLabel, mb: 0.5 }}>
+              KEY PASSPHRASE{" "}
+              <Box component="span" sx={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "#999" }}>
+                Optional
+              </Box>
+            </Typography>
+            <TextField
+              fullWidth
+              type="password"
+              placeholder="Enter if key is encrypted"
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+              sx={{ width: 320, "& .MuiOutlinedInput-root": { bgcolor: "#fafafa" } }}
+            />
+          </Box>
+        )}
+
+        <Button variant="outlined" fullWidth sx={actionBtnSx}>
+          Check Match
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/* ── Left Nav ── */
+function SslLeftNav({
+  activeTool,
+  onOpenTool,
+}: {
+  activeTool: string | null;
+  onOpenTool: (tool: string) => void;
+}) {
+  return (
+    <Box
+      sx={{
+        width: 210,
+        flexShrink: 0,
+        alignSelf: "stretch",
+        borderRight: "1px solid #e0e0e0",
+        bgcolor: "#fff",
+        pt: 3,
+        pb: 2,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#aaa", letterSpacing: "0.08em", px: 2, mb: 0.5 }}>
+        SSL TOOLS
+      </Typography>
+      <List disablePadding>
+        {TOOL_NAV.map((item) => {
+          const isActive = activeTool === item.hash;
+          return (
+            <ListItemButton
+              key={item.hash}
+              onClick={() => onOpenTool(item.hash)}
+              sx={{
+                px: 2,
+                py: 1,
+                bgcolor: isActive ? "#e8f0fc" : "transparent",
+                "&:hover": { bgcolor: isActive ? "#e8f0fc" : "#f5f5f5" },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 28 }}>
+                <ArrowBigRight
+                  size={16}
+                  color={isActive ? colors.primary : "#bbb"}
+                  fill={isActive ? colors.primary : "none"}
+                />
+              </ListItemIcon>
+              <ListItemText
+                primary={item.label}
+                slotProps={{
+                  primary: {
+                    sx: {
+                      fontSize: 14,
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive ? colors.primary : "#444",
+                    },
+                  },
+                }}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
+    </Box>
+  );
+}
+
+/* ── Tool Drawer wrapper ── */
+const TOOL_TITLES: Record<string, string> = {
+  "ssl-verify":   "SSL Verify",
+  "csr-decoder":  "CSR Decoder",
+  "cert-decoder": "Certificate Decoder",
+  "key-matcher":  "Key Matcher",
+};
+
+function SslToolDrawer({
+  activeTool,
+  onClose,
+}: {
+  activeTool: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <Drawer
+      anchor="right"
+      open={activeTool !== null}
+      onClose={onClose}
+      PaperProps={{ sx: { width: "75%", maxWidth: "90vw" } }}
+    >
+      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2, borderBottom: "1px solid #e0e0e0", bgcolor: "#f5f5f5" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: "#333" }}>
+            {activeTool ? TOOL_TITLES[activeTool] : ""}
+          </Typography>
+          <IconButton onClick={onClose} size="small" sx={{ color: "#666" }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <Box sx={{ flex: 1, overflow: "auto", p: { xs: 3, md: 4 }, bgcolor: "#fafafa" }}>
+          {activeTool === "ssl-verify"   && <SslVerifyPanel />}
+          {activeTool === "csr-decoder"  && <CsrDecoderPanel />}
+          {activeTool === "cert-decoder" && <CertDecoderPanel />}
+          {activeTool === "key-matcher"  && <KeyMatcherPanel />}
         </Box>
       </Box>
     </Drawer>
@@ -1277,7 +1263,13 @@ function SslHeroIntro({ onNext }: { onNext: () => void }) {
 
 /* ── Dashboard ── */
 
-function SslManageDashboard() {
+function SslManageDashboard({
+  activeTool,
+  onOpenTool,
+}: {
+  activeTool: string | null;
+  onOpenTool: (tool: string) => void;
+}) {
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>(null);
   const [statusDrawerStatus, setStatusDrawerStatus] =
     useState<CertStatus>("Issued");
@@ -1345,13 +1337,19 @@ function SslManageDashboard() {
         sx={{
           flex: 1,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          px: { xs: 2, sm: 3, md: 4 },
-          py: { xs: 3, md: 4 },
+          alignItems: "flex-start",
           bgcolor: colors.secondary,
         }}
       >
+        <SslLeftNav activeTool={activeTool} onOpenTool={onOpenTool} />
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            px: { xs: 2, sm: 3, md: 4 },
+            py: { xs: 3, md: 4 },
+          }}
+        >
         <Box
           sx={{
             width: "100%",
@@ -1359,8 +1357,6 @@ function SslManageDashboard() {
             mx: "auto",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
             gap: 3,
           }}
         >
@@ -1484,6 +1480,7 @@ function SslManageDashboard() {
             </Button>
           </Paper>
         </Box>
+        </Box>
       </Box>
 
       <StatusDrawer
@@ -1508,19 +1505,23 @@ function SslManageDashboard() {
 export default function SslManage() {
   const { hash } = useLocation();
   const navigate = useNavigate();
-  const showDashboard = isDashboardView(hash);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
 
-  const goToDashboard = () => {
-    navigate({ pathname: SSL_MANAGE_PATH, hash: DASHBOARD_HASH });
-  };
+  const isHeroView = !hash || hash === "";
+  const goToDashboard = () => navigate({ pathname: SSL_MANAGE_PATH, hash: DASHBOARD_HASH });
+
+  if (isHeroView) {
+    return (
+      <Box sx={{ width: "100%", minHeight: "100%", bgcolor: colors.secondary }}>
+        <SslHeroIntro onNext={goToDashboard} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: "100%", minHeight: "100%", bgcolor: colors.secondary }}>
-      {showDashboard ? (
-        <SslManageDashboard />
-      ) : (
-        <SslHeroIntro onNext={goToDashboard} />
-      )}
+      <SslManageDashboard activeTool={activeTool} onOpenTool={setActiveTool} />
+      <SslToolDrawer activeTool={activeTool} onClose={() => setActiveTool(null)} />
     </Box>
   );
 }

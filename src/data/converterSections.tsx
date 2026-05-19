@@ -5,7 +5,7 @@ const OTHER_SECTION_SLUGS = new Set(["lock-pdf", "unlock-pdf"]);
 
 /**
  * Grouped converter tools — each section shows a title (Office, Office 2, …) and its cards.
- * Slugs stay unique across the app for `/home/converter/:slug` routes.
+ * Slugs stay unique across the app for `/home/doc-forge/:slug` routes.
  */
 const convertersMain = converters.filter((c) => !OTHER_SECTION_SLUGS.has(c.slug));
 const convertersOther = converters.filter((c) => OTHER_SECTION_SLUGS.has(c.slug));

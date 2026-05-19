@@ -13,7 +13,7 @@ import {
   Divider,
   Chip,
 } from '@mui/material';
-import { Clock, LogOut, Bell } from 'lucide-react';
+import { LogOut, Bell } from 'lucide-react';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsDrawer from '@/components/dialogs/NotificationsDrawer';
 import AddFundsDrawer from '@/components/dialogs/AddFundsDrawer';
@@ -34,31 +34,12 @@ export default function Header() {
   const dispatch = useAppDispatch();
   const { sidebarWidth } = useSidebar();
   // const user = useAppSelector((s) => s.user.profile);
-  const [time, setTime] = useState('--:--:--');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
-
-  useEffect(() => {
-
-    // Update clock
-    const updateClock = () => {
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const seconds = now.getSeconds().toString().padStart(2, '0');
-      setTime(`${hours}:${minutes}:${seconds}`);
-    };
-
-    updateClock();
-    const interval = setInterval(updateClock, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
 
   useEffect(() => {
     accountApi.getBalance().then((data) => setWalletBalance(data.balance)).catch(() => {});
@@ -258,17 +239,9 @@ export default function Header() {
             </Box>
           </Box>
 
-          {/* Right Side - Notifications, Clock */}
+          {/* Right Side - Notifications */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, ml: 'auto' }}>
-            {/* Clock */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mr: { xs: 0, sm: 3, md: 3 } }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Clock size={20} color="#666" />
-                <Typography variant="body2" sx={{ color: '#666', fontWeight: 500 }}>
-                  {time}
-                </Typography>
-              </Box>
-
               {/* Notifications Bell */}
               <Tooltip title="Notifications">
                 <IconButton

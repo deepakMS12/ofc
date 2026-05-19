@@ -7,7 +7,7 @@ const baseURL =
     ? envBase.trim().replace(/\/$/, "")
     : DEFAULT_URL_TO_PDF_API_BASE;
 
-/** localStorage key for the Bearer token used on `/home/converter` → doceditor requests. */
+/** localStorage key for the Bearer token used on `/home/doc-forge` → doceditor requests. */
 export const OFC_CONVERTER_AUTH_TOKEN_LS_KEY = "ofcConverterAuthToken";
 
 function normalizeConverterAuthToken(raw: string | null): string | null {

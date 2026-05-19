@@ -172,8 +172,8 @@ export default function AddFundsDrawer({
           </IconButton>
         </Box>
 
-        <Box sx={{ flex: 1, overflow: 'auto', p: 3, backgroundColor: '#fafafa' }}>
-          <Box sx={{ p: 4, border: '1px solid #e0e0e0', borderRadius: 2, bgcolor: 'white' }}>
+        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+          <Box sx={{ p: 4, bgcolor: 'white' }}>
             {walletBalance !== null && (
               <Typography variant="body2" sx={{ color: '#666', textAlign: 'center', mb: 2 }}>
                 Current Balance: ₹{walletBalance.toFixed(4)}

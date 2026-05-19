@@ -20,8 +20,8 @@ function HomeLayoutContent() {
     void dispatch(fetchUserProfile());
   }, [dispatch]);
 
-  const isConverterToolRoute = Boolean(useMatch("/home/converter/:slug"));
-  const isConverterRoute = Boolean(useMatch("/home/converter"));
+  const isConverterToolRoute = Boolean(useMatch("/home/doc-forge/:slug"));
+  const isConverterRoute = Boolean(useMatch("/home/doc-forge"));
   const isSslManageRoute = Boolean(useMatch("/home/ssl-manage"));
   const isPlansRoute = Boolean(useMatch("/home/plans"));
   const footerVisible = !(
@@ -77,8 +77,8 @@ function HomeLayoutContent() {
 }
 
 export default function HomeLayout() {
-  const isConverterToolRoute = Boolean(useMatch("/home/converter/:slug"));
-  const isConverterRoute = Boolean(useMatch("/home/converter"));
+  const isConverterToolRoute = Boolean(useMatch("/home/doc-forge/:slug"));
+  const isConverterRoute = Boolean(useMatch("/home/doc-forge"));
   const isSslManageRoute = Boolean(useMatch("/home/ssl-manage"));
   const isPlansRoute = Boolean(useMatch("/home/plans"));
   const footerVisible = !(

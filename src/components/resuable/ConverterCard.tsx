@@ -91,16 +91,15 @@ const ConverterCard = ({
       sx={{
         height: "100%",
         borderRadius: 2,
-        border: "1px solid",
+        border: "2px solid #b1b1b180",
         borderColor: "divider",
         bgcolor: "background.paper",
         opacity: disabled ? 0.55 : 1,
-        boxShadow: "0 2px 4px #1151a680",
         transition: "box-shadow 0.2s, border-color 0.2s, opacity 0.2s",
         "&:hover": disabled
           ? {}
           : {
-              boxShadow: 2,
+              boxShadow: '0 0px 12px 3px rgba(0, 0, 0, 0.08)',
               borderColor: "action.disabledBackground",
             },
       }}

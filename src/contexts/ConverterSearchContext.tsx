@@ -125,7 +125,7 @@ function ConverterSearchDialogShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isConverterSearchSpotlight =
-    location.pathname === "/home/converter" || location.pathname.startsWith("/home/converter/");
+    location.pathname === "/home/doc-forge" || location.pathname.startsWith("/home/doc-forge/");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -492,7 +492,7 @@ function ConverterSearchDialogShell({ children }: { children: ReactNode }) {
                             onClick={() => {
                               saveRecentSearch(converter.title);
                               closeSearchModal();
-                              navigate(`/home/converter/${converter.slug}`);
+                              navigate(`/home/doc-forge/${converter.slug}`);
                             }}
                             sx={searchResultCardSx}
                           >

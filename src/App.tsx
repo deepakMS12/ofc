@@ -18,6 +18,8 @@ import {
   ApiPortal,
   Plans,
   SslManage,
+  Marketplace,
+  Applications,
 } from '@/components/pages';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from '@/pages/SignUpPage';
@@ -56,8 +58,10 @@ export default function App() {
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="ssl-manage" element={<SslManage />} />
-              <Route path="converter" element={<ConverterPage />} />
-              <Route path="converter/:slug" element={<ConverterTool />} />
+              <Route path="doc-forge" element={<ConverterPage />} />
+              <Route path="doc-forge/:slug" element={<ConverterTool />} />
+              <Route path="marketplace" element={<Marketplace />} />
+              <Route path="applications" element={<Applications />} />
               <Route path="settings" element={<Settings />} />
               <Route path="api" element={<ApiPortal />} />
               <Route path="plans" element={<Plans />} />

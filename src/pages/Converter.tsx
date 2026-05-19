@@ -91,7 +91,7 @@ const Converter = ({ title, converters: convertersProp = [] }:any) => {
             sourceColor={item.sourceColor}
             TargetIcon={item.TargetIcon}
             targetColor={item.targetColor}
-            to={`/home/converter/${item.slug}`}
+            to={`/home/doc-forge/${item.slug}`}
             disabled={disabledSlugs.has(item.slug)}
             onDelete={() => handleDelete(item.slug)}
             onDisable={() => handleToggleDisable(item.slug)}

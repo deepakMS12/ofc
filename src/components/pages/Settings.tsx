@@ -31,9 +31,9 @@ import { useToast } from "@/hooks/useToast";
 type SettingsTab = "personal" | "password" | "activity" | "delete";
 
 const tabHashMap: Record<SettingsTab, string> = {
-  personal: "personal-detail",
+  personal: "profile",
   password: "change-password",
-  activity: "login-logs",
+  activity: "activity-logs",
   delete: "delete-ac",
 };
 
@@ -63,7 +63,7 @@ const tabConfig: { key: SettingsTab; label: string; icon: React.ReactNode }[] =
       label: "Change Password",
       icon: <LockKeyhole size={16} />,
     },
-    { key: "activity", label: "Login Activity", icon: <Activity size={16} /> },
+    { key: "activity", label: "Activity Logs", icon: <Activity size={16} /> },
     { key: "delete", label: "Delete Account", icon: <Trash2 size={16} /> },
   ];
 
