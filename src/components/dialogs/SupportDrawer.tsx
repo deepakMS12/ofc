@@ -18,7 +18,11 @@ import {
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { Headset, X } from 'lucide-react';
 import { colors } from '@/utils/customColor';
-import { supportApi, type SupportCategory } from '@/lib/api/support';
+import {
+  supportApi,
+  SUPPORT_CATEGORY_OPTIONS,
+  type SupportCategory,
+} from '@/lib/api/support';
 import { useToast } from '@/hooks/useToast';
 
 export interface SupportDrawerProps {
@@ -144,12 +148,11 @@ export default function SupportDrawer({ open, onClose }: SupportDrawerProps) {
                   onChange={(e) => setSupportCategory(e.target.value as SupportCategory)}
                   sx={{ bgcolor: '#fafafa' }}
                 >
-                  <MenuItem value="api_request">API Request</MenuItem>
-                  <MenuItem value="bug_report">Bug Report</MenuItem>
-                  <MenuItem value="account_related">Account Related</MenuItem>
-                  <MenuItem value="billing_related">Billing Related</MenuItem>
-                  <MenuItem value="feature_request">Feature Request</MenuItem>
-                  <MenuItem value="other">Other</MenuItem>
+                  {SUPPORT_CATEGORY_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 

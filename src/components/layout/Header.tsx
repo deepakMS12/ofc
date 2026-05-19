@@ -25,11 +25,14 @@ import { logout } from '@/store/slices/authSlice';
 import { clearUser } from '@/store/slices/userSlice';
 import { colors } from '@/utils/customColor';
 import { accountApi } from '@/lib/api/account';
+import { SIDEBAR_TRANSITION, useSidebar } from '@/contexts/SidebarContext';
+import SidebarToggle from '@/components/layout/SidebarToggle';
 
 export default function Header() {
   const navigate = useNavigate();
   const { openSearch } = useConverterSearch();
   const dispatch = useAppDispatch();
+  const { sidebarWidth } = useSidebar();
   // const user = useAppSelector((s) => s.user.profile);
   const [time, setTime] = useState('--:--:--');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -82,62 +85,20 @@ export default function Header() {
           borderBottom: `4px solid ${colors.primary}`,
           height: '4.625rem',
           zIndex: 1200,
+          left: `${sidebarWidth}px`,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          transition: `left ${SIDEBAR_TRANSITION}, width ${SIDEBAR_TRANSITION}`,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between', px: 3, position: 'relative' }}>
-          {/* Left Side - OFC Logo */}
-          <Box
-            sx={{
-              backgroundColor: colors.primary,
-              height: '4.625rem',
-              display: 'flex',
-              alignItems: 'center',
-              px: 3,
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              width: 'calc(236px + 0.5rem)',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 1,
-                  backgroundColor: '#000',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: colors.primary,
-                  fontWeight: 'bold',
-                  fontSize: '18px',
-                }}
-              >
-                <img src='/assets/images/ajaxter-logo.svg' alt='logo' style={{ width: 80, height: 80 }} />
-              </Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '18px',
-                }}
-              >
-                OFC
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Left Side - User Profile with Avatar */}
+        <Toolbar sx={{ justifyContent: 'space-between', px: 3 }}>
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
-              m: 'calc(210px + 15px + 3.5rem)',
             }}
           >
+            <SidebarToggle />
             {/* <Avatar
               sx={{
                 width: 40,
