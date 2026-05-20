@@ -183,7 +183,7 @@ const OfflineStatusModal: React.FC = () => {
                 mb: 1,
               }}
             >
-              Offline...
+              You're offline
             </Typography>
 
             <Typography
@@ -194,8 +194,8 @@ const OfflineStatusModal: React.FC = () => {
                 mb: 1,
               }}
             >
-              All calls will be disabled during this time, but tickets will still
-              be allocated to you.
+              Document conversions, uploads, and API requests are paused until
+              your internet connection is restored.
             </Typography>
 
             <Typography
@@ -206,7 +206,7 @@ const OfflineStatusModal: React.FC = () => {
                 fontFamily: "monospace",
               }}
             >
-              You are offline since : {formatTime(timeElapsed)}
+              Offline for: {formatTime(timeElapsed)}
             </Typography>
           </Box>
         </Box>

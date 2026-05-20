@@ -1,17 +1,17 @@
-import { useRef, useState } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
+import { useState } from "react";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthSplitLayout, BRAND_GREEN } from "../components/auth/AuthUi";
-import { AuthActionButton } from "@/components/common";
+import { AuthActionButton, RecaptchaField } from "@/components/common";
+import { isRecaptchaEnabled } from "@/lib/env";
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
-  const canContinue = !!email.trim() && !!recaptchaToken;
+  const recaptchaSatisfied = !isRecaptchaEnabled || !!recaptchaToken;
+  const canContinue = !!email.trim() && recaptchaSatisfied;
 
   const handleSubmit = (event:any) => {
     event.preventDefault();
@@ -42,9 +42,7 @@ const ForgotPasswordPage = () => {
           </Typography>
         ) : null}
 
-        <ReCAPTCHA
-          ref={recaptchaRef}
-          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+        <RecaptchaField
           onChange={(token) => setRecaptchaToken(token)}
           onExpired={() => setRecaptchaToken(null)}
         />

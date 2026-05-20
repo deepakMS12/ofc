@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Divider,
   Grid,
   Paper,
   Tab,
@@ -164,27 +165,7 @@ export default function Plans() {
 
   const renderPlans = () => (
     <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: 0 }}>
-            <Box sx={{ textAlign: 'left', py: 1.5 }}>
-        <Typography sx={{ fontSize: 13, color: '#555', lineHeight: 1.8 }}>
-        Need unlimited API requests? We also offer custom{' '}
-          <Box
-            component="span"
-            onClick={() => openContact('Enterprise plan')}
-            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-          >
-            Enterprise plan
-          </Box>{' '}
-          for unlimited API requests, 
-          Dedicated server and more —{' '}
-          <Box
-            component="span"
-            onClick={() => openContact('Request Quote')}
-            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-          >
-            Request Quote
-          </Box>
-        </Typography>
-      </Box>
+   
       {/* Page header */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 0.4 }}>
@@ -220,7 +201,7 @@ export default function Plans() {
       </Box>
 
       {/* Plan cards */}
-      <Grid container spacing={2.5} sx={{ mb: 5 }}>
+      <Grid container spacing={2.5} sx={{ mb: 5, minHeight: "calc(100vh - 360px)" }}>
         {/* Trial card */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
@@ -230,6 +211,7 @@ export default function Plans() {
               border: currentPlan === null ? `2px solid ${colors.primary}` : '1px solid #e0e0e0',
               p: 2.5,
               height: '100%',
+              maxHeight: '95%',
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
@@ -287,6 +269,7 @@ export default function Plans() {
                   border: isCurrent ? `2px solid ${colors.primary}` : '1px solid #e0e0e0',
                   p: 2.5,
                   height: '100%',
+                  maxHeight: '95%',
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
@@ -417,6 +400,29 @@ export default function Plans() {
           );
         })}
       </Grid>
+      <Divider  sx={{ my: 0.5 }} />
+
+               <Box sx={{ textAlign: 'left', py: 1.5,  }}>
+        <Typography sx={{ fontSize: 13, color: '#555', lineHeight: 1.8 }}>
+        Need unlimited API requests? We also offer custom{' '}
+          <Box
+            component="span"
+            onClick={() => openContact('Enterprise plan')}
+            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Enterprise plan
+          </Box>{' '}
+          for unlimited API requests, 
+          Dedicated server and more —{' '}
+          <Box
+            component="span"
+            onClick={() => openContact('Request Quote')}
+            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Request Quote
+          </Box>
+        </Typography>
+      </Box>
 
 
     </Box>

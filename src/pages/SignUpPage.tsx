@@ -1,6 +1,5 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
 import {
   Box,
   Button,
@@ -20,7 +19,12 @@ import {
   BRAND_GREEN,
   SocialAuthButtons,
 } from "../components/auth/AuthUi";
-import { AuthActionButton, ValidatedTextField } from "@/components/common";
+import {
+  AuthActionButton,
+  RecaptchaField,
+  ValidatedTextField,
+} from "@/components/common";
+import { isRecaptchaEnabled } from "@/lib/env";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -38,8 +42,13 @@ const SignUpPage = () => {
   const [phoneError, setPhoneError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
-  const canContinue = !!email.trim() && !!name.trim() && !!password && termsChecked && !!recaptchaToken;
+  const recaptchaSatisfied = !isRecaptchaEnabled || !!recaptchaToken;
+  const canContinue =
+    !!email.trim() &&
+    !!name.trim() &&
+    !!password &&
+    termsChecked &&
+    recaptchaSatisfied;
 
   const validateEmail = (value: string) => {
     const trimmed = value.trim();
@@ -258,9 +267,7 @@ const SignUpPage = () => {
               }
             />
 
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+            <RecaptchaField
               onChange={(token) => setRecaptchaToken(token)}
               onExpired={() => setRecaptchaToken(null)}
             />

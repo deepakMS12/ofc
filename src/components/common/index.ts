@@ -7,6 +7,8 @@ export { default as AuthActionButton } from './AuthActionButton';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as ConfirmDialog } from './ConfirmDialog';
 export { default as OfflineStatusModal } from './OfflineStatusModal';
+export { default as RecaptchaField } from './RecaptchaField';
+export type { RecaptchaFieldRef } from './RecaptchaField';
 export {
   ValidatedSelectField,
   ValidatedTextAreaField,

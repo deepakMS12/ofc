@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
 import {
   Box,
   IconButton,
@@ -17,7 +16,13 @@ import {
   BRAND_GREEN,
   SocialAuthButtons,
 } from "../components/auth/AuthUi";
-import { AuthActionButton, ValidatedTextField } from "@/components/common";
+import {
+  AuthActionButton,
+  RecaptchaField,
+  type RecaptchaFieldRef,
+  ValidatedTextField,
+} from "@/components/common";
+import { isRecaptchaEnabled } from "@/lib/env";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { openSidebarOnLogin } from "@/contexts/SidebarContext";
 import { loginUser } from "@/store/thunks/authThunks";
@@ -36,7 +41,8 @@ const SignInPage = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const recaptchaRef = useRef<RecaptchaFieldRef>(null);
+  const recaptchaSatisfied = !isRecaptchaEnabled || !!recaptchaToken;
 
   const validateEmailOrUsername = (value: string) => {
     const trimmed = value.trim();
@@ -63,14 +69,18 @@ const SignInPage = () => {
 
     if (nextEmailError || nextPasswordError) return;
 
-    if (!recaptchaToken) {
+    if (isRecaptchaEnabled && !recaptchaToken) {
       showToast("Please complete the reCAPTCHA verification.", "error");
       return;
     }
 
     try {
       const response = await dispatch(
-        loginUser({ username: email.trim(), password, recaptchaToken }),
+        loginUser({
+          username: email.trim(),
+          password,
+          recaptchaToken: recaptchaToken ?? undefined,
+        }),
       ).unwrap();
 
       if (!response?.success) {
@@ -161,19 +171,16 @@ const SignInPage = () => {
             }}
           />
 
-          <Box sx={{ display: "flex", justifyContent: "left" }}>
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-              onChange={(token) => setRecaptchaToken(token)}
-              onExpired={() => setRecaptchaToken(null)}
-            />
-          </Box>
+          <RecaptchaField
+            ref={recaptchaRef}
+            onChange={(token) => setRecaptchaToken(token)}
+            onExpired={() => setRecaptchaToken(null)}
+          />
 
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
              <AuthActionButton
               type="submit"
-              isActive={hasCredentials && !!recaptchaToken}
+              isActive={hasCredentials && recaptchaSatisfied}
               isLoading={isLoading}
               label="SIGN IN"
               loadingLabel="SIGNING IN…"
