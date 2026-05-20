@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Avatar,
   Box,
@@ -10,9 +10,9 @@ import {
   InputAdornment,
   TextField,
   Typography,
-} from '@mui/material';
-import { Link as LinkIcon, Play, Search } from 'lucide-react';
-import { colors } from '@/utils/customColor';
+} from "@mui/material";
+import { Link as LinkIcon, Play, Search } from "lucide-react";
+import { colors } from "@/utils/customColor";
 
 interface MarketplaceApp {
   id: string;
@@ -26,24 +26,26 @@ interface MarketplaceApp {
 
 const allApps: MarketplaceApp[] = [
   {
-    id: 'email-verification',
-    name: 'Email Verification',
-    description: 'Verify email addresses in real-time to reduce bounce rates and protect your sender reputation.',
-    iconBg: '#E8EAF6',
-    iconColor: '#3949AB',
-    iconLabel: 'EV',
+    id: "email-verification",
+    name: "Email Verification",
+    description:
+      "Verify email addresses in real-time to reduce bounce rates and protect your sender reputation.",
+    iconBg: "#E8EAF6",
+    iconColor: "#3949AB",
+    iconLabel: "EV",
     activated: false,
   },
 ];
 
 export default function Marketplace() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [apps, setApps] = useState(allApps);
 
-  const filtered = apps.filter((app) =>
-    app.name.toLowerCase().includes(search.toLowerCase()) ||
-    app.description.toLowerCase().includes(search.toLowerCase()),
+  const filtered = apps.filter(
+    (app) =>
+      app.name.toLowerCase().includes(search.toLowerCase()) ||
+      app.description.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleActivate = (id: string) => {
@@ -56,10 +58,13 @@ export default function Marketplace() {
     <Box sx={{ p: 3 }}>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 0.5 }}>
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}
+        >
           Marketplace
         </Typography>
-        <Typography sx={{ fontSize: '0.875rem', color: colors.primary }}>
+        <Typography sx={{ fontSize: "0.875rem", color: colors.primary }}>
           Find application &amp; activate to setup their API
         </Typography>
       </Box>
@@ -81,12 +86,12 @@ export default function Marketplace() {
         }}
         sx={{
           mb: 4,
-          '& .MuiOutlinedInput-root': {
+          "& .MuiOutlinedInput-root": {
             borderRadius: 2,
-            bgcolor: '#fff',
-            '& fieldset': { borderColor: '#e0e0e0' },
-            '&:hover fieldset': { borderColor: '#bdbdbd' },
-            '&.Mui-focused fieldset': { borderColor: colors.primary },
+            bgcolor: "#fff",
+            "& fieldset": { borderColor: "#e0e0e0" },
+            "&:hover fieldset": { borderColor: "#bdbdbd" },
+            "&.Mui-focused fieldset": { borderColor: colors.primary },
           },
         }}
       />
@@ -94,37 +99,56 @@ export default function Marketplace() {
       {/* Grid — max 3 per row */}
       <Grid container spacing={2.5} alignItems="stretch">
         {filtered.map((app) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={app.id} sx={{ display: 'flex' }}>
+          <Grid
+            size={{ xs: 12, sm: 6, md: 4 }}
+            key={app.id}
+            sx={{ display: "flex" }}
+          >
             <Card
               variant="outlined"
               sx={{
-                borderRadius: 2,
-                border: '1px solid #e8e8e8',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                boxShadow: 'none',
-                '&:hover': { boxShadow: '0 2px 12px rgba(0,0,0,0.08)' },
-                transition: 'box-shadow 0.2s',
+                border: "2px solid #b1b1b180",
+                transition: "box-shadow 0.2s, border-color 0.2s, opacity 0",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: "none",
+                "&:hover": { boxShadow: "0 2px 12px rgba(0,0,0,0.08)" },
               }}
             >
-              <CardContent sx={{ p: 2.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <CardContent
+                sx={{
+                  p: 2.5,
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
                 {/* Icon + Title */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    mb: 1.5,
+                  }}
+                >
                   <Avatar
                     sx={{
                       width: 40,
                       height: 40,
                       bgcolor: app.iconBg,
                       color: app.iconColor,
-                      fontSize: '0.7rem',
+                      fontSize: "0.7rem",
                       fontWeight: 700,
                       borderRadius: 1.5,
                     }}
                   >
                     {app.iconLabel}
                   </Avatar>
-                  <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#1a1a1a' }}>
+                  <Typography
+                    sx={{ fontWeight: 600, fontSize: "1rem", color: "#1a1a1a" }}
+                  >
                     {app.name}
                   </Typography>
                 </Box>
@@ -132,7 +156,7 @@ export default function Marketplace() {
                 {/* Description */}
                 <Typography
                   sx={{
-                    fontSize: '0.8125rem',
+                    fontSize: "0.8125rem",
                     color: colors.primary,
                     lineHeight: 1.6,
                     flex: 1,
@@ -147,19 +171,19 @@ export default function Marketplace() {
                   <Button
                     variant="contained"
                     startIcon={<LinkIcon size={14} />}
-                    onClick={() => navigate('/home/applications')}
+                    onClick={() => navigate("/home/applications")}
                     sx={{
-                      alignSelf: 'flex-start',
-                      bgcolor: '#F5A623',
-                      color: '#fff',
-                      textTransform: 'none',
+                      alignSelf: "flex-start",
+                      bgcolor: "#F5A623",
+                      color: "#fff",
+                      textTransform: "none",
                       fontWeight: 600,
-                      fontSize: '0.8125rem',
+                      fontSize: "0.8125rem",
                       borderRadius: 1.5,
                       px: 2,
                       py: 0.75,
-                      boxShadow: 'none',
-                      '&:hover': { bgcolor: '#e0951f', boxShadow: 'none' },
+                      boxShadow: "none",
+                      "&:hover": { bgcolor: "#e0951f", boxShadow: "none" },
                     }}
                   >
                     Activate
@@ -170,16 +194,16 @@ export default function Marketplace() {
                     startIcon={<Play size={13} />}
                     onClick={() => handleActivate(app.id)}
                     sx={{
-                      alignSelf: 'flex-start',
-                      borderColor: '#ccc',
-                      color: '#333',
-                      textTransform: 'none',
+                      alignSelf: "flex-start",
+                      borderColor: "#ccc",
+                      color: "#333",
+                      textTransform: "none",
                       fontWeight: 500,
-                      fontSize: '0.8125rem',
+                      fontSize: "0.8125rem",
                       borderRadius: 1,
                       px: 2,
                       py: 0.75,
-                      '&:hover': { borderColor: '#999', bgcolor: '#fafafa' },
+                      "&:hover": { borderColor: "#999", bgcolor: "#fafafa" },
                     }}
                   >
                     Use this API
@@ -192,8 +216,10 @@ export default function Marketplace() {
 
         {filtered.length === 0 && (
           <Grid size={12}>
-            <Box sx={{ textAlign: 'center', py: 8, color: '#999' }}>
-              <Typography>No applications found for &ldquo;{search}&rdquo;</Typography>
+            <Box sx={{ textAlign: "center", py: 8, color: "#999" }}>
+              <Typography>
+                No applications found for &ldquo;{search}&rdquo;
+              </Typography>
             </Box>
           </Grid>
         )}

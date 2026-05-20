@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import {
   Avatar,
   Box,
@@ -7,9 +7,9 @@ import {
   CardActionArea,
   Grid,
   Typography,
-} from '@mui/material';
-import { Link as LinkIcon } from 'lucide-react';
-import { colors } from '@/utils/customColor';
+} from "@mui/material";
+import { Link as LinkIcon } from "lucide-react";
+import { colors } from "@/utils/customColor";
 
 interface ActiveApp {
   id: string;
@@ -20,7 +20,13 @@ interface ActiveApp {
 }
 
 const activeApps: ActiveApp[] = [
-  { id: 'email-verification', name: 'Email Verification', iconBg: '#E8EAF6', iconColor: '#3949AB', iconLabel: 'EV' },
+  {
+    id: "email-verification",
+    name: "Email Verification",
+    iconBg: "#E8EAF6",
+    iconColor: "#3949AB",
+    iconLabel: "EV",
+  },
 ];
 
 export default function Applications() {
@@ -29,12 +35,22 @@ export default function Applications() {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          mb: 3.5,
+        }}
+      >
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 0.5 }}>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 700, color: "#1a1a1a", mb: 0.5 }}
+          >
             Applications
           </Typography>
-          <Typography sx={{ fontSize: '0.875rem', color: colors.primary }}>
+          <Typography sx={{ fontSize: "0.875rem", color: colors.primary }}>
             Your all active applications in this current project.
           </Typography>
         </Box>
@@ -42,22 +58,22 @@ export default function Applications() {
         <Button
           variant="contained"
           startIcon={<LinkIcon size={15} />}
-          onClick={() => navigate('/home/marketplace')}
+          onClick={() => navigate("/home/marketplace")}
           sx={{
-    bgcolor: "#F5A623",
-    color: "#fff",
-    textTransform: "none",
-    fontWeight: 600,
-    fontSize: 16,
-    px: 4,
-    py: 1.35,
-    borderRadius: 0.5,
-    whiteSpace: "nowrap",
-    "&:hover": {
-      bgcolor: "#e0951f",
-      boxShadow: "0 4px 14px rgba(17, 86, 166, 0.4)",
-    },
-  }}
+            bgcolor: "#F5A623",
+            color: "#fff",
+            textTransform: "none",
+            fontWeight: 600,
+            fontSize: 16,
+            px: 4,
+            py: 1.35,
+            borderRadius: 0.5,
+            whiteSpace: "nowrap",
+            "&:hover": {
+              bgcolor: "#e0951f",
+              boxShadow: "0 4px 14px rgba(17, 86, 166, 0.4)",
+            },
+          }}
         >
           View marketplace
         </Button>
@@ -70,21 +86,23 @@ export default function Applications() {
             <Card
               variant="outlined"
               sx={{
+                border: "2px solid #b1b1b180",
+                transition: "box-shadow 0.2s, border-color 0.2s, opacity 0.2s",
                 borderRadius: 2,
-                border: '1px solid #e8e8e8',
-                boxShadow: 'none',
-                '&:hover': { boxShadow: '0 2px 10px rgba(0,0,0,0.07)' },
-                transition: 'box-shadow 0.2s',
+                boxShadow: "none",
+                "&:hover": { boxShadow: "0 2px 10px rgba(0,0,0,0.07)" },
               }}
             >
-              <CardActionArea sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <CardActionArea
+                sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}
+              >
                 <Avatar
                   sx={{
                     width: 38,
                     height: 38,
                     bgcolor: app.iconBg,
                     color: app.iconColor,
-                    fontSize: '0.65rem',
+                    fontSize: "0.65rem",
                     fontWeight: 700,
                     borderRadius: 1.5,
                     flexShrink: 0,
@@ -95,8 +113,8 @@ export default function Applications() {
                 <Typography
                   sx={{
                     fontWeight: 600,
-                    fontSize: '0.9rem',
-                    color: '#1a1a1a',
+                    fontSize: "0.9rem",
+                    color: "#1a1a1a",
                     lineHeight: 1.3,
                   }}
                 >
@@ -109,16 +127,16 @@ export default function Applications() {
       </Grid>
 
       {activeApps.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 10, color: '#999' }}>
+        <Box sx={{ textAlign: "center", py: 10, color: "#999" }}>
           <Typography sx={{ mb: 1.5 }}>No active applications yet.</Typography>
           <Button
             variant="contained"
-            onClick={() => navigate('/home/marketplace')}
+            onClick={() => navigate("/home/marketplace")}
             sx={{
-              bgcolor: '#F5A623',
-              textTransform: 'none',
-              boxShadow: 'none',
-              '&:hover': { bgcolor: '#e0951f', boxShadow: 'none' },
+              bgcolor: "#F5A623",
+              textTransform: "none",
+              boxShadow: "none",
+              "&:hover": { bgcolor: "#e0951f", boxShadow: "none" },
             }}
           >
             Browse Marketplace

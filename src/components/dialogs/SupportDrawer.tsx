@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Drawer,
@@ -28,19 +28,24 @@ import { useToast } from '@/hooks/useToast';
 export interface SupportDrawerProps {
   open: boolean;
   onClose: () => void;
+  initialCategory?: SupportCategory;
+  initialSubject?: string;
 }
 
-export default function SupportDrawer({ open, onClose }: SupportDrawerProps) {
+export default function SupportDrawer({ open, onClose, initialCategory, initialSubject }: SupportDrawerProps) {
   const { showToast } = useToast();
-  const [supportCategory, setSupportCategory] = useState<SupportCategory | ''>('');
-  const [supportSubject, setSupportSubject] = useState('');
+  const [supportCategory, setSupportCategory] = useState<SupportCategory | ''>(initialCategory ?? '');
+  const [supportSubject, setSupportSubject] = useState(initialSubject ?? '');
   const [supportMessage, setSupportMessage] = useState('');
   const [supportAttachments, setSupportAttachments] = useState<File[]>([]);
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  const isLocked = Boolean(initialCategory);
 
   const handleClose = () => {
-    setSupportCategory('');
-    setSupportSubject('');
+    setSupportCategory(initialCategory ?? '');
+    setSupportSubject(initialSubject ?? '');
     setSupportMessage('');
     setSupportAttachments([]);
     onClose();
@@ -48,14 +53,19 @@ export default function SupportDrawer({ open, onClose }: SupportDrawerProps) {
 
   useEffect(() => {
     if (open) {
+      setSupportCategory(initialCategory ?? '');
+      setSupportSubject(initialSubject ?? '');
       document.body.style.overflow = 'hidden';
+      if (isLocked) {
+        setTimeout(() => messageRef.current?.focus(), 120);
+      }
     } else {
       document.body.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open]);
+  }, [open, initialCategory, initialSubject, isLocked]);
 
   const handleAttachmentAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(e.target.files ?? []);
@@ -139,14 +149,14 @@ export default function SupportDrawer({ open, onClose }: SupportDrawerProps) {
         <Box sx={{ flex: 1, overflow: 'auto', p: 3, backgroundColor: '#fafafa' }}>
           <Box sx={{ p: 4, border: '1px solid #e0e0e0', borderRadius: 2, bgcolor: 'white' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={isLocked}>
                 <InputLabel id="support-category-label">Category</InputLabel>
                 <Select
                   labelId="support-category-label"
                   label="Category"
                   value={supportCategory}
                   onChange={(e) => setSupportCategory(e.target.value as SupportCategory)}
-                  sx={{ bgcolor: '#fafafa' }}
+                  sx={{ bgcolor: isLocked ? '#f5f5f5' : '#fafafa' }}
                 >
                   {SUPPORT_CATEGORY_OPTIONS.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -161,9 +171,10 @@ export default function SupportDrawer({ open, onClose }: SupportDrawerProps) {
                 value={supportSubject}
                 onChange={(e) => setSupportSubject(e.target.value)}
                 fullWidth
+                disabled={isLocked}
                 inputProps={{ maxLength: 150 }}
-                helperText={`${supportSubject.length}/150`}
-                sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#fafafa' } }}
+                helperText={isLocked ? undefined : `${supportSubject.length}/150`}
+                sx={{ '& .MuiOutlinedInput-root': { bgcolor: isLocked ? '#f5f5f5' : '#fafafa' } }}
               />
 
               <TextField
@@ -173,7 +184,7 @@ export default function SupportDrawer({ open, onClose }: SupportDrawerProps) {
                 fullWidth
                 multiline
                 rows={5}
-                inputProps={{ maxLength: 2000 }}
+                inputProps={{ maxLength: 2000, ref: messageRef }}
                 helperText={`${supportMessage.length}/2000`}
                 sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#fafafa' } }}
               />

@@ -16,7 +16,6 @@ import {
 import { LogOut, Bell } from 'lucide-react';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsDrawer from '@/components/dialogs/NotificationsDrawer';
-import AddFundsDrawer from '@/components/dialogs/AddFundsDrawer';
 import SupportDrawer from '@/components/dialogs/SupportDrawer';
 import { ConfirmDialog } from '@/components/common';
 import { useConverterSearch } from '@/contexts/ConverterSearchContext';
@@ -37,13 +36,48 @@ export default function Header() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [apiUsed] = useState(22); // dummy — replace with real API call
+  const FREE_QUOTA = 50;
+  const BLOCK_COUNT = 10;
 
   useEffect(() => {
-    accountApi.getBalance().then((data) => setWalletBalance(data.balance)).catch(() => {});
+    accountApi.getBalance().catch(() => {});
   }, []);
+
+  const filledBlocks = Math.round((Math.min(apiUsed, FREE_QUOTA) / FREE_QUOTA) * BLOCK_COUNT);
+  const pct = Math.round((Math.min(apiUsed, FREE_QUOTA) / FREE_QUOTA) * 100);
+  const remaining = FREE_QUOTA - apiUsed;
+
+  const resetDate = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1, 1);
+    d.setHours(0, 0, 0, 0);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}-${mm}-${yyyy} 00:00`;
+  })();
+
+  const apiTooltip = (
+    <Box sx={{ p: 0.5, minWidth: 210 }}>
+      <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#6a6a6a', mb: 1, borderBottom: '1px solid rgba(255,255,255,0.15)', pb: 0.75 }}>
+        Free Tier Usage
+      </Typography>
+      {[
+        { label: 'Consumed', value: `${apiUsed} requests` },
+        { label: 'Remaining', value: `${remaining} requests` },
+        { label: 'Total quota', value: `${FREE_QUOTA} requests / month` },
+        { label: 'Usage', value: `${pct}%` },
+        { label: 'Resets on', value: resetDate },
+      ].map(({ label, value }) => (
+        <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 0.5 }}>
+          <Typography sx={{ fontSize: 11, color: '#6a6a6a' }}>{label}</Typography>
+          <Typography sx={{ fontSize: 11, color: '#6a6a6a', fontWeight: 600 }}>{value}</Typography>
+        </Box>
+      ))}
+    </Box>
+  );
 
   const handleLogout = () => {
     dispatch(logout());
@@ -101,51 +135,52 @@ export default function Header() {
               </Typography>
             </Box> */}
 
-            {/* Wallet Balance Chip */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                bgcolor: '#1156a6',
-                borderRadius: '3px',
-                pl: 2,
-                pr: 2,
-                py: 1,
-                gap: 1,
-                flexShrink: 0,
+            {/* API Usage Progress */}
+            <Tooltip
+              title={apiTooltip}
+              placement="bottom-start"
+              arrow
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: '#f5f5f5',
+                    borderRadius: 1.5,
+                    p: 1.25,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.22)',
+                    maxWidth: 260,
+                  },
+                },
+                arrow: { sx: { color: '#f5f5f5' } },
               }}
             >
               <Box
-                component="img"
-                src="/assets/images/wallet.svg"
-                alt="wallet"
-                sx={{ width: 30, height: 20, display: 'block' }}
-              />
-              <Typography
-                sx={{ color: 'white', fontWeight: 600, fontSize: 13, fontFamily: 'monospace', mt: 0.5 }}
-              >
-                ₹ {walletBalance !== null ? walletBalance.toFixed(4) : '00'}
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => setAddFundsOpen(true)}
                 sx={{
-                  bgcolor: 'rgba(255,255,255,0.15)',
-                  borderRadius: '3px',
-                  width: 24,
-                  height: 24,
-                  ml: 2,
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.28)' },
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.4,
+                  flexShrink: 0,
+                  pl: 1,
+                  cursor: 'default',
                 }}
               >
-                <Box
-                  component="img"
-                  src="/assets/images/wallet-plus.svg"
-                  alt="add funds"
-                  sx={{ width: 15, height: 15, display: 'block' }}
-                />
-              </IconButton>
-            </Box>
+                <Box sx={{ display: 'flex', gap: 0.4 }}>
+                  {Array.from({ length: BLOCK_COUNT }, (_, i) => (
+                    <Box
+                      key={i}
+                      sx={{
+                        width: 16,
+                        height: 13,
+                        bgcolor: i < filledBlocks ? '#face86' : '#d8dde6',
+                        borderRadius: 0.25,
+                      }}
+                    />
+                  ))}
+                </Box>
+                <Typography sx={{ fontSize: 11, color: '#555', fontWeight: 500, lineHeight: 1 }}>
+                  {pct}% ({apiUsed}/{FREE_QUOTA}) API requests consumed
+                </Typography>
+              </Box>
+            </Tooltip>
 
             <Box
               role="button"
@@ -312,12 +347,6 @@ export default function Header() {
       />
 
 
-      <AddFundsDrawer
-        open={addFundsOpen}
-        onClose={() => setAddFundsOpen(false)}
-        walletBalance={walletBalance}
-        onBalanceChange={setWalletBalance}
-      />
 
       <SupportDrawer open={supportOpen} onClose={() => setSupportOpen(false)} />
 

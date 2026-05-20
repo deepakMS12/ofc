@@ -90,7 +90,6 @@ const ConverterCard = ({
       elevation={0}
       sx={{
         height: "100%",
-        borderRadius: 2,
         border: "2px solid #b1b1b180",
         borderColor: "divider",
         bgcolor: "background.paper",

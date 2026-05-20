@@ -91,7 +91,7 @@ const Dashboard = () => {
                 ({pctLabel})
               </Typography>
             </Box>
-            <Button variant="outlined" sx={{borderRadius: 50,  my: 2}}>View Report</Button>
+            <Button href="./settings#activity-logs" variant="outlined" sx={{borderRadius: 50,  my: 2}}>View Report</Button>
           </Box>
         </DashboardCard>
         <DashboardCard>

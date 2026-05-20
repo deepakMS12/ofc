@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
   CircularProgress,
+  Divider,
+  Grid,
   Paper,
-  Stack,
   Tab,
   Tabs,
   Typography,
@@ -15,236 +16,53 @@ import { accountApi } from '@/lib/api/account';
 import { useToast } from '@/hooks/useToast';
 import { Crown, Receipt } from 'lucide-react';
 import PlanTransactionHistory from './PlanTransactionHistory';
-import conversionCosts from '../../../conversion_costs.json';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import BoltIcon from '@mui/icons-material/Bolt';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import Check from '@mui/icons-material/Check';
-import Close from '@mui/icons-material/Close';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import SupportDrawer from '@/components/dialogs/SupportDrawer';
 import { colors } from '@/utils/customColor';
 import { useLayoutShell } from '@/contexts/LayoutShellContext';
 
-/** Plan page palette — solid colors from reference (no gradients). */
-const PLAN_PURPLE = '#1156a6';
-const PLAN_NAVY = '#1A1A40';
-const PLAN_BODY = '#4A5568';
-const PLAN_MUTED = '#9CA3AF';
-const PLAN_BORDER = PLAN_PURPLE;
-const planPanelSx = {
-  border: `1px solid ${PLAN_BORDER}`,
-  borderRadius: '10px',
-  overflow: 'hidden',
-  backgroundColor: '#fff',
-  boxShadow: '0 2px 10px rgba(112, 71, 235, 0.12)',
-} as const;
-
-const currentPlanBadgeSx = {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  zIndex: 3,
-  px: 1.75,
-  py: 0.65,
-  bgcolor: '#fff',
-  color: PLAN_PURPLE,
-  border: `2px solid ${PLAN_PURPLE}`,
-  borderTop: 'none',
-  borderLeft: 'none',
-  borderRadius: '0 0 10px 0',
-  boxShadow: '0 4px 12px rgba(112, 71, 235, 0.22)',
-  fontSize: 11,
-  fontWeight: 700,
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  lineHeight: 1.2,
-  whiteSpace: 'nowrap',
-} as const;
-
-const planBulletListSx = {
-  m: 0,
-  pl: 2.2,
-  listStyleType: 'disc',
-  '& li': {
-    color: PLAN_NAVY,
-    fontSize: 14,
-    lineHeight: 1.65,
-    mb: 0.75,
-    pl: 0.25,
-    '&::marker': { color: PLAN_PURPLE, fontSize: 12 },
-  },
-} as const;
-
-function PlanHeaderMessage({
-  label,
-  description,
-  highlight,
-}: {
-  label: string;
-  description: string;
-  highlight?: boolean;
-}) {
-  if (highlight) {
-    return (
-      <Typography
-        sx={{
-          color: '#fff',
-          fontSize: 15,
-          fontWeight: 400,
-          lineHeight: 1.45,
-          textAlign: 'center',
-          px: 1,
-        }}
-      >
-        We recommend the {label.charAt(0) + label.slice(1).toLowerCase()} plan
-      </Typography>
-    );
-  }
-
-  return (
-    <Typography
-      sx={{
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: 400,
-        lineHeight: 1.45,
-        textAlign: 'center',
-        px: 1,
-      }}
-    >
-      {description}
-    </Typography>
-  );
-}
-
 type PlanTier = 'bronze' | 'silver' | 'gold' | 'enterprise';
-
-type ConversionPlan = {
-  maxUpload: number;
-  perPage: string;
-  rateLimit: number;
-};
-
-type ConversionEntry = {
-  plan?: Partial<Record<PlanTier, ConversionPlan>>;
-};
-
-type ConversionCostsFile = {
-  conversions?: Record<string, ConversionEntry>;
-};
-
-
-
-type PlanMetrics = {
-  tier: PlanTier;
-  label: string;
-  description: string;
-  icon: ReactNode;
-  gradient: string;
-  accentColor: string;
-  cta: string;
-  highlight?: boolean;
-  conversionCount: number;
-  perPageMin: number;
-  perPageMax: number;
-  maxUploadMin: number;
-  maxUploadMax: number;
-  rateLimitMin: number;
-  rateLimitMax: number;
-};
-
-const tierMeta: Record<
-  PlanTier,
-  {
-    label: string;
-    description: string;
-    icon: ReactNode;
-    gradient: string;
-    accentColor: string;
-    cta: string;
-    highlight?: boolean;
-  }
-> = {
-  bronze: {
-    label: 'BRONZE',
-    description: 'Starter automation for small conversion volume',
-    icon: <BoltIcon fontSize="small" />,
-    gradient: PLAN_PURPLE,
-    accentColor: PLAN_PURPLE,
-    cta: 'Start Bronze',
-  },
-  silver: {
-    label: 'SILVER',
-    description: 'Balanced speed and cost for growing teams',
-    icon: <AutoAwesomeIcon fontSize="small" />,
-    gradient: PLAN_PURPLE,
-    accentColor: PLAN_PURPLE,
-    cta: 'Choose Silver',
-    highlight: true,
-  },
-  gold: {
-    label: 'GOLD',
-    description: 'Best value for high-volume production use',
-    icon: <WorkspacePremiumIcon fontSize="small" />,
-    gradient: PLAN_PURPLE,
-    accentColor: PLAN_PURPLE,
-    cta: 'Choose Gold',
-  },
-  enterprise: {
-    label: 'ENTERPRISE',
-    description: 'Scale-ready throughput and priority handling',
-    icon: <BusinessCenterIcon fontSize="small" />,
-    gradient: PLAN_PURPLE,
-    accentColor: PLAN_PURPLE,
-    cta: 'Contact Sales',
-  },
-};
-
-const TIERS: PlanTier[] = ['bronze', 'silver', 'gold', 'enterprise'];
-
-const PLAN_PRICES: Partial<Record<PlanTier, string>> = {
-  bronze: '999.00',
-  silver: '1999.00',
-  gold: '3999.00',
-};
-
-const formatRange = (min: number, max: number, suffix = '') => {
-  if (min === max) {
-    return `${min}${suffix}`;
-  }
-  return `${min}-${max}${suffix}`;
-};
-
-const formatPriceRange = (min: number, max: number) => {
-  if (min === max) {
-    return `INR ${min.toFixed(2)} /page`;
-  }
-  return `INR ${min.toFixed(2)}-${max.toFixed(2)} /page`;
-};
-
-const pricingData = conversionCosts as ConversionCostsFile;
-
 type PlansTab = 'plans' | 'history';
 
-const tabHashMap: Record<PlansTab, string> = {
-  plans: 'plans',
-  history: 'history',
-};
-
-const hashToTabMap: Record<string, PlansTab> = Object.entries(tabHashMap).reduce(
-  (acc, [tabKey, hashValue]) => {
-    acc[hashValue.toLowerCase()] = tabKey as PlansTab;
-    return acc;
+const TIERS: PlanTier[] = ['bronze', 'silver', 'gold', 'enterprise'];
+const PLAN_CARDS = [
+  {
+    tier: 'bronze' as PlanTier,
+    name: 'Personal',
+    monthlyPrice: 10,
+    annualPrice: 85,
+    description: 'Standard Kit — includes core features and',
+    requestsText: '10,000 monthly API requests',
+    popular: false,
   },
+  {
+    tier: 'silver' as PlanTier,
+    name: 'Professional',
+    monthlyPrice: 25,
+    annualPrice: 240,
+    description: 'Startup Plan — higher volume to build your MVPs. up to',
+    requestsText: '50,000 monthly API requests',
+    popular: true,
+  },
+  {
+    tier: 'gold' as PlanTier,
+    name: 'Business',
+    monthlyPrice: 50,
+    annualPrice: 480,
+    description: 'Smart Option — complete suite of advanced features and',
+    requestsText: '120,000 monthly API requests',
+    popular: false,
+  },
+];
+
+const tabHashMap: Record<PlansTab, string> = { plans: 'plans', history: 'history' };
+const hashToTabMap: Record<string, PlansTab> = Object.entries(tabHashMap).reduce(
+  (acc, [k, v]) => { acc[v.toLowerCase()] = k as PlansTab; return acc; },
   {} as Record<string, PlansTab>,
 );
 
-const getInitialTabFromHash = (): PlansTab => {
-  if (typeof window === 'undefined') {
-    return 'plans';
-  }
-  const normalized = window.location.hash.replace(/^#/, '').toLowerCase();
-  return hashToTabMap[normalized] || 'plans';
+const getInitialTab = (): PlansTab => {
+  if (typeof window === 'undefined') return 'plans';
+  return hashToTabMap[window.location.hash.replace(/^#/, '').toLowerCase()] || 'plans';
 };
 
 const tabConfig: { key: PlansTab; label: string; icon: React.ReactNode }[] = [
@@ -257,23 +75,22 @@ export default function Plans() {
   const navigate = useNavigate();
   const { pageShellMinHeight, pageContentMaxHeight } = useLayoutShell();
   const { showToast } = useToast();
-  const [tab, setTab] = useState<PlansTab>(getInitialTabFromHash);
+  const [tab, setTab] = useState<PlansTab>(getInitialTab);
   const [currentPlan, setCurrentPlan] = useState<PlanTier | null>(null);
   const [payingTier, setPayingTier] = useState<PlanTier | null>(null);
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactSubject, setContactSubject] = useState('');
+
+  const openContact = (subject: string) => {
+    setContactSubject(subject);
+    setContactOpen(true);
+  };
 
   useEffect(() => {
-    accountApi.getBalance().then((d: { balance: number }) => setWalletBalance(d.balance)).catch(() => {});
+    accountApi.getBalance().catch(() => {});
   }, []);
 
   const handleSelectPlan = useCallback(async (tier: PlanTier) => {
-    if (!PLAN_PRICES[tier]) return;
-
-    if (walletBalance !== null && walletBalance <= 0) {
-      showToast('Please top up your wallet first.', 'error');
-      return;
-    }
-
     setPayingTier(tier);
     try {
       await paymentApi.purchasePlan(tier);
@@ -284,7 +101,7 @@ export default function Plans() {
     } finally {
       setPayingTier(null);
     }
-  }, [showToast, walletBalance]);
+  }, [showToast]);
 
   useEffect(() => {
     const normalized = location.hash.replace(/^#/, '').toLowerCase();
@@ -294,13 +111,8 @@ export default function Plans() {
   const handleTabChange = useCallback(
     (_: React.SyntheticEvent, newValue: PlansTab) => {
       setTab(newValue);
-      const hashValue = tabHashMap[newValue];
       navigate(
-        {
-          pathname: location.pathname,
-          search: location.search,
-          hash: hashValue ? `#${hashValue}` : '',
-        },
+        { pathname: location.pathname, search: location.search, hash: `#${tabHashMap[newValue]}` },
         { replace: true },
       );
     },
@@ -308,474 +120,260 @@ export default function Plans() {
   );
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    const normalizeTier = (value: unknown): PlanTier | null => {
-      if (typeof value !== 'string') {
-        return null;
-      }
-      const normalized = value.trim().toLowerCase();
-      return TIERS.includes(normalized as PlanTier) ? (normalized as PlanTier) : null;
+    if (typeof window === 'undefined') return;
+    const normalizeTier = (v: unknown): PlanTier | null => {
+      if (typeof v !== 'string') return null;
+      const n = v.trim().toLowerCase();
+      return TIERS.includes(n as PlanTier) ? (n as PlanTier) : null;
     };
-
-    const detectPlanFromToken = (): PlanTier | null => {
+    const detectFromToken = (): PlanTier | null => {
       const token = localStorage.getItem('token');
-      if (!token) {
-        return null;
-      }
-
+      if (!token) return null;
       try {
-        const payloadSegment = token.split('.')[1];
-        if (!payloadSegment) {
-          return null;
-        }
-
-        const base64 = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
+        const seg = token.split('.')[1];
+        if (!seg) return null;
+        const base64 = seg.replace(/-/g, '+').replace(/_/g, '/');
         const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-        const payloadText = atob(padded);
-        const payload = JSON.parse(payloadText) as { plan?: unknown; planCode?: unknown; tier?: unknown };
-
-        return (
-          normalizeTier(payload.plan) ||
-          normalizeTier(payload.planCode) ||
-          normalizeTier(payload.tier)
-        );
-      } catch {
-        return null;
-      }
+        const payload = JSON.parse(atob(padded)) as { plan?: unknown; planCode?: unknown; tier?: unknown };
+        return normalizeTier(payload.plan) || normalizeTier(payload.planCode) || normalizeTier(payload.tier);
+      } catch { return null; }
     };
-
     const userRaw = localStorage.getItem('user');
     if (userRaw) {
       try {
-        const parsed = JSON.parse(userRaw) as {
-          planCode?: string;
-          plan?: string;
-          tier?: string;
-          planName?: string;
-        };
+        const parsed = JSON.parse(userRaw) as { planCode?: string; plan?: string; tier?: string; planName?: string };
         const detected =
-          normalizeTier(parsed.planCode) ||
-          normalizeTier(parsed.plan) ||
-          normalizeTier(parsed.tier) ||
-          normalizeTier(parsed.planName) ||
-          detectPlanFromToken();
-        if (detected) {
-          setCurrentPlan(detected);
-          return;
-        }
-      } catch {
-        // Ignore invalid cached user payload.
-      }
+          normalizeTier(parsed.planCode) || normalizeTier(parsed.plan) ||
+          normalizeTier(parsed.tier) || normalizeTier(parsed.planName) || detectFromToken();
+        if (detected) { setCurrentPlan(detected); return; }
+      } catch {}
     }
-
-    setCurrentPlan(normalizeTier(localStorage.getItem('planCode')) || detectPlanFromToken());
+    setCurrentPlan(normalizeTier(localStorage.getItem('planCode')) || detectFromToken());
   }, []);
 
-  const planMetrics = useMemo<PlanMetrics[]>(() => {
-    const conversions = Object.values(pricingData?.conversions ?? {});
+  const resetDate = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1, 1);
+    d.setHours(0, 0, 0, 0);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}-${mm}-${yyyy} ${hh}:${min}`;
+  })();
 
-    return TIERS.map((tier) => {
-      const tierPoints = conversions
-        .map((item) => item.plan?.[tier])
-        .filter((point): point is ConversionPlan => Boolean(point));
-
-      const perPagePoints = tierPoints
-        .map((point) => Number(point.perPage))
-        .filter((value) => Number.isFinite(value));
-      const maxUploadPoints = tierPoints.map((point) => point.maxUpload);
-      const rateLimitPoints = tierPoints.map((point) => point.rateLimit);
-
-      return {
-        tier,
-        ...tierMeta[tier],
-        conversionCount: tierPoints.length,
-        perPageMin: perPagePoints.length ? Math.min(...perPagePoints) : 0,
-        perPageMax: perPagePoints.length ? Math.max(...perPagePoints) : 0,
-        maxUploadMin: maxUploadPoints.length ? Math.min(...maxUploadPoints) : 0,
-        maxUploadMax: maxUploadPoints.length ? Math.max(...maxUploadPoints) : 0,
-        rateLimitMin: rateLimitPoints.length ? Math.min(...rateLimitPoints) : 0,
-        rateLimitMax: rateLimitPoints.length ? Math.max(...rateLimitPoints) : 0,
-      };
-    });
-  }, []);
-
-  const getUnavailableSpecs = (tier: PlanTier) => {
-    if (tier === 'enterprise') {
-      return [];
-    }
-    if (tier === 'gold') {
-      return ['Unlimited enterprise throughput'];
-    }
-    if (tier === 'silver') {
-      return ['Unlimited enterprise throughput', 'Dedicated enterprise support'];
-    }
-    return [
-      'Unlimited enterprise throughput',
-      'Dedicated enterprise support',
-      'Priority enterprise queue',
-    ];
-  };
-
-  const renderPlansContent = () => (
-    <Box sx={{ px: { xs: 3, md: 4 } }}>
-      <Box sx={{ textAlign: 'center', maxWidth: 840, mx: 'auto', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: PLAN_NAVY, mb: 1 }}>
-          Choose the plan that matches your conversion volume
+  const renderPlans = () => (
+    <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: 1 }}>
+      {/* Page header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 0.4 }}>
+          Plan & Pricing
         </Typography>
-        <Typography variant="body1" sx={{ color: PLAN_BODY }}>
-          Pricing is generated directly from conversion costs and reflects per-page rates,
-          request limits, and upload caps across available conversion tools.
+        <Typography sx={{ fontSize: 12, color: '#555' }}>
+          Your current plan and options to upgrade for high plan.
         </Typography>
       </Box>
 
-      <Stack spacing={3}>
-        {planMetrics.map((plan) => {
-          const unavailable = getUnavailableSpecs(plan.tier);
-          const included = [
-            `Per page pricing: ${formatPriceRange(plan.perPageMin, plan.perPageMax)}`,
-            `Conversion tools covered: ${plan.conversionCount}`,
-            `Max uploads per request: ${formatRange(plan.maxUploadMin, plan.maxUploadMax)}`,
-            `API rate limit: ${formatRange(plan.rateLimitMin, plan.rateLimitMax)} req/min`,
-          ];
+      {/* Note banner */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3.5 }}>
+        <Box
+          sx={{
+            px: 1,
+            py: 0.3,
+            bgcolor: '#F5A623',
+            borderRadius: 0.5,
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#fff',
+            flexShrink: 0,
+          }}
+        >
+          Note:
+        </Box>
+        <Typography sx={{ fontSize: 13, color: '#555' }}>
+          API consumption will be reset on{' '}
+          <Box component="span" sx={{ fontWeight: 700 }}>
+            {resetDate}
+          </Box>
+        </Typography>
+      </Box>
 
-          const planTitle =
-            plan.label.charAt(0) + plan.label.slice(1).toLowerCase();
-
+      {/* Plan cards */}
+      <Grid container spacing={2.5} sx={{ mb: 5}}>
+        {PLAN_CARDS.map((plan) => {
+          const isCurrent = currentPlan === plan.tier;
+          const isPaying = payingTier === plan.tier;
           return (
-            <Box
-              key={plan.tier}
-              sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                gap: 2,
-                alignItems: 'stretch',
-              }}
-            >
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={plan.tier}>
               <Paper
-                elevation={0}
+                variant="outlined"
                 sx={{
-                  ...planPanelSx,
-                  position: 'relative',
-                  flex: { xs: '1 1 auto', md: '0 0 300px' },
-                  maxWidth: { md: 320 },
+                  borderRadius: 3,
+                  border: isCurrent ? `2px solid ${colors.primary}` : '1px solid #e0e0e0',
+                  p: 2.5,
+                  height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
+                  position: 'relative',
+                  bgcolor: plan.popular ? '#fafafa' : '#fff',
+                  boxShadow: 'none',
+                  mt: plan.popular ? 0 : 0,
                 }}
               >
-                {currentPlan === plan.tier && (
-                  <Box component="span" sx={currentPlanBadgeSx}>
-                    Current plan
+                {/* Most Popular badge */}
+                {plan.popular && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -16,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      bgcolor: colors.primary,
+                      color: '#fff',
+                      px: 1.5,
+                      py: 0.4,
+                      borderRadius: 1,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    🔥 Most Popular
                   </Box>
                 )}
-                <Box
-                  sx={{
-                    backgroundColor: PLAN_PURPLE,
-                    py: 2.25,
-                    px: 2,
-                    pt: currentPlan === plan.tier ? 3.5 : 2.25,
-                    position: 'relative',
-                    borderRadius: '9px 9px 0 0',
-                  }}
-                >
-                  <PlanHeaderMessage
-                    label={plan.label}
-                    description={plan.description}
-                    highlight={plan.highlight}
-                  />
+
+                {/* Current plan badge */}
+                {isCurrent && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      bgcolor: colors.primary,
+                      color: '#fff',
+                      px: 1.25,
+                      py: 0.35,
+                      borderRadius: '0 10px 0 10px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Current
+                  </Box>
+                )}
+
+                <Typography sx={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a', mb: 0.5 }}>
+                  {plan.name}
+                </Typography>
+
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mb: 5 }}>
+                  <Typography sx={{ fontSize: 38, fontWeight: 800, color: '#1a1a1a', lineHeight: 1 }}>
+                    ${plan.monthlyPrice}
+                  </Typography>
+                  <Typography sx={{ fontSize: 13, color: '#888' }}>/month</Typography>
                 </Box>
 
-                <Box
+                <Typography sx={{ fontSize: 13, color: '#555', mb: 4, flex: 1, lineHeight: 1.65 }}>
+                  {plan.description}{' '}
+                  <Box
+                    component="span"
+                    sx={{ color: colors.primary, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}
+                  >
+                    {plan.requestsText}
+                  </Box>
+                  .
+                </Typography>
+
+                {/* Pay Monthly */}
+                <Button
+                  variant="contained"
+                  fullWidth
+                  disabled={payingTier !== null || isCurrent}
+                  onClick={() => void handleSelectPlan(plan.tier)}
                   sx={{
-                    p: 2.5,
-                    pt: 2,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    mb: 1,
+                    bgcolor: '#F5A623',
+                    color: '#fff',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: 12,
+                    borderRadius: 2,
+                    boxShadow: 'none',
+                    py: 1.1,
+                    '&:hover': { bgcolor: '#e0951f', boxShadow: 'none' },
+                    '&.Mui-disabled': { bgcolor: '#F5A623', opacity: 0.55, color: '#fff' },
                   }}
                 >
-                  <Typography
-                    sx={{
-                      color: PLAN_NAVY,
-                      fontWeight: 400,
-                      fontSize: 15,
-                      mb: 0.25,
-                    }}
-                  >
-                    {plan.conversionCount} Credits
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: PLAN_NAVY,
-                      fontSize: 36,
-                      lineHeight: 1.1,
-                      mb: 1.75,
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    {planTitle}
-                  </Typography>
-
-                  <Box component="ul" sx={{ ...planBulletListSx, flex: 1 }}>
-                    <Box component="li">
-                      Total Overage:{' '}
-                      <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
-                        {formatPriceRange(plan.perPageMin, plan.perPageMax)}
-                      </Box>
-                    </Box>
-                    <Box component="li">
-                      Max uploads:{' '}
-                      <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
-                        {formatRange(plan.maxUploadMin, plan.maxUploadMax)}
-                      </Box>
-                    </Box>
-                    <Box component="li">
-                      Timeout:{' '}
-                      <Box component="span" sx={{ color: PLAN_PURPLE, fontWeight: 700 }}>
-                        30s
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  {currentPlan !== plan.tier && (
-                    plan.tier === 'enterprise' ? (
-                      <Button
-                        variant="outlined"
-                        disableElevation
-                        fullWidth
-                        sx={{
-                          mt: 2,
-                          py: 1.35,
-                          borderRadius: '8px',
-                          textTransform: 'none',
-                          fontWeight: 600,
-                          fontSize: 15,
-                          borderColor: PLAN_PURPLE,
-                          color: PLAN_PURPLE,
-                          '&:hover': { bgcolor: 'rgba(17,86,166,0.06)', borderColor: PLAN_PURPLE },
-                        }}
-                      >
-                        Contact Sales
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="contained"
-                        disableElevation
-                        fullWidth
-                        disabled={payingTier !== null}
-                        onClick={() => void handleSelectPlan(plan.tier)}
-                        sx={{
-                          mt: 2,
-                          py: 1.35,
-                          borderRadius: '8px',
-                          textTransform: 'none',
-                          fontWeight: 400,
-                          fontSize: 16,
-                          backgroundColor: PLAN_PURPLE,
-                          boxShadow: 'none',
-                          '&:hover': {
-                            backgroundColor: PLAN_PURPLE,
-                            filter: 'brightness(0.94)',
-                            boxShadow: 'none',
-                          },
-                        }}
-                      >
-                        {payingTier === plan.tier ? (
-                          <CircularProgress size={20} sx={{ color: '#fff' }} />
-                        ) : (
-                          <>SELECT</>
-
-                        )}
-                      </Button>
-                    )
+                  {isPaying ? (
+                    <CircularProgress size={18} sx={{ color: '#fff' }} />
+                  ) : isCurrent ? (
+                    'Current Plan'
+                  ) : (
+                    `Pay Monthly — $${plan.monthlyPrice}`
                   )}
-                </Box>
-              </Paper>
+                </Button>
 
-              <Paper
-                elevation={0}
-                sx={{
-                  ...planPanelSx,
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minWidth: 0,
-                }}
-              >
-                <Box
+                {/* Pay Annually */}
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  disabled={payingTier !== null || isCurrent}
+                  onClick={() => void handleSelectPlan(plan.tier)}
                   sx={{
-                    p: { xs: 2.5, md: 3 },
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    color: '#333',
+                    borderColor: '#ccc',
+                    textTransform: 'none',
+                    fontWeight: 550,
+                    fontSize: 12,
+                    borderRadius: 2,
+                    py: 1.1,
+                    '&:hover': { borderColor: '#999', bgcolor: '#fafafa' },
                   }}
                 >
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: PLAN_NAVY,
-                      fontSize: 20,
-                      mb: 2.5,
-                    }}
-                  >
-                    Basic features:
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
-                      flex: 1,
-                      gap: 0,
-                    }}
-                  >
-                    <Box sx={{ flex: 1, pr: { md: unavailable.length ? 2.5 : 0 } }}>
-                      <Stack spacing={1.75}>
-                        {included.map((item) => (
-                          <Stack
-                            key={`${plan.tier}-${item}`}
-                            direction="row"
-                            spacing={1.25}
-                            alignItems="flex-start"
-                          >
-                            <Box
-                              sx={{
-                                width: 22,
-                                height: 22,
-                                borderRadius: '50%',
-                                backgroundColor: '#e3f2fd',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                                mt: 0.1,
-                              }}
-                            >
-                              <Check sx={{ fontSize: 14, color: '#1156a6' }} aria-hidden />
-                            </Box>
-                            <Typography
-                              sx={{
-                                color: PLAN_BODY,
-                                fontSize: 14,
-                                lineHeight: 1.55,
-                                fontWeight: 400,
-                              }}
-                            >
-                              {item}
-                            </Typography>
-                          </Stack>
-                        ))}
-                      </Stack>
-                    </Box>
-
-                    {unavailable.length > 0 && (
-                      <Box
-                        sx={{
-                          flex: 1,
-                          borderLeft: { xs: 'none', md: `1px solid ${PLAN_BORDER}` },
-                          borderTop: { xs: `1px solid ${PLAN_BORDER}`, md: 'none' },
-                          mt: { xs: 2.5, md: 0 },
-                          pt: { xs: 2.5, md: 0 },
-                          pl: { md: 2.5 },
-                        }}
-                      >
-                        <Stack spacing={1.75}>
-                          {unavailable.map((item) => (
-                            <Stack
-                              key={`${plan.tier}-${item}`}
-                              direction="row"
-                              spacing={1.25}
-                              alignItems="flex-start"
-                            >
-                              <Close
-                                sx={{
-                                  fontSize: 18,
-                                  color: '#1156a6',
-                                  flexShrink: 0,
-                                  mt: 0.05,
-                                }}
-                                aria-hidden
-                              />
-                              <Typography
-                                sx={{
-                                  color: PLAN_BODY,
-                                  fontSize: 14,
-                                  lineHeight: 1.55,
-                                  textDecoration: 'line-through',
-                                  fontWeight: 400,
-                                }}
-                              >
-                                {item}
-                              </Typography>
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </Box>
-                    )}
-                  </Box>
-
-                  <Box
-                    sx={{
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.75 }}>
-                      <Typography
-                        component="span"
-                        sx={{ fontSize: 13, color: PLAN_MUTED, fontWeight: 400 }}
-                      >
-                        1 /
-                      </Typography>
-                      <Box
-                        component="img"
-                        src="/assets/images/user.png"
-                        alt="Max login one"
-                        sx={{ width: 14, height: 14, opacity: 0.7 }}
-                      />
-                    </Stack>
-                    <Typography
-                      sx={{
-                        mt: 'auto',
-                        pt: 3,
-                        color: PLAN_MUTED,
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        fontWeight: 400,
-                      }}
-                    >
-                      * We count 1 credit per request unit; billing varies by tier and conversion
-                      type.
-                    </Typography>
-                  </Box>
-                </Box>
+                  Pay Annually — ${plan.annualPrice}
+                </Button>
               </Paper>
-            </Box>
+            </Grid>
           );
         })}
-      </Stack>
+      </Grid>
+
+      {/* Enterprise footer */}
+      <Divider sx={{  borderColor: '#e8e8e8' }} />
+      <Box sx={{ textAlign: 'left', py: 1.5 }}>
+        <Typography sx={{ fontSize: 13, color: '#555', lineHeight: 1.8 }}>
+        Need unlimited API requests? We also offer custom{' '}
+          <Box
+            component="span"
+            onClick={() => openContact('Enterprise plan')}
+            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Enterprise plan
+          </Box>{' '}
+          for unlimited API requests, 
+          Dedicated server and more —{' '}
+          <Box
+            component="span"
+            onClick={() => openContact('Request Quote')}
+            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Request Quote
+          </Box>
+        </Typography>
+      </Box>
     </Box>
   );
-
-  const renderTabContent = () => {
-    switch (tab) {
-      case 'history':
-        return <PlanTransactionHistory embedded />;
-      case 'plans':
-      default:
-        return renderPlansContent();
-    }
-  };
 
   return (
     <Box
       sx={{
         p: 0,
-        backgroundColor: '#fffdf5',
+        backgroundColor: '#fff',
         minHeight: pageShellMinHeight,
         height: pageShellMinHeight,
         overflow: 'hidden',
@@ -801,20 +399,9 @@ export default function Plans() {
           scrollButtons="auto"
           sx={{
             borderBottom: '1px solid #e5e7eb',
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 600,
-              minHeight: 44,
-              py: 0.75,
-              px: 2,
-            },
-            '& .Mui-selected': {
-              color: `${colors.primary} !important`,
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: colors.primary,
-              height: 3,
-            },
+            '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 44, py: 0.75, px: 2 },
+            '& .Mui-selected': { color: `${colors.primary} !important` },
+            '& .MuiTabs-indicator': { backgroundColor: colors.primary, height: 3 },
           }}
         >
           {tabConfig.map((item) => (
@@ -822,35 +409,24 @@ export default function Plans() {
               key={item.key}
               value={item.key}
               iconPosition="start"
-              icon={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {item.icon}
-                </Box>
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {item.label}
-                </Box>
-              }
+              icon={<Box sx={{ display: 'flex', alignItems: 'center' }}>{item.icon}</Box>}
+              label={<Box sx={{ display: 'flex', alignItems: 'center' }}>{item.label}</Box>}
               sx={{ gap: 1, '& svg': { color: 'inherit' } }}
             />
           ))}
         </Tabs>
 
-        <Box
-          sx={{
-            py: 3,
-            flex: 1,
-            minHeight: 0,
-            maxHeight: pageContentMaxHeight,
-            overflow: 'auto',
-          }}
-        >
-          {renderTabContent()}
+        <Box sx={{ py: 3, flex: 1, minHeight: 0, maxHeight: pageContentMaxHeight, overflow: 'auto' }}>
+          {tab === 'history' ? <PlanTransactionHistory embedded /> : renderPlans()}
         </Box>
       </Paper>
+
+      <SupportDrawer
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        initialCategory="billing_related"
+        initialSubject={contactSubject}
+      />
     </Box>
   );
 }
-
-
