@@ -200,12 +200,66 @@ export default function Plans() {
       </Box>
 
       {/* Plan cards */}
-      <Grid container spacing={2.5} sx={{ mb: 5}}>
+      <Grid container spacing={2.5} sx={{ mb: 5 }}>
+        {/* Trial card */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Paper
+            variant="outlined"
+            sx={{
+              borderRadius: 3,
+              border: currentPlan === null ? `2px solid ${colors.primary}` : '1px solid #e0e0e0',
+              p: 2.5,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+              bgcolor: '#fff',
+              boxShadow: 'none',
+            }}
+          >
+            {currentPlan === null && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  bgcolor: colors.primary,
+                  color: '#fff',
+                  px: 1.25,
+                  py: 0.35,
+                  borderRadius: '0 10px 0 10px',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Current
+              </Box>
+            )}
+            <Typography sx={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a', mb: 0.5 }}>
+              Trial
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mb: 1.5 }}>
+              <Typography sx={{ fontSize: 38, fontWeight: 800, color: '#1a1a1a', lineHeight: 1 }}>
+                $0
+              </Typography>
+              <Typography sx={{ fontSize: 13, color: '#888' }}>/month</Typography>
+            </Box>
+            <Typography sx={{ fontSize: 13, color: '#555', flex: 1, lineHeight: 1.65 }}>
+              Get started for free with{' '}
+              <Box component="span" sx={{ color: colors.primary, fontWeight: 600 }}>
+                50 API calls / month
+              </Box>
+              , resets every month automatically.
+            </Typography>
+          </Paper>
+        </Grid>
+
         {PLAN_CARDS.map((plan) => {
           const isCurrent = currentPlan === plan.tier;
           const isPaying = payingTier === plan.tier;
           return (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={plan.tier}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={plan.tier}>
               <Paper
                 variant="outlined"
                 sx={{
@@ -289,54 +343,55 @@ export default function Plans() {
                   .
                 </Typography>
 
-                {/* Pay Monthly */}
-                <Button
-                  variant="contained"
-                  fullWidth
-                  disabled={payingTier !== null || isCurrent}
-                  onClick={() => void handleSelectPlan(plan.tier)}
-                  sx={{
-                    mb: 1,
-                    bgcolor: '#F5A623',
-                    color: '#fff',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    fontSize: 12,
-                    borderRadius: 2,
-                    boxShadow: 'none',
-                    py: 1.1,
-                    '&:hover': { bgcolor: '#e0951f', boxShadow: 'none' },
-                    '&.Mui-disabled': { bgcolor: '#F5A623', opacity: 0.55, color: '#fff' },
-                  }}
-                >
-                  {isPaying ? (
-                    <CircularProgress size={18} sx={{ color: '#fff' }} />
-                  ) : isCurrent ? (
-                    'Current Plan'
-                  ) : (
-                    `Pay Monthly — $${plan.monthlyPrice}`
-                  )}
-                </Button>
+                {!isCurrent && (
+                  <>
+                    {/* Pay Monthly */}
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      disabled={payingTier !== null}
+                      onClick={() => void handleSelectPlan(plan.tier)}
+                      sx={{
+                        mb: 1,
+                        bgcolor: '#F5A623',
+                        color: '#fff',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: 12,
+                        borderRadius: 2,
+                        boxShadow: 'none',
+                        py: 1.1,
+                        '&:hover': { bgcolor: '#e0951f', boxShadow: 'none' },
+                      }}
+                    >
+                      {isPaying ? (
+                        <CircularProgress size={18} sx={{ color: '#fff' }} />
+                      ) : (
+                        `Pay Monthly — $${plan.monthlyPrice}`
+                      )}
+                    </Button>
 
-                {/* Pay Annually */}
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  disabled={payingTier !== null || isCurrent}
-                  onClick={() => void handleSelectPlan(plan.tier)}
-                  sx={{
-                    color: '#333',
-                    borderColor: '#ccc',
-                    textTransform: 'none',
-                    fontWeight: 550,
-                    fontSize: 12,
-                    borderRadius: 2,
-                    py: 1.1,
-                    '&:hover': { borderColor: '#999', bgcolor: '#fafafa' },
-                  }}
-                >
-                  Pay Annually — ${plan.annualPrice}
-                </Button>
+                    {/* Pay Annually */}
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      disabled={payingTier !== null}
+                      onClick={() => void handleSelectPlan(plan.tier)}
+                      sx={{
+                        color: '#333',
+                        borderColor: '#ccc',
+                        textTransform: 'none',
+                        fontWeight: 550,
+                        fontSize: 12,
+                        borderRadius: 2,
+                        py: 1.1,
+                        '&:hover': { borderColor: '#999', bgcolor: '#fafafa' },
+                      }}
+                    >
+                      Pay Annually — ${plan.annualPrice}
+                    </Button>
+                  </>
+                )}
               </Paper>
             </Grid>
           );

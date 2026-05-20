@@ -27,6 +27,7 @@ import {
   Share2
 } from "lucide-react";
 import HttpsIcon from "@mui/icons-material/Https";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { ArrowLeftRight as ArrowIcon } from "lucide-react";
 import ApiDrawer from "@/components/dialogs/ApiDrawer";
@@ -478,6 +479,7 @@ export default function Sidebar() {
             >
               @Free Whatsapp API
             </Typography>
+            <OpenInNewIcon sx={{ fontSize: 14, color: "inherit", ml: "auto" }} />
           </Box>
         </Box>
       </Box>

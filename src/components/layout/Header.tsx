@@ -303,7 +303,7 @@ export default function Header() {
                     '&:hover': { backgroundColor: '#f5f5f5' },
                   }}
                 >
-                  <Box component="img" src="/assets/images/support.svg" alt="support" sx={{ width: 22, height: 22, marginTop: -1, display: 'block' }} />
+                  <Box component="img" src="/assets/images/support.png" alt="Get Help" sx={{ width: 22, height: 22, display: 'block' }} />
                 </IconButton>
               </Tooltip>
             </Box>

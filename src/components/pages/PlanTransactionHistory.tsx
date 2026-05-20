@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
-  Button,
   Chip,
   Paper,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
-import SearchIcon from '@mui/icons-material/Search';
 import dayjs from 'dayjs';
 import { accountApi, type Transaction } from '@/lib/api/account';
 import { useToast } from '@/hooks/useToast';
@@ -25,16 +22,6 @@ const MUTED = '#9CA3AF';
 const BORDER = '#e5e7eb';
 const PAGE_BG = '#F5F5F8';
 
-const fieldSx = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
-    bgcolor: '#fff',
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: BORDER },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: PRIMARY },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: PRIMARY },
-  },
-  '& .MuiInputLabel-root.Mui-focused': { color: PRIMARY },
-} as const;
 
 const panelSx = {
   border: `1px solid ${BORDER}`,
@@ -93,22 +80,10 @@ export default function PlanTransactionHistory({
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [invoiceId, setInvoiceId] = useState('');
-  const [fromDate, setFromDate] = useState(dayjs().subtract(3, 'month').format('YYYY-MM-DD'));
-  const [toDate, setToDate] = useState(dayjs().format('YYYY-MM-DD'));
-
   const loadTransactions = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Parameters<typeof accountApi.getTransactions>[0] = {
-        page: 1,
-        limit: 500,
-      };
-      if (fromDate) params.fromDate = fromDate;
-      if (toDate) params.toDate = toDate;
-      if (invoiceId.trim()) params.transactionId = invoiceId.trim();
-
-      const data = await accountApi.getTransactions(params);
+      const data = await accountApi.getTransactions({ page: 1, limit: 500 });
       const list = Array.isArray(data) ? data : data.transactions ?? [];
       setTransactions(
         list.map((row, index) => ({
@@ -126,17 +101,11 @@ export default function PlanTransactionHistory({
     } finally {
       setLoading(false);
     }
-  }, [fromDate, invoiceId, showToast, toDate]);
+  }, [showToast]);
 
   useEffect(() => {
     void loadTransactions();
-  }, []);
-
-  const handleClearFilters = () => {
-    setInvoiceId('');
-    setFromDate(dayjs().subtract(3, 'month').format('YYYY-MM-DD'));
-    setToDate(dayjs().format('YYYY-MM-DD'));
-  };
+  }, [loadTransactions]);
 
   const filteredRows = useMemo(() => transactions, [transactions]);
 
@@ -244,97 +213,9 @@ export default function PlanTransactionHistory({
       <Box
         sx={{
           ...(embedded ? { px: { xs: 3, md: 4 } } : { p: { xs: 2, md: 3 } }),
-          display: 'flex',
-          flexDirection: { xs: 'column', lg: 'row' },
-          gap: 2,
-          alignItems: 'stretch',
           ...(embedded && { flex: 1, minHeight: 0 }),
         }}
       >
-        <Paper elevation={0} sx={{ ...panelSx, flex: { lg: '0 0 300px' }, p: 0 }}>
-          <Box
-            sx={{
-              px: 2.5,
-              py: 2,
-              borderBottom: `1px solid ${BORDER}`,
-              bgcolor: 'rgba(17, 86, 166, 0.04)',
-            }}
-          >
-            <Typography sx={{ fontWeight: 700, color: NAVY, fontSize: 16 }}>
-              Filter Criteria
-            </Typography>
-          </Box>
-
-          <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="Invoice ID"
-              size="small"
-              fullWidth
-              value={invoiceId}
-              onChange={(e) => setInvoiceId(e.target.value)}
-              sx={fieldSx}
-            />
-            <TextField
-              label="Start date"
-              type="date"
-              size="small"
-              fullWidth
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={fieldSx}
-            />
-            <TextField
-              label="End date"
-              type="date"
-              size="small"
-              fullWidth
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={fieldSx}
-            />
-            <Stack spacing={1} sx={{ pt: 0.5 }}>
-              <Button
-                variant="contained"
-                fullWidth
-                disabled={loading}
-                startIcon={<SearchIcon />}
-                onClick={() => void loadTransactions()}
-                sx={{
-                  py: 1.15,
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: 15,
-                  bgcolor: PRIMARY,
-                  boxShadow: 'none',
-                  '&:hover': {
-                    bgcolor: PRIMARY,
-                    filter: 'brightness(0.94)',
-                    boxShadow: 'none',
-                  },
-                }}
-              >
-                Search
-              </Button>
-              <Button
-                variant="text"
-                fullWidth
-                onClick={handleClearFilters}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 500,
-                  color: MUTED,
-                  '&:hover': { color: PRIMARY, bgcolor: 'rgba(17, 86, 166, 0.06)' },
-                }}
-              >
-                Clear filters
-              </Button>
-            </Stack>
-          </Box>
-        </Paper>
-
         <Paper
           elevation={0}
           sx={{
