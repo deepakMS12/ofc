@@ -10,13 +10,14 @@ export const loginUser = createAsyncThunk(
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     const username = credentials.username.trim();
     const password = credentials.password;
-
+    const recaptchaToken = credentials.recaptchaToken;
 
     try {
       const response: any = await postAuthV1Login({
         username,
         password,
         force: false,
+        recaptchaToken,
       });
 
       const responseData = response?.data ?? {};

@@ -5,6 +5,7 @@ export type AuthV1LoginBody = {
   username: string;
   password: string;
   force: boolean;
+  recaptchaToken?: string;
 };
 
 

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import {
   Box,
   IconButton,
@@ -34,6 +35,8 @@ const SignInPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const validateEmailOrUsername = (value: string) => {
     const trimmed = value.trim();
@@ -60,13 +63,20 @@ const SignInPage = () => {
 
     if (nextEmailError || nextPasswordError) return;
 
+    if (!recaptchaToken) {
+      showToast("Please complete the reCAPTCHA verification.", "error");
+      return;
+    }
+
     try {
       const response = await dispatch(
-        loginUser({ username: email.trim(), password }),
+        loginUser({ username: email.trim(), password, recaptchaToken }),
       ).unwrap();
 
       if (!response?.success) {
         showToast(response?.message || "Login failed. Please try again.", "error");
+        recaptchaRef.current?.reset();
+        setRecaptchaToken(null);
         return;
       }
 
@@ -87,6 +97,8 @@ const SignInPage = () => {
           ? error
           : error?.message || "Login failed. Please try again.";
       showToast(errorMessage, "error");
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
   const hasCredentials = !!email.trim() && !!password;
@@ -149,31 +161,33 @@ const SignInPage = () => {
             }}
           />
 
-          <Box
-            sx={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "flex-end",
-              mt: -0.5,
-            }}
-          >
+          <Box sx={{ display: "flex", justifyContent: "left" }}>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+              onChange={(token) => setRecaptchaToken(token)}
+              onExpired={() => setRecaptchaToken(null)}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+             <AuthActionButton
+              type="submit"
+              isActive={hasCredentials && !!recaptchaToken}
+              isLoading={isLoading}
+              label="SIGN IN"
+              loadingLabel="SIGNING IN…"
+            />
             <Link
               component={RouterLink}
               to="/forgot-password"
               underline="none"
-              sx={{ fontSize: 12, color: BRAND_GREEN, fontWeight: 600 }}
+              sx={{ fontSize: 12, color: BRAND_GREEN, fontWeight: 600, whiteSpace: "nowrap" }}
             >
               Forgot password?
             </Link>
+           
           </Box>
-
-          <AuthActionButton
-            type="submit"
-            isActive={hasCredentials}
-            isLoading={isLoading}
-            label="SIGN IN"
-            loadingLabel="SIGNING IN…"
-          />
         </Stack>
 
         <Typography

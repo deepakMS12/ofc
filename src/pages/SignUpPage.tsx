@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import {
   Box,
   Button,
@@ -36,7 +37,9 @@ const SignUpPage = () => {
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const canContinue = !!email.trim() && !!name.trim() && !!password && termsChecked;
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const canContinue = !!email.trim() && !!name.trim() && !!password && termsChecked && !!recaptchaToken;
 
   const validateEmail = (value: string) => {
     const trimmed = value.trim();
@@ -131,7 +134,7 @@ const SignUpPage = () => {
           <Stack component="form" spacing={2.8} onSubmit={handleSubmit}>
             <Button
               variant="text"
-              onClick={() => navigate("/signin")}
+              onClick={() => navigate("/login")}
               sx={{
                 mt: 2,
                 alignSelf: "flex-start",
@@ -253,6 +256,13 @@ const SignUpPage = () => {
                   </Box>
                 </Typography>
               }
+            />
+
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+              onChange={(token) => setRecaptchaToken(token)}
+              onExpired={() => setRecaptchaToken(null)}
             />
 
             <AuthActionButton

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthSplitLayout, BRAND_GREEN } from "../components/auth/AuthUi";
@@ -8,7 +9,9 @@ const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const canContinue = !!email.trim();
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const canContinue = !!email.trim() && !!recaptchaToken;
 
   const handleSubmit = (event:any) => {
     event.preventDefault();
@@ -24,14 +27,14 @@ const ForgotPasswordPage = () => {
 
         <TextField
           required
-          placeholder="Email/username *"
+          placeholder="Email/ Username *"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           autoComplete="email"
           size="small"
         />
         <Typography sx={{ color: "#475569", fontSize: 15, maxWidth: 440 }}>
-          Enter your email/username address and we will send you instructions to reset your password.
+          Enter your email / username address and we will send you instructions to reset your password.
         </Typography>
         {sent ? (
           <Typography sx={{ color: BRAND_GREEN, fontWeight: 700 }}>
@@ -39,10 +42,17 @@ const ForgotPasswordPage = () => {
           </Typography>
         ) : null}
 
-        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+        <ReCAPTCHA
+          ref={recaptchaRef}
+          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+          onChange={(token) => setRecaptchaToken(token)}
+          onExpired={() => setRecaptchaToken(null)}
+        />
+
+        <Stack direction="row" spacing={2}>
           <Button
             variant="outlined"
-            onClick={() => navigate("/signin")}
+            onClick={() => navigate("/login")}
             sx={{ borderColor: "#9ca3af", color: BRAND_GREEN, minWidth: 120 }}
           >
             CANCEL
