@@ -1,7 +1,12 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
-import { ErrorBoundary, ProtectedRoute, ScrollToTop } from '@/components/common';
+import {
+  ErrorBoundary,
+  OfflineStatusModal,
+  ProtectedRoute,
+  ScrollToTop,
+} from '@/components/common';
 import HomeLayout from '@/pages/HomeLayout';
 import TermsPage from '@/pages/TermsPage';
 import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
@@ -33,6 +38,7 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <ErrorBoundary>
+          <OfflineStatusModal />
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<SignInPage />} />

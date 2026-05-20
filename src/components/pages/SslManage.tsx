@@ -1284,7 +1284,7 @@ function SslManageDashboard({
     <Box
       sx={{
         width: "100%",
-        minHeight: "calc(100vh - 64px)",
+        minHeight: "calc(100vh - 80px)",
         bgcolor: colors.secondary,
         display: "flex",
         flexDirection: "column",

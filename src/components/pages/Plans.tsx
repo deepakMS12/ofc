@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Divider,
   Grid,
   Paper,
   Tab,
@@ -164,7 +163,28 @@ export default function Plans() {
   })();
 
   const renderPlans = () => (
-    <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: 1 }}>
+    <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: 0 }}>
+            <Box sx={{ textAlign: 'left', py: 1.5 }}>
+        <Typography sx={{ fontSize: 13, color: '#555', lineHeight: 1.8 }}>
+        Need unlimited API requests? We also offer custom{' '}
+          <Box
+            component="span"
+            onClick={() => openContact('Enterprise plan')}
+            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Enterprise plan
+          </Box>{' '}
+          for unlimited API requests, 
+          Dedicated server and more —{' '}
+          <Box
+            component="span"
+            onClick={() => openContact('Request Quote')}
+            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Request Quote
+          </Box>
+        </Typography>
+      </Box>
       {/* Page header */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 0.4 }}>
@@ -398,29 +418,7 @@ export default function Plans() {
         })}
       </Grid>
 
-      {/* Enterprise footer */}
-      <Divider sx={{  borderColor: '#e8e8e8' }} />
-      <Box sx={{ textAlign: 'left', py: 1.5 }}>
-        <Typography sx={{ fontSize: 13, color: '#555', lineHeight: 1.8 }}>
-        Need unlimited API requests? We also offer custom{' '}
-          <Box
-            component="span"
-            onClick={() => openContact('Enterprise plan')}
-            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-          >
-            Enterprise plan
-          </Box>{' '}
-          for unlimited API requests, 
-          Dedicated server and more —{' '}
-          <Box
-            component="span"
-            onClick={() => openContact('Request Quote')}
-            sx={{ color: colors.primary, fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-          >
-            Request Quote
-          </Box>
-        </Typography>
-      </Box>
+
     </Box>
   );
 
@@ -471,7 +469,7 @@ export default function Plans() {
           ))}
         </Tabs>
 
-        <Box sx={{ py: 3, flex: 1, minHeight: 0, maxHeight: pageContentMaxHeight, overflow: 'auto' }}>
+        <Box sx={{ py: 1, flex: 1, minHeight: 0, maxHeight: pageContentMaxHeight, overflow: 'auto' }}>
           {tab === 'history' ? <PlanTransactionHistory embedded /> : renderPlans()}
         </Box>
       </Paper>
