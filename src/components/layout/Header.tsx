@@ -203,7 +203,6 @@ export default function Header() {
                 border: '1px solid',
                 borderColor: 'hsla(215, 15%, 88%, 0.95)',
                 backgroundColor: 'hsla(215, 15%, 97%, 0.9)',
-                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 color: '#64748b',
