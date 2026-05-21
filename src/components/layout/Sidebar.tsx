@@ -411,7 +411,7 @@ export default function Sidebar() {
                   <ListItemButton
                     key={link.slug}
                     onClick={() => setApiDrawerOpen(true)}
-                    sx={navItemSx(false)}
+                    sx={{ ...navItemSx(false), display: { xs: 'none', md: 'flex' } }}
                   >
                     <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
                       {renderNavIcon(link, false)}

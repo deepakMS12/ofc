@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Collapse,
   Divider,
   Drawer,
   FormControlLabel,
@@ -18,7 +19,10 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useLocation, useNavigate } from "react-router-dom";
 import HttpsIcon from "@mui/icons-material/Https";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
@@ -262,7 +266,7 @@ function StatusDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
-      PaperProps={{ sx: { width: "75%", maxWidth: "90vw" } }}
+      PaperProps={{ sx: { width: { xs: '100%', sm: '75%' }, maxWidth: { xs: '100%', sm: '90vw' } } }}
     >
       <Box sx={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <Box
@@ -1030,7 +1034,7 @@ function KeyMatcherPanel() {
   );
 }
 
-/* ── Left Nav ── */
+/* ── Left Nav (desktop sidebar + mobile collapsable dropdown) ── */
 function SslLeftNav({
   activeTool,
   onOpenTool,
@@ -1038,6 +1042,85 @@ function SslLeftNav({
   activeTool: string | null;
   onOpenTool: (tool: string) => void;
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navList = (
+    <List disablePadding>
+      {TOOL_NAV.map((item) => {
+        const isActive = activeTool === item.hash;
+        return (
+          <ListItemButton
+            key={item.hash}
+            onClick={() => {
+              onOpenTool(item.hash);
+              if (isMobile) setMobileOpen(false);
+            }}
+            sx={{
+              px: 2,
+              py: 1,
+              bgcolor: isActive ? "#e8f0fc" : "transparent",
+              "&:hover": { bgcolor: isActive ? "#e8f0fc" : "#f5f5f5" },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <ArrowBigRight
+                size={16}
+                color={isActive ? colors.primary : "#bbb"}
+                fill={isActive ? colors.primary : "none"}
+              />
+            </ListItemIcon>
+            <ListItemText
+              primary={item.label}
+              slotProps={{
+                primary: {
+                  sx: {
+                    fontSize: 14,
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? colors.primary : "#444",
+                  },
+                },
+              }}
+            />
+          </ListItemButton>
+        );
+      })}
+    </List>
+  );
+
+  if (isMobile) {
+    return (
+      <Box sx={{ width: "100%", bgcolor: "#fff", borderBottom: "1px solid #e0e0e0" }}>
+        <Box
+          onClick={() => setMobileOpen((prev) => !prev)}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1.5,
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#555", letterSpacing: "0.08em" }}>
+            SSL TOOLS
+          </Typography>
+          <ExpandMoreIcon
+            sx={{
+              fontSize: 20,
+              color: "#888",
+              transform: mobileOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s",
+            }}
+          />
+        </Box>
+        <Collapse in={mobileOpen}>{navList}</Collapse>
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -1055,43 +1138,7 @@ function SslLeftNav({
       <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#aaa", letterSpacing: "0.08em", px: 2, mb: 0.5 }}>
         SSL TOOLS
       </Typography>
-      <List disablePadding>
-        {TOOL_NAV.map((item) => {
-          const isActive = activeTool === item.hash;
-          return (
-            <ListItemButton
-              key={item.hash}
-              onClick={() => onOpenTool(item.hash)}
-              sx={{
-                px: 2,
-                py: 1,
-                bgcolor: isActive ? "#e8f0fc" : "transparent",
-                "&:hover": { bgcolor: isActive ? "#e8f0fc" : "#f5f5f5" },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 28 }}>
-                <ArrowBigRight
-                  size={16}
-                  color={isActive ? colors.primary : "#bbb"}
-                  fill={isActive ? colors.primary : "none"}
-                />
-              </ListItemIcon>
-              <ListItemText
-                primary={item.label}
-                slotProps={{
-                  primary: {
-                    sx: {
-                      fontSize: 14,
-                      fontWeight: isActive ? 700 : 500,
-                      color: isActive ? colors.primary : "#444",
-                    },
-                  },
-                }}
-              />
-            </ListItemButton>
-          );
-        })}
-      </List>
+      {navList}
     </Box>
   );
 }
@@ -1116,7 +1163,7 @@ function SslToolDrawer({
       anchor="right"
       open={activeTool !== null}
       onClose={onClose}
-      PaperProps={{ sx: { width: "75%", maxWidth: "90vw" } }}
+      PaperProps={{ sx: { width: { xs: '100%', sm: '75%' }, maxWidth: { xs: '100%', sm: '90vw' } } }}
     >
       <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2, borderBottom: "1px solid #e0e0e0", bgcolor: "#f5f5f5" }}>
@@ -1209,10 +1256,11 @@ function SslHeroIntro({ onNext }: { onNext: () => void }) {
 
         <Box
           sx={{
-            flex: { xs: "none", lg: 1.1 },
-            width: { xs: "100%", lg: "auto" },
-            maxWidth: { xs: 520, lg: "none" },
-            mx: { xs: "auto", lg: 0 },
+            display: { xs: "none", lg: "block" },
+            flex: { lg: 1.1 },
+            width: { lg: "auto" },
+            maxWidth: { lg: "none" },
+            mx: { lg: 0 },
           }}
         >
           <Box
@@ -1292,6 +1340,7 @@ function SslManageDashboard({
     >
       <Box
         sx={{
+          display: { xs: "none", md: "block" },
           position: "relative",
           color: "#fff",
           background: `${SSL_HEADER_BG} url(${SSL_HEADER_IMAGE}) 100% / 1200px`,
@@ -1337,6 +1386,7 @@ function SslManageDashboard({
         sx={{
           flex: 1,
           display: "flex",
+          flexDirection: { xs: "column", md: "row" },
           alignItems: "flex-start",
           bgcolor: colors.secondary,
         }}

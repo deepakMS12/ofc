@@ -122,7 +122,7 @@ export default function SupportDrawer({ open, onClose, initialCategory, initialS
       anchor="right"
       open={open}
       onClose={handleClose}
-      PaperProps={{ sx: { width: '35%' } }}
+      PaperProps={{ sx: { width: { xs: '100%', sm: '35%' } } }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         <Box

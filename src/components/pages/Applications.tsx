@@ -60,6 +60,7 @@ export default function Applications() {
           startIcon={<LinkIcon size={15} />}
           onClick={() => navigate("/home/marketplace")}
           sx={{
+            display: { xs: 'none', sm: 'flex' },
             bgcolor: "#F5A623",
             color: "#fff",
             textTransform: "none",
