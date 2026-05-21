@@ -94,7 +94,7 @@ export default function Applications() {
               }}
             >
               <CardActionArea
-                sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}
+                sx={{ p: 2, display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 1.5 }}
               >
                 <Avatar
                   sx={{
