@@ -252,6 +252,28 @@ function ConverterSearchDialogShell({ children }: { children: ReactNode }) {
     return map;
   }, []);
 
+  const openConverter = useCallback(
+    (converter: (typeof converterSections)[number]["converters"][number]) => {
+      saveRecentSearch(converter.title);
+      setSearchOpen(false);
+      setQuery("");
+      navigate(`/home/doc-forge/${converter.slug}`);
+    },
+    [navigate],
+  );
+
+  const openRecentSearch = useCallback(
+    (item: string) => {
+      const matchedConverter = converterByTitle.get(item.toLowerCase());
+      if (matchedConverter) {
+        openConverter(matchedConverter);
+        return;
+      }
+      setQuery(item);
+    },
+    [converterByTitle, openConverter],
+  );
+
   const contextValue = useMemo<ConverterSearchContextValue>(
     () => ({
       query,
@@ -426,7 +448,7 @@ function ConverterSearchDialogShell({ children }: { children: ReactNode }) {
                         <Paper
                           key={`recent-${item}`}
                           elevation={0}
-                          onClick={() => setQuery(item)}
+                          onClick={() => openRecentSearch(item)}
                           sx={searchResultCardSx}
                         >
                           <SearchResultIcon Icon={RecentIcon} />
@@ -489,11 +511,7 @@ function ConverterSearchDialogShell({ children }: { children: ReactNode }) {
                           <Paper
                             key={converter.slug}
                             elevation={0}
-                            onClick={() => {
-                              saveRecentSearch(converter.title);
-                              closeSearchModal();
-                              navigate(`/home/doc-forge/${converter.slug}`);
-                            }}
+                            onClick={() => openConverter(converter)}
                             sx={searchResultCardSx}
                           >
                             <SearchResultIcon Icon={ConverterIcon} />
