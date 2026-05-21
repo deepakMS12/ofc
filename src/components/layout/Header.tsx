@@ -182,6 +182,27 @@ export default function Header() {
               </Box>
             </Tooltip>
 
+            <Tooltip title="Search converters">
+              <IconButton
+                onClick={triggerConverterSearch}
+                aria-label="Search converters"
+                sx={{
+                  display: { xs: 'inline-flex', md: 'none' },
+                  color: '#64748b',
+                  border: '1px solid',
+                  borderColor: 'hsla(215, 15%, 88%, 0.95)',
+                  borderRadius: '8px',
+                  backgroundColor: 'hsla(215, 15%, 97%, 0.9)',
+                  '&:hover': {
+                    backgroundColor: '#fff',
+                    borderColor: '#60a5fa',
+                  },
+                }}
+              >
+                <SearchIcon sx={{ fontSize: 20, color: '#2563eb' }} />
+              </IconButton>
+            </Tooltip>
+
             <Box
               role="button"
               tabIndex={0}
@@ -194,8 +215,8 @@ export default function Header() {
                 }
               }}
               sx={{
-                display: 'none',
-                margin: '0 0 0 50px',
+                display: { xs: 'none', md: 'flex' },
+                ml: { md: 2, lg: 4 },
                 height: 40,
                 minWidth: 280,
                 px: 1.25,
