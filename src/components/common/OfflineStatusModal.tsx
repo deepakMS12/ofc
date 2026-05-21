@@ -1,29 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Dialog,
   DialogContent,
   Box,
   Typography,
-  Button,
-  CircularProgress,
 } from "@mui/material";
-
-import { useToast } from "@/hooks/useToast";
-import offlineIcon from "../../../public/offline.png"
-
+import netLostImg from "../../../public/assets/images/net-lost.jpg";
 
 const APP_TITLE = "OFC";
 const DEFAULT_FAVICON = "/assets/assets/images/icon/favicon/favicon.ico";
 const OFFLINE_FAVICON = "/offline.png";
-
-const formatTime = (seconds: number) => {
-  const hours = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return `${hours.toString().padStart(2, "0")}:${mins
-    .toString()
-    .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-};
+const RETRY_INTERVAL = 5;
 
 const updateFavicon = (iconPath: string) => {
   const existingLinks = document.querySelectorAll("link[rel*='icon']");
@@ -52,30 +39,29 @@ const resetFavicon = () => {
   document.getElementsByTagName("head")[0].appendChild(link);
 };
 
-/**
- * Full-screen offline notice when the browser reports no network.
- * UI matches the legacy TMS modal; logic is adapted for this app (no status API).
- */
 const OfflineStatusModal: React.FC = () => {
   const [open, setOpen] = useState(() =>
     typeof navigator !== "undefined" ? !navigator.onLine : false,
   );
-  const [offlineSessionStart, setOfflineSessionStart] = useState<number | null>(
-    null,
-  );
-  const [timeElapsed, setTimeElapsed] = useState(0);
-  const { showToast } = useToast();
-  const isLoading = false;
+  const [retryCountdown, setRetryCountdown] = useState(RETRY_INTERVAL);
+  const countdownRef = useRef(RETRY_INTERVAL);
+
+  const goOnline = useCallback(() => {
+    setOpen(false);
+    setRetryCountdown(RETRY_INTERVAL);
+    countdownRef.current = RETRY_INTERVAL;
+    document.title = APP_TITLE;
+    resetFavicon();
+  }, []);
 
   const syncNavigatorOffline = useCallback(() => {
     const offline = !navigator.onLine;
-    setOpen(offline);
-    if (offline) {
-      setOfflineSessionStart((prev) => (prev === null ? Date.now() : prev));
+    if (!offline) {
+      goOnline();
     } else {
-      setOfflineSessionStart(null);
+      setOpen(true);
     }
-  }, []);
+  }, [goOnline]);
 
   useEffect(() => {
     syncNavigatorOffline();
@@ -88,53 +74,27 @@ const OfflineStatusModal: React.FC = () => {
   }, [syncNavigatorOffline]);
 
   useEffect(() => {
-    if (!open || offlineSessionStart === null) return;
+    if (!open) return;
 
-    const startTimestamp = offlineSessionStart;
-
-    const getElapsedTime = () =>
-      Math.max(Math.floor((Date.now() - startTimestamp) / 1000), 0);
-
-    setTimeElapsed(getElapsedTime());
+    document.title = `Offline - ${APP_TITLE}`;
+    updateFavicon(OFFLINE_FAVICON);
 
     const interval = setInterval(() => {
-      setTimeElapsed(getElapsedTime());
+      countdownRef.current -= 1;
+      setRetryCountdown(countdownRef.current);
+
+      if (countdownRef.current <= 0) {
+        if (navigator.onLine) {
+          goOnline();
+        } else {
+          countdownRef.current = RETRY_INTERVAL;
+          setRetryCountdown(RETRY_INTERVAL);
+        }
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [open, offlineSessionStart]);
-
-  useEffect(() => {
-    if (open) {
-      document.title = `Offline - ${APP_TITLE}`;
-      updateFavicon(OFFLINE_FAVICON);
-    } else {
-      document.title = APP_TITLE;
-      resetFavicon();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (open) {
-      document.title = `${formatTime(timeElapsed)}`;
-    }
-  }, [timeElapsed, open]);
-
-  const handleResumeClick = () => {
-    if (!navigator.onLine) {
-      showToast(
-        "You are still offline. Check your connection and try again.",
-        "error",
-      );
-      return;
-    }
-
-    setOpen(false);
-    setOfflineSessionStart(null);
-    setTimeElapsed(0);
-    document.title = APP_TITLE;
-    resetFavicon();
-  };
+  }, [open, goOnline]);
 
   return (
     <Dialog
@@ -158,85 +118,31 @@ const OfflineStatusModal: React.FC = () => {
         },
       }}
     >
-      <DialogContent
-        sx={{
-          p: 3,
-          position: "relative",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-   
-          <img  src={offlineIcon} style={{width:72, height: 72, objectFit: "contain", marginRight:15 }}  />
+      <DialogContent sx={{ p: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box
+            component="img"
+            src={netLostImg}
+            alt="No internet connection"
+            sx={{ width: 90, height: 90, objectFit: "contain", flexShrink: 0 }}
+          />
 
           <Box>
-            <Typography
-              variant="h5"
-              sx={{
-                color: "#000",
-                fontWeight: 600,
-                mb: 1,
-              }}
-            >
-              You're offline
+            <Typography variant="h5" sx={{ color: "#000", fontWeight: 600, mb: 0.75 }}>
+              Internet Connection Lost
+            </Typography>
+
+            <Typography variant="body2" sx={{ color: "#666", lineHeight: 1.5, mb: 1.25 }}>
+              Please check your network connection. We'll automatically retry.
             </Typography>
 
             <Typography
               variant="body2"
-              sx={{
-                color: "#666",
-                lineHeight: 1.4,
-                mb: 1,
-              }}
+              sx={{ color: "#f44336", fontWeight: 600, fontFamily: "monospace", fontSize: "0.875rem" }}
             >
-              Document conversions, uploads, and API requests are paused until
-              your internet connection is restored.
-            </Typography>
-
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#f44336",
-                fontWeight: 600,
-                fontFamily: "monospace",
-              }}
-            >
-              Offline for: {formatTime(timeElapsed)}
+              Retrying in {retryCountdown}s...
             </Typography>
           </Box>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleResumeClick}
-            sx={{
-              backgroundColor: "#ff9800",
-              color: "#fff",
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              textTransform: "none",
-              fontSize: "0.9rem",
-              fontWeight: 500,
-              "&:hover": {
-                backgroundColor: "#f57c00",
-              },
-            }}
-            disabled={isLoading}
-          >
-            {isLoading ? <CircularProgress size={22} /> : "Resume"}
-          </Button>
         </Box>
       </DialogContent>
     </Dialog>
