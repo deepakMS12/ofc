@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { Outlet, useMatch } from "react-router-dom";
-import { Box } from "@mui/material";
+import { Outlet, useLocation, useMatch } from "react-router-dom";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { Header, Sidebar, Footer } from "@/components/layout";
 import { ConverterSearchProvider } from "@/contexts/ConverterSearchContext";
 import {
@@ -14,11 +14,24 @@ import { colors } from "@/utils/customColor";
 
 function HomeLayoutContent() {
   const dispatch = useAppDispatch();
-  const { sidebarWidth } = useSidebar();
+  const { sidebarWidth, isCollapsed, closeSidebar } = useSidebar();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { pathname } = useLocation();
 
   useEffect(() => {
     void dispatch(fetchUserProfile());
   }, [dispatch]);
+
+  // Close sidebar on mobile when navigating
+  useEffect(() => {
+    if (isMobile) closeSidebar();
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Force-close sidebar on initial mobile load
+  useEffect(() => {
+    if (isMobile) closeSidebar();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isConverterToolRoute = Boolean(useMatch("/home/doc-forge/:slug"));
   const isConverterRoute = Boolean(useMatch("/home/doc-forge"));
@@ -42,13 +55,28 @@ function HomeLayoutContent() {
         >
           <Sidebar />
           <Header />
+
+          {/* Mobile backdrop — tap outside sidebar to close */}
+          {isMobile && !isCollapsed && (
+            <Box
+              onClick={closeSidebar}
+              sx={{
+                position: "fixed",
+                inset: 0,
+                bgcolor: "rgba(0,0,0,0.45)",
+                backdropFilter: "blur(2px)",
+                zIndex: 1299,
+              }}
+            />
+          )}
+
           <Box
             sx={{
               display: "flex",
               flexDirection: "column",
               flex: 1,
               minWidth: 0,
-              ml: `${sidebarWidth}px`,
+              ml: { xs: 0, md: `${sidebarWidth}px` },
               pt: LAYOUT_HEADER_OFFSET,
               transition: `margin-left ${SIDEBAR_TRANSITION}`,
               ...(footerVisible
@@ -70,7 +98,11 @@ function HomeLayoutContent() {
               >
                 <Outlet />
               </Box>
-              {footerVisible ? <Footer /> : null}
+              {footerVisible ? (
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                  <Footer />
+                </Box>
+              ) : null}
           </Box>
         </Box>
   );

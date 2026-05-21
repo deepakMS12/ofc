@@ -1,5 +1,5 @@
 
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, useMediaQuery, useTheme } from "@mui/material";
 import DashboardCard from "../resuable/DashboardCard";
 import DashboardSparkLine from "../resuable/DashboardSparkLine";
 import DashboardGauge from "../resuable/DashboardGauge";
@@ -17,6 +17,9 @@ const trendFromPercent = (pct:any) => {
 };
 
 const Dashboard = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const amount = 1700;
   const changePercent:any = 5;
 
@@ -41,7 +44,7 @@ const Dashboard = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr 1fr",
+          gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "1fr 1fr 1fr 1fr",
           gap: "16px",
         }}
       >
@@ -182,7 +185,7 @@ const Dashboard = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 335px",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 335px",
           gap: "16px",
         }}
       >

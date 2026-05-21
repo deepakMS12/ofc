@@ -100,12 +100,12 @@ export default function Header() {
           borderBottom: `4px solid ${colors.primary}`,
           height: '4.625rem',
           zIndex: 1200,
-          left: `${sidebarWidth}px`,
-          width: `calc(100% - ${sidebarWidth}px)`,
+          left: { xs: 0, md: `${sidebarWidth}px` },
+          width: { xs: '100%', md: `calc(100% - ${sidebarWidth}px)` },
           transition: `left ${SIDEBAR_TRANSITION}, width ${SIDEBAR_TRANSITION}`,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between', px: 3 }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1.5, md: 3 } }}>
           <Box
             sx={{
               display: 'flex',
@@ -155,7 +155,7 @@ export default function Header() {
             >
               <Box
                 sx={{
-                  display: 'flex',
+                  display: { xs: 'none', sm: 'flex' },
                   flexDirection: 'column',
                   gap: 0.4,
                   flexShrink: 0,
@@ -194,6 +194,7 @@ export default function Header() {
                 }
               }}
               sx={{
+                display: 'none',
                 margin: '0 0 0 50px',
                 height: 40,
                 minWidth: 280,
@@ -202,7 +203,6 @@ export default function Header() {
                 border: '1px solid',
                 borderColor: 'hsla(215, 15%, 88%, 0.95)',
                 backgroundColor: 'hsla(215, 15%, 97%, 0.9)',
-                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 color: '#64748b',
@@ -275,17 +275,16 @@ export default function Header() {
           </Box>
 
           {/* Right Side - Notifications */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, ml: 'auto' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mr: { xs: 0, sm: 3, md: 3 } }}>
-              {/* Notifications Bell */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 }, ml: 'auto' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 }, mr: { xs: 0, sm: 2, md: 3 } }}>
+              {/* Notifications Bell — hidden on mobile */}
               <Tooltip title="Notifications">
                 <IconButton
                   onClick={() => setNotificationsOpen(true)}
                   sx={{
+                    display: { xs: 'none', sm: 'flex' },
                     color: '#666',
-                    '&:hover': {
-                      backgroundColor: '#f5f5f5',
-                    },
+                    '&:hover': { backgroundColor: '#f5f5f5' },
                   }}
                 >
                   <Badge badgeContent={notificationCount} color="error">
@@ -294,11 +293,12 @@ export default function Header() {
                 </IconButton>
               </Tooltip>
 
-              {/* Support */}
+              {/* Support — hidden on mobile */}
               <Tooltip title="Support">
                 <IconButton
                   onClick={() => setSupportOpen(true)}
                   sx={{
+                    display: { xs: 'none', sm: 'flex' },
                     color: '#666',
                     '&:hover': { backgroundColor: '#f5f5f5' },
                   }}
@@ -307,7 +307,7 @@ export default function Header() {
                 </IconButton>
               </Tooltip>
             </Box>
-            <Divider orientation="vertical" flexItem />
+            <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'flex' } }} />
 
             {/* Logout Button */}
             <Tooltip title="Logout">
@@ -315,7 +315,7 @@ export default function Header() {
                 onClick={() => setLogoutConfirmOpen(true)}
                 sx={{
                   color: '#666',
-                  ml: { xs: 0, sm: 3, md: 3 },
+                  ml: { xs: 0, sm: 2, md: 3 },
                   '&:hover': {
                     backgroundColor: '#f5f5f5',
                     color: '#d32f2f',

@@ -136,8 +136,8 @@ export default function NotificationsDrawer({ open, onClose, onNotificationCount
             onClose={onClose}
             PaperProps={{
                 sx: {
-                    width: '45%',
-                    maxWidth: '90vw',
+                    width: { xs: '100%', sm: '45%' },
+                    maxWidth: { xs: '100%', sm: '90vw' },
                 },
             }}
         >

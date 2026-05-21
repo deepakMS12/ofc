@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTheme, useMediaQuery } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -92,6 +93,8 @@ export default function SettingsPage() {
   const dispatch = useAppDispatch();
   const userProfile = useAppSelector((state) => state.user.profile);
   const { showToast } = useToast();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [tab, setTab] = useState<SettingsTab>(getInitialTabFromHash);
   const [emailEditable, setEmailEditable] = useState(false);
   const [emailInput, setEmailInput] = useState("");
@@ -147,6 +150,12 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    if (isMobile && (tab === "activity" || tab === "personal")) {
+      setTab("password");
+    }
+  }, [isMobile, tab]);
 
   useEffect(() => {
     if (!pendingEmail) {
@@ -238,7 +247,7 @@ export default function SettingsPage() {
       </Box>
 
       <Box sx={{ textAlign: "left", mb: 3 }}>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2, alignItems: { xs: "stretch", sm: "center" } }}>
           <TextField
             fullWidth
             variant="outlined"
@@ -269,8 +278,7 @@ export default function SettingsPage() {
                 textTransform: "none",
                 fontWeight: 600,
                 px: 2.5,
-
-                minWidth: 150,
+                minWidth: { xs: "100%", sm: 150 },
                 "&:hover": { backgroundColor: "#08855d" },
               }}
             >
@@ -284,6 +292,7 @@ export default function SettingsPage() {
                 color: "#a15c00",
                 fontWeight: 600,
                 px: 2,
+                alignSelf: { xs: "flex-start", sm: "center" },
               }}
             />
           ) : (
@@ -294,6 +303,7 @@ export default function SettingsPage() {
                 color: "white",
                 fontWeight: 600,
                 px: 2,
+                alignSelf: { xs: "flex-start", sm: "center" },
               }}
             />
           )}
@@ -504,12 +514,12 @@ export default function SettingsPage() {
             : "";
 
     return (
-      <Box sx={{ px: { xs: 3, md: 4 } }}>
+      <Box sx={{ px: { xs: 2, md: 4 } }}>
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 8,
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gap: { xs: 3, md: 8 },
           }}
         >
           <Paper elevation={0}>
@@ -622,6 +632,7 @@ export default function SettingsPage() {
           <Paper
             elevation={0}
             sx={{
+              display: { xs: "none", md: "block" },
               p: 3,
               flex: 1,
               border: "1px solid #d7e3ff",
@@ -711,7 +722,7 @@ export default function SettingsPage() {
         <Typography sx={{ mb: 1, color: "#d32f2f", fontWeight: 500 }}>
           Confirm with your password to delete the account.
         </Typography>
-        <Box sx={{ display: "flex", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2 }}>
           <TextField
             type="password"
             fullWidth
@@ -721,7 +732,7 @@ export default function SettingsPage() {
             disabled={!allWarningsAcknowledged || deleteLoading}
             inputRef={deletePasswordRef}
             sx={{
-              maxWidth: 400,
+              maxWidth: { xs: "100%", sm: 400 },
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "#fff",
               },
@@ -739,6 +750,7 @@ export default function SettingsPage() {
               fontWeight: 600,
               letterSpacing: 1,
               px: 5,
+              alignSelf: { xs: "stretch", sm: "center" },
               "&:hover": { backgroundColor: "#d64939" },
             }}
           >
@@ -1022,7 +1034,10 @@ export default function SettingsPage() {
               sx={{
                 gap: 1,
                 "& svg": { color: "inherit" },
-                ...(item.key === "delete"
+                ...(item.key === "activity" || item.key === "personal"
+                  ? { display: { xs: "none", md: "flex" } }
+                  : {}),
+              ...(item.key === "delete"
                   ? {
                       ml: { xs: 0, md: "auto" },
                       color: "#c62828",

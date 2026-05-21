@@ -60,6 +60,7 @@ export default function Applications() {
           startIcon={<LinkIcon size={15} />}
           onClick={() => navigate("/home/marketplace")}
           sx={{
+            display: { xs: 'none', sm: 'flex' },
             bgcolor: "#F5A623",
             color: "#fff",
             textTransform: "none",
@@ -94,7 +95,7 @@ export default function Applications() {
               }}
             >
               <CardActionArea
-                sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}
+                sx={{ p: 2, display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 1.5 }}
               >
                 <Avatar
                   sx={{

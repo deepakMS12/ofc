@@ -122,7 +122,7 @@ export default function SupportDrawer({ open, onClose, initialCategory, initialS
       anchor="right"
       open={open}
       onClose={handleClose}
-      PaperProps={{ sx: { width: '35%' } }}
+      PaperProps={{ sx: { width: { xs: '100%', sm: '35%' } } }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         <Box
@@ -146,9 +146,8 @@ export default function SupportDrawer({ open, onClose, initialCategory, initialS
           </IconButton>
         </Box>
 
-        <Box sx={{ flex: 1, overflow: 'auto', p: 3, backgroundColor: '#fafafa' }}>
-          <Box sx={{ p: 4, border: '1px solid #e0e0e0', borderRadius: 2, bgcolor: 'white' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <Box sx={{ flex: 1, overflow: 'auto', p: 5, backgroundColor: '#fafafa' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
               <FormControl fullWidth disabled={isLocked}>
                 <InputLabel id="support-category-label">Category</InputLabel>
                 <Select
@@ -303,7 +302,6 @@ export default function SupportDrawer({ open, onClose, initialCategory, initialS
                 'Submit Ticket'
               )}
             </Button>
-          </Box>
         </Box>
       </Box>
     </Drawer>

@@ -172,8 +172,8 @@ export default function ApiDrawer({ open, onClose }: ApiDrawerProps) {
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: "75%",
-          maxWidth: "90vw",
+          width: { xs: '100%', sm: '75%' },
+          maxWidth: { xs: '100%', sm: '90vw' },
         },
       }}
     >
