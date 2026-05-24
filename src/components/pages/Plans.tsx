@@ -27,7 +27,7 @@ const TIERS: PlanTier[] = ['bronze', 'silver', 'gold', 'enterprise'];
 const PLAN_CARDS = [
   {
     tier: 'bronze' as PlanTier,
-    name: 'Personal',
+    name: 'Bronze',
     monthlyPrice: 10,
     annualPrice: 85,
     description: 'Standard Kit — includes core features and',
@@ -36,7 +36,7 @@ const PLAN_CARDS = [
   },
   {
     tier: 'silver' as PlanTier,
-    name: 'Professional',
+    name: 'Silver',
     monthlyPrice: 25,
     annualPrice: 240,
     description: 'Startup Plan — higher volume to build your MVPs. up to',
@@ -45,7 +45,7 @@ const PLAN_CARDS = [
   },
   {
     tier: 'gold' as PlanTier,
-    name: 'Business',
+    name: 'Gold',
     monthlyPrice: 50,
     annualPrice: 480,
     description: 'Smart Option — complete suite of advanced features and',
