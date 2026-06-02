@@ -6,4 +6,5 @@ export { default as Plans } from './Plans';
 export { default as SslManage } from './SslManage';
 export { default as Marketplace } from './Marketplace';
 export { default as Applications } from './Applications';
+export { NewsletterLayout } from './newsletter';
 

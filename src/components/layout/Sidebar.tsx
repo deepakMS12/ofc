@@ -22,6 +22,7 @@ import {
   CodeXml,
   LayoutDashboard,
   LogOut,
+  Mail,
   Plus,
   Settings,
   Share2
@@ -49,6 +50,7 @@ const navLinks = [
   { slug: "marketplace", label: "Marketplace", icon: BoxIcon, lucide: true },
   { slug: "ssl-manage", label: "SSL Manage", icon: HttpsIcon, mui: true },
   { slug: "doc-forge", label: "Doc forge", icon: ArrowIcon, lucide: true },
+  { slug: "newsletter", label: "Newsletter", icon: Mail, lucide: true },
 ];
 
 const bottomLinks = [
