@@ -18,6 +18,7 @@ import {
 import { Plus, Edit2, Trash2, Copy } from "lucide-react";
 import { useState } from "react";
 import { colors } from "@/utils/customColor";
+import SelectionToolbar from "../SelectionToolbar";
 
 const columns = ["", "Name", "Subscribers", "Created", "Status", "Actions"];
 
@@ -61,8 +62,28 @@ export default function AllLists() {
 
   const paginatedLists = mockLists.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+  const actions = [
+    {
+      label: "Delete",
+      icon: <Trash2 size={16} />,
+      color: "#ff6b6b",
+      onClick: () => {
+        console.log("Delete action for lists:", selectedIds);
+        setSelectedIds([]);
+      },
+    },
+  ];
+
   return (
     <Box sx={{ p: "20px" }}>
+      <SelectionToolbar
+        selectedCount={selectedIds.length}
+        totalCount={mockLists.length}
+        actions={actions}
+        onSelectAll={toggleSelectAll}
+        showSelectAll={true}
+      />
+
       <Box
         sx={{
           display: "flex",

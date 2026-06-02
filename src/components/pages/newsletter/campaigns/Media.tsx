@@ -1,6 +1,8 @@
-import { Box, Button, Typography, Card, CardContent, IconButton, Tooltip } from "@mui/material";
+import { Box, Button, Typography, Card, CardContent, IconButton, Tooltip, Checkbox } from "@mui/material";
 import { Upload, Image as ImageIcon, Download, Trash2, Copy } from "lucide-react";
+import { useState } from "react";
 import { colors } from "@/utils/customColor";
+import SelectionToolbar from "../SelectionToolbar";
 
 const mockMedia = [
   { id: 1, name: "black-friday-banner.jpg", size: "256 KB", uploaded: "Nov 28, 2024", type: "banner" },
@@ -12,8 +14,44 @@ const mockMedia = [
 ];
 
 export default function Media() {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(mockMedia.map((m) => m.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const toggleSelect = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id]);
+    } else {
+      setSelectedIds(selectedIds.filter((sid) => sid !== id));
+    }
+  };
+
+  const actions = [
+    {
+      label: "DELETE",
+      icon: <Trash2 size={16} />,
+      color: "#d32f2f",
+      onClick: () => {
+        console.log("Delete action for media:", selectedIds);
+      },
+    },
+  ];
+
   return (
     <Box sx={{ p: "20px" }}>
+      <SelectionToolbar
+        selectedCount={selectedIds.length}
+        totalCount={mockMedia.length}
+        actions={actions}
+        onSelectAll={toggleSelectAll}
+        showSelectAll={true}
+      />
       <Box
         sx={{
           display: "flex",
@@ -49,7 +87,27 @@ export default function Media() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
         {mockMedia.map((media) => (
-          <Card key={media.id} elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 2, display: "flex", flexDirection: "column" }}>
+          <Card key={media.id} elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 2, display: "flex", flexDirection: "column", position: "relative" }}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: 8,
+                left: 8,
+                zIndex: 10,
+              }}
+            >
+              <Checkbox
+                size="small"
+                checked={selectedIds.includes(media.id)}
+                onChange={(e) => toggleSelect(media.id, e.target.checked)}
+                sx={{
+                  color: "#fff",
+                  bgcolor: "rgba(0,0,0,0.3)",
+                  borderRadius: 0.5,
+                  "&.Mui-checked": { color: colors.primary, bgcolor: "rgba(255,255,255,0.8)" },
+                }}
+              />
+            </Box>
             <Box
               sx={{
                 height: 140,

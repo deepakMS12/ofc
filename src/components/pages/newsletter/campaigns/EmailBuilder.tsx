@@ -10,9 +10,11 @@ import {
 import { createPortal } from "react-dom";
 import {
   Box,
+  Button,
   Divider,
   IconButton,
   MenuItem,
+  Modal,
   Popover,
   Select,
   Slider,
@@ -31,6 +33,7 @@ import {
   Columns2,
   Columns3,
   Copy,
+  Eye,
   GripVertical,
   Image as ImageIcon,
   Layout,
@@ -49,6 +52,7 @@ import {
   Trash2,
   Type,
   Heading1,
+  X,
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { colors } from "@/utils/customColor";
@@ -440,8 +444,7 @@ const palette: {type:BlockType;label:string;Icon:React.ComponentType<{size?:numb
   {type:"divider", label:"Divider", Icon:Minus},
   {type:"spacer",  label:"Spacer",  Icon:Square},
   {type:"footer",  label:"Footer",  Icon:Mail},
-  {type:"columns", label:"2 Cols",  Icon:Columns2},
-  {type:"columns", label:"3 Cols",  Icon:Columns3},
+  {type:"columns", label:"Cols",    Icon:Columns2},
 ];
 
 /* ═══════════════════════════════════════════════════
@@ -461,6 +464,7 @@ export default function EmailBuilder() {
   const [htmlDraft,setHtmlDraft]   = useState("");
   const [htmlEdited,setHtmlEdited] = useState(false);
   const [htmlCopied,setHtmlCopied] = useState(false);
+  const [showPreviewModal,setShowPreviewModal] = useState(false);
 
   const toolbarRef = useRef<HTMLDivElement|null>(null);
   const editingBlockRef = useRef<HTMLDivElement|null>(null);
@@ -574,19 +578,6 @@ export default function EmailBuilder() {
       <Box sx={{display:"flex",alignItems:"center",gap:1,px:2,py:0.75,bgcolor:"#fafafa",borderBottom:"1px solid #e8e8e8",flexShrink:0,flexWrap:"wrap",rowGap:0.5}}>
         <Typography sx={{fontSize:"0.78rem",fontWeight:600,color:"#555",mr:"auto"}}>{blocks.length} block{blocks.length!==1?"s":""} · {preview}</Typography>
 
-        {/* Preview mode */}
-        {viewMode==="design"&&(
-          <Box sx={{display:"flex",gap:0.25,bgcolor:"#f0f0f0",borderRadius:1,p:0.25}}>
-            {([["desktop",Monitor],["tablet",Tablet],["mobile",Smartphone]] as const).map(([m,Icon])=>(
-              <Tooltip key={m} title={`${m} (${previewWidths[m]}px)`}>
-                <Box component="button" onClick={()=>setPreview(m as any)} sx={{display:"flex",alignItems:"center",gap:0.5,px:1,py:0.5,border:"none",borderRadius:0.75,cursor:"pointer",bgcolor:preview===m?"#fff":"transparent",color:preview===m?colors.primary:"#666",boxShadow:preview===m?"0 1px 3px rgba(0,0,0,0.1)":"none",transition:"all 0.15s","&:hover":{bgcolor:preview===m?"#fff":"#e8e8e8"}}}>
-                  <Icon size={14}/>
-                  <Typography sx={{fontSize:"0.7rem",fontWeight:500,textTransform:"capitalize"}}>{m}</Typography>
-                </Box>
-              </Tooltip>
-            ))}
-          </Box>
-        )}
 
         {/* Canvas bg */}
         {viewMode==="design"&&<Tooltip title="Canvas background"><Box sx={{display:"flex",alignItems:"center",gap:0.75}}><Typography sx={{fontSize:"0.72rem",color:"#888"}}>BG</Typography><input type="color" value={bgColor} onChange={(e)=>setBgColor(e.target.value)} style={{width:26,height:20,border:"1px solid #ddd",borderRadius:3,cursor:"pointer",padding:1}}/></Box></Tooltip>}
@@ -603,6 +594,7 @@ export default function EmailBuilder() {
         <Divider orientation="vertical" flexItem sx={{borderColor:"#e0e0e0"}}/>
 
         <Tooltip title="Reset canvas"><IconButton size="small" onClick={reset} sx={{"&:hover":{color:"#dc2626"}}}><RotateCcw size={14}/></IconButton></Tooltip>
+        <Tooltip title="Preview"><IconButton size="small" onClick={()=>setShowPreviewModal(true)} sx={{color:colors.primary}}><Eye size={15}/></IconButton></Tooltip>
         <Tooltip title={isFullscreen?"Exit fullscreen (Esc)":"Fullscreen"}><IconButton size="small" onClick={()=>setIsFullscreen(v=>!v)}>{isFullscreen?<Minimize2 size={15}/>:<Maximize2 size={15}/>}</IconButton></Tooltip>
       </Box>
 
@@ -620,7 +612,14 @@ export default function EmailBuilder() {
             <Typography sx={{px:2,pb:0.75,fontSize:"0.65rem",fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:"0.07em"}}>Blocks</Typography>
             {palette.map(({type,label,Icon},idx)=>(
               <Box key={`${type}${idx}`} draggable onDragStart={(e)=>onPalDragStart(e,type,label)}
-                onClick={()=>{ const ov:Partial<ColumnsData>={};if(type==="columns"&&label==="3 Cols"){ov.colCount=3;ov.cols=[[],[],[]];} addBlock(type,blocks.length,ov as Partial<BlockData>); }}
+                onClick={()=>{
+                  const ov:Partial<ColumnsData>={};
+                  if(type==="columns"&&label==="Cols"){
+                    ov.colCount=2;
+                    ov.cols=[[],[]];
+                  }
+                  addBlock(type,blocks.length,ov as Partial<BlockData>);
+                }}
                 sx={{display:"flex",alignItems:"center",gap:1.25,px:2,py:0.875,cursor:"grab",borderRadius:1,mx:1,mb:0.25,"&:hover":{bgcolor:`${colors.primary}0e`},"&:active":{cursor:"grabbing"},userSelect:"none"}}
               >
                 <Icon size={14} color="#666" strokeWidth={1.75}/>
@@ -736,6 +735,55 @@ export default function EmailBuilder() {
           </Box>
         )}
       </Box>
+
+      {/* Preview Modal */}
+      <Modal open={showPreviewModal} onClose={()=>setShowPreviewModal(false)} sx={{display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <Box sx={{bgcolor:"#fff",borderRadius:2,width:"90vw",height:"90vh",display:"flex",flexDirection:"column",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+          {/* Modal Header */}
+          <Box sx={{display:"flex",alignItems:"center",justifyContent:"space-between",p:2,borderBottom:"1px solid #e8e8e8",flexShrink:0}}>
+            <Typography variant="h6" fontWeight={600}>Email Preview</Typography>
+            <IconButton size="small" onClick={()=>setShowPreviewModal(false)}><X size={20}/></IconButton>
+          </Box>
+
+          {/* Modal Body - Preview */}
+          <Box sx={{flex:1,overflow:"auto",display:"flex",alignItems:"flex-start",justifyContent:"center",bgcolor:bgColor,p:3,transition:"background-color 0.2s"}}>
+            <Box sx={{width:previewWidths[preview],bgcolor:"#fff",boxShadow:"0 4px 16px rgba(0,0,0,0.1)",borderRadius:1,overflow:"hidden",transition:"width 0.3s ease"}}>
+              <Box sx={{"& table":{width:"100%"},"& img":{maxWidth:"100%",height:"auto",display:"block"}}} dangerouslySetInnerHTML={{__html:generateEmailHTML(blocks,bgColor)}}/>
+            </Box>
+          </Box>
+
+          {/* Modal Footer - Device Tabs */}
+          <Box sx={{display:"flex",alignItems:"center",justifyContent:"center",gap:1,p:2,borderTop:"1px solid #e8e8e8",bgcolor:"#fafafa",flexShrink:0}}>
+            {([["desktop",600],["tablet",480],["mobile",375]] as const).map(([size,width])=>(
+              <Box
+                key={size}
+                component="button"
+                onClick={()=>setPreview(size)}
+                sx={{
+                  display:"flex",
+                  alignItems:"center",
+                  gap:0.75,
+                  px:2,
+                  py:0.75,
+                  border:`1.5px solid ${preview===size?colors.primary:"#e0e0e0"}`,
+                  borderRadius:1,
+                  cursor:"pointer",
+                  bgcolor:preview===size?`${colors.primary}10`:"transparent",
+                  color:preview===size?colors.primary:"#555",
+                  fontWeight:preview===size?600:500,
+                  fontSize:"0.875rem",
+                  transition:"all 0.2s",
+                  "&:hover":{borderColor:colors.primary,color:colors.primary}
+                }}
+              >
+                <Typography sx={{textTransform:"capitalize",fontWeight:"inherit"}}>{size}</Typography>
+                <Typography sx={{fontSize:"0.75rem",color:"inherit",opacity:0.7}}>{width}px</Typography>
+              </Box>
+            ))}
+          </Box>
+
+        </Box>
+      </Modal>
     </Box>
   );
 }

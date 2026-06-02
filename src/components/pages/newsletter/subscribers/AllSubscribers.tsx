@@ -15,9 +15,10 @@ import {
   Typography,
   TablePagination,
 } from "@mui/material";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Trash2, Ban, Download, ListFilter } from "lucide-react";
 import { useState } from "react";
 import { colors } from "@/utils/customColor";
+import SelectionToolbar from "../SelectionToolbar";
 
 const columns = ["", "Email", "Name", "List", "Status", "Date Added"];
 
@@ -64,8 +65,51 @@ export default function AllSubscribers() {
 
   const paginatedSubscribers = mockSubscribers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+  const actions = [
+    {
+      label: "Export",
+      icon: <Download size={16} />,
+      color: colors.primary,
+      onClick: () => {
+        console.log("Export action for subscribers:", selectedIds);
+      },
+    },
+    {
+      label: "Manage lists",
+      icon: <ListFilter size={16} />,
+      color: colors.primary,
+      onClick: () => {
+        console.log("Manage lists action for subscribers:", selectedIds);
+      },
+    },
+    {
+      label: "Delete",
+      icon: <Trash2 size={16} />,
+      color: "#d32f2f",
+      onClick: () => {
+        console.log("Delete action for subscribers:", selectedIds);
+      },
+    },
+    {
+      label: "Blocklist",
+      icon: <Ban size={16} />,
+      color: "#f57c00",
+      onClick: () => {
+        console.log("Blocklist action for subscribers:", selectedIds);
+      },
+    },
+  ];
+
   return (
     <Box sx={{ p: "20px" }}>
+      <SelectionToolbar
+        selectedCount={selectedIds.length}
+        totalCount={mockSubscribers.length}
+        actions={actions}
+        onSelectAll={toggleSelectAll}
+        showSelectAll={true}
+      />
+
       <Box
         sx={{
           display: "flex",

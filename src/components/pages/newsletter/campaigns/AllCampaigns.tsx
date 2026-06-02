@@ -12,9 +12,10 @@ import {
   Typography,
   TablePagination,
 } from "@mui/material";
-import { Plus, Search, LinkIcon, BarChart3, Copy, Lock } from "lucide-react";
+import { Plus, Search, LinkIcon, BarChart3, Copy, Lock, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { colors } from "@/utils/customColor";
+import SelectionToolbar from "../SelectionToolbar";
 
 const mockCampaigns = [
   {
@@ -62,6 +63,7 @@ const getStatusColor = (status: string) => {
 
 export default function AllCampaigns() {
   const navigate = useNavigate();
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -74,10 +76,45 @@ export default function AllCampaigns() {
     setPage(0);
   };
 
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(mockCampaigns.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const toggleSelect = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id]);
+    } else {
+      setSelectedIds(selectedIds.filter((sid) => sid !== id));
+    }
+  };
+
   const paginatedCampaigns = mockCampaigns.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  const actions = [
+    {
+      label: "DELETE",
+      icon: <Trash2 size={16} />,
+      color: "#d32f2f",
+      onClick: () => {
+        console.log("Delete action for campaigns:", selectedIds);
+      },
+    },
+  ];
 
   return (
     <Box sx={{ p: "20px" }}>
+      <SelectionToolbar
+        selectedCount={selectedIds.length}
+        totalCount={mockCampaigns.length}
+        actions={actions}
+        onSelectAll={toggleSelectAll}
+        showSelectAll={true}
+      />
+
       {/* Header */}
       <Box
         sx={{
@@ -151,7 +188,11 @@ export default function AllCampaigns() {
               <Box sx={{ display: "flex", alignItems: "stretch", minHeight: 100 }}>
                 {/* Checkbox */}
                 <Box sx={{ display: "flex", alignItems: "center", px: 1.5, bgcolor: "#fafafa" }}>
-                  <Checkbox size="small" />
+                  <Checkbox
+                    size="small"
+                    checked={selectedIds.includes(campaign.id)}
+                    onChange={(e) => toggleSelect(campaign.id, e.target.checked)}
+                  />
                 </Box>
 
                 {/* Status */}

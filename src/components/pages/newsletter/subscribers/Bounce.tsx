@@ -12,7 +12,9 @@ import {
   Typography,
   TablePagination,
 } from "@mui/material";
+import { Trash2, Ban } from "lucide-react";
 import { useState } from "react";
+import SelectionToolbar from "../SelectionToolbar";
 
 const columns = ["", "Email", "Bounce Type", "Reason", "Date", "Status"];
 
@@ -85,8 +87,35 @@ export default function Bounce() {
   const softBounces = mockBounces.filter((b) => b.bounceType === "soft").length;
   const complaints = mockBounces.filter((b) => b.bounceType === "complaint").length;
 
+  const actions = [
+    {
+      label: "Delete",
+      icon: <Trash2 size={16} />,
+      color: "#d32f2f",
+      onClick: () => {
+        console.log("Delete action for bounces:", selectedIds);
+      },
+    },
+    {
+      label: "Blocklist",
+      icon: <Ban size={16} />,
+      color: "#f57c00",
+      onClick: () => {
+        console.log("Blocklist action for bounces:", selectedIds);
+      },
+    },
+  ];
+
   return (
     <Box sx={{ p: "20px" }}>
+      <SelectionToolbar
+        selectedCount={selectedIds.length}
+        totalCount={mockBounces.length}
+        actions={actions}
+        onSelectAll={toggleSelectAll}
+        showSelectAll={true}
+      />
+
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700} color="#1a1a1a">
           Bounce Management
