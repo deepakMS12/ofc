@@ -10,7 +10,6 @@ import {
 import { createPortal } from "react-dom";
 import {
   Box,
-  Button,
   Divider,
   IconButton,
   MenuItem,
@@ -31,7 +30,6 @@ import {
   ChevronUp,
   Code2,
   Columns2,
-  Columns3,
   Copy,
   Eye,
   GripVertical,
