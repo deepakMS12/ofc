@@ -1,104 +1,101 @@
-import { Box, Paper, Typography, MenuItem, TextField } from "@mui/material";
-import { TrendingUp, MousePointerClick, UserMinus, Send } from "lucide-react";
+import { useState } from "react";
+import { Box, Paper, Typography, TextField, IconButton, InputAdornment, Autocomplete } from "@mui/material";
+import { Search } from "lucide-react";
 import { colors } from "@/utils/customColor";
 
-const metrics = [
-  { label: "Emails Sent", value: "0", icon: Send, color: colors.primary, bg: `${colors.primary}12` },
-  { label: "Open Rate", value: "0%", icon: TrendingUp, color: "#059669", bg: "#05966912" },
-  { label: "Click Rate", value: "0%", icon: MousePointerClick, color: "#7c3aed", bg: "#7c3aed12" },
-  { label: "Unsubscribes", value: "0", icon: UserMinus, color: "#dc2626", bg: "#dc262612" },
+const campaignOptions = [
+  "Black Friday Sale 2024",
+  "Test campaign",
+  "October Newsletter",
+  "Product Update: v2.0",
+  "Welcome to Premium",
 ];
 
 export default function Analytics() {
+  const [selectedCampaign, setSelectedCampaign] = useState<string | null>("Campaigns");
+
+  const SimpleLineChart = ({ height = 300 }: { height?: number }) => (
+    <svg width="100%" height={height} style={{ marginTop: "20px" }}>
+      <line x1="50" y1="0" x2="50" y2={height} stroke="#ddd" strokeWidth="1" />
+      <line x1="0" y1={height - 40} x2="100%" y2={height - 40} stroke="#ddd" strokeWidth="1" />
+      <text x="10" y="20" fontSize="12" fill="#666">
+        1
+      </text>
+      <text x="0" y={height - 20} fontSize="12" fill="#666">
+        0
+      </text>
+      <line x1="50" y1={height - 40} x2="100%" y2={height - 40} stroke={colors.primary} strokeWidth="2" />
+    </svg>
+  );
+
   return (
     <Box sx={{ p: "20px" }}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 3,
-          flexWrap: "wrap",
-          gap: 2,
-        }}
-      >
-        <Box>
-          <Typography variant="h5" fontWeight={700} color="#1a1a1a">
-            Campaign Analytics
-          </Typography>
-          <Typography variant="body2" color="#666" mt={0.5}>
-            Track performance metrics across all your campaigns.
-          </Typography>
-        </Box>
-        <TextField select size="small" defaultValue="30" sx={{ minWidth: 140 }}>
-          <MenuItem value="7">Last 7 days</MenuItem>
-          <MenuItem value="30">Last 30 days</MenuItem>
-          <MenuItem value="90">Last 90 days</MenuItem>
-          <MenuItem value="all">All time</MenuItem>
-        </TextField>
-      </Box>
+      <Typography variant="h5" fontWeight={700} color="#1a1a1a" mb={3}>
+        Analytics
+      </Typography>
 
-      {/* Metrics */}
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" },
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr auto" },
           gap: 2,
-          mb: 3,
+          mb: 4,
+          alignItems: "end",
         }}
       >
-        {metrics.map((m) => {
-          const Icon = m.icon;
-          return (
-            <Paper
-              key={m.label}
-              elevation={0}
-              sx={{ border: "1px solid #e8e8e8", borderRadius: 2, p: 2.5 }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 1.5,
-                  bgcolor: m.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mb: 1.5,
-                }}
-              >
-                <Icon size={20} color={m.color} strokeWidth={1.75} />
-              </Box>
-              <Typography sx={{ fontSize: "1.5rem", fontWeight: 700, color: "#1a1a1a" }}>
-                {m.value}
-              </Typography>
-              <Typography sx={{ fontSize: "0.8125rem", color: "#666", mt: 0.25 }}>{m.label}</Typography>
-            </Paper>
-          );
-        })}
+        <Autocomplete
+          options={campaignOptions}
+          value={selectedCampaign}
+          onChange={(_, newValue) => setSelectedCampaign(newValue)}
+          size="small"
+          fullWidth
+          freeSolo
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Campaigns"
+              slotProps={{
+                input: {
+                  ...params.InputProps,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Typography sx={{ fontSize: "1.2rem" }}>📋</Typography>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+          )}
+        />
+        <TextField label="From" size="small" fullWidth defaultValue="2026-05-26 00:00" />
+        <TextField label="To" size="small" fullWidth defaultValue="2026-06-02 23:59" />
+        <IconButton sx={{ bgcolor: "#ddd", color: "#999", borderRadius: 1 }}>
+          <Search size={18} />
+        </IconButton>
       </Box>
 
-      {/* Chart placeholder */}
-      <Paper elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 2, p: 3 }}>
-        <Typography fontWeight={600} color="#333" mb={1}>
-          Performance Over Time
-        </Typography>
-        <Box
-          sx={{
-            height: 200,
-            bgcolor: "#f9f9f9",
-            borderRadius: 1.5,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1px dashed #ddd",
-          }}
-        >
-          <Typography color="#bbb" fontSize="0.875rem">
-            Chart will appear once you send your first campaign
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr" }, gap: 3 }}>
+        <Paper elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 1, p: 3 }}>
+          <Typography fontWeight={600} color="#333" mb={1}>
+            Views (0)
           </Typography>
-        </Box>
-      </Paper>
+          <SimpleLineChart height={300} />
+        </Paper>
+
+        <Paper elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 1, p: 3 }}>
+          <Typography fontWeight={600} color="#333" mb={1}>
+            Clicks (0)
+          </Typography>
+          <SimpleLineChart height={300} />
+        </Paper>
+
+        <Paper elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 1, p: 3 }}>
+          <Typography fontWeight={600} color="#333" mb={1}>
+            Bounces (0)
+          </Typography>
+          <SimpleLineChart height={300} />
+        </Paper>
+      </Box>
     </Box>
   );
 }

@@ -8,14 +8,59 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Chip,
+  Checkbox,
   Typography,
+  IconButton,
+  Tooltip,
+  TablePagination,
 } from "@mui/material";
-import { Plus, List } from "lucide-react";
+import { Plus, Edit2, Trash2, Copy } from "lucide-react";
+import { useState } from "react";
 import { colors } from "@/utils/customColor";
 
-const columns = ["Name", "Subscribers", "Created", "Status", "Actions"];
+const columns = ["", "Name", "Subscribers", "Created", "Status", "Actions"];
+
+const mockLists = [
+  { id: 1, name: "Marketing Subscribers", subscribers: 5240, created: "Oct 15, 2024", status: "active" },
+  { id: 2, name: "Product Updates", subscribers: 3891, created: "Sep 22, 2024", status: "active" },
+  { id: 3, name: "Newsletter Digest", subscribers: 1250, created: "Aug 10, 2024", status: "active" },
+  { id: 4, name: "Trial Users", subscribers: 642, created: "Nov 03, 2024", status: "paused" },
+  { id: 5, name: "Premium Members", subscribers: 892, created: "Jul 18, 2024", status: "active" },
+];
 
 export default function AllLists() {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(mockLists.map((l) => l.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const toggleSelect = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id]);
+    } else {
+      setSelectedIds(selectedIds.filter((sid) => sid !== id));
+    }
+  };
+
+  const paginatedLists = mockLists.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   return (
     <Box sx={{ p: "20px" }}>
       <Box
@@ -55,7 +100,15 @@ export default function AllLists() {
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: "#fafafa" }}>
-              {columns.map((col) => (
+              <TableCell sx={{ width: 40, fontWeight: 600, fontSize: "0.8125rem", color: "#555", borderBottom: "1px solid #e8e8e8", p: 1 }}>
+                <Checkbox
+                  size="small"
+                  checked={selectedIds.length === mockLists.length}
+                  indeterminate={selectedIds.length > 0 && selectedIds.length < mockLists.length}
+                  onChange={(e) => toggleSelectAll(e.target.checked)}
+                />
+              </TableCell>
+              {columns.slice(1).map((col) => (
                 <TableCell
                   key={col}
                   sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "#555", borderBottom: "1px solid #e8e8e8" }}
@@ -66,31 +119,69 @@ export default function AllLists() {
             </TableRow>
           </TableHead>
           <TableBody>
-            <TableRow>
-              <TableCell colSpan={columns.length} sx={{ textAlign: "center", py: 6 }}>
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-                  <List size={36} color="#ccc" strokeWidth={1.25} />
-                  <Typography color="#888" fontSize="0.9rem">
-                    No lists yet. Create your first list to get started.
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Plus size={15} />}
+            {paginatedLists.map((list) => (
+              <TableRow key={list.id} sx={{ "&:hover": { bgcolor: "#fafafa" }, "&:last-child td": { borderBottom: 0 } }}>
+                <TableCell sx={{ width: 40, p: 1 }}>
+                  <Checkbox
+                    size="small"
+                    checked={selectedIds.includes(list.id)}
+                    onChange={(e) => toggleSelect(list.id, e.target.checked)}
+                  />
+                </TableCell>
+                <TableCell sx={{ fontWeight: 500, color: colors.primary, cursor: "pointer", fontSize: "0.875rem" }}>
+                  {list.name}
+                </TableCell>
+                <TableCell sx={{ fontSize: "0.875rem", color: "#555" }}>
+                  {list.subscribers.toLocaleString()}
+                </TableCell>
+                <TableCell sx={{ fontSize: "0.875rem", color: "#888" }}>
+                  {list.created}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={list.status === "active" ? "Active" : "Paused"}
                     size="small"
                     sx={{
-                      textTransform: "none",
-                      borderColor: colors.primary,
-                      color: colors.primary,
-                      borderRadius: 1.5,
+                      bgcolor: list.status === "active" ? "#d4edda" : "#fff3cd",
+                      color: list.status === "active" ? "#155724" : "#856404",
+                      fontSize: "0.75rem",
+                      fontWeight: 500,
+                      height: 22,
                     }}
-                  >
-                    Create List
-                  </Button>
-                </Box>
-              </TableCell>
-            </TableRow>
+                  />
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: "flex", gap: 0.5 }}>
+                    <Tooltip title="Edit">
+                      <IconButton size="small" sx={{ color: colors.primary }}>
+                        <Edit2 size={15} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Duplicate">
+                      <IconButton size="small" sx={{ color: "#666" }}>
+                        <Copy size={15} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" sx={{ color: "#bbb", "&:hover": { color: "#dc2626" } }}>
+                        <Trash2 size={15} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={mockLists.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
       </TableContainer>
     </Box>
   );

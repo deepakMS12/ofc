@@ -1,102 +1,302 @@
+import { useState } from "react";
 import {
   Box,
   Button,
+  Checkbox,
+  Chip,
+  IconButton,
+  InputAdornment,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  TextField,
+  Tooltip,
   Typography,
+  TablePagination,
 } from "@mui/material";
-import { Plus, Megaphone } from "lucide-react";
+import { Plus, Search, LinkIcon, BarChart3, Copy, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { colors } from "@/utils/customColor";
 
-const columns = ["Name", "Status", "List", "Sent", "Open Rate", "Click Rate", "Date"];
+const mockCampaigns = [
+  {
+    id: 1,
+    name: "Black Friday Sale 2024",
+    description: "Welcome to our big sale",
+    slug: "black-friday-2024",
+    status: "sent",
+    lists: "Marketing Subscribers",
+    createdDate: "Sun, 28 Nov 2024, 10:30",
+    endedDate: "Sun, 28 Nov 2024, 11:30",
+    views: 2442,
+    clicks: 2516,
+    sent: "1 / 1",
+    bounces: 489,
+  },
+  {
+    id: 2,
+    name: "Test campaign",
+    description: "Welcome to listmonk",
+    slug: "test-campaign",
+    status: "draft",
+    lists: "Default list",
+    createdDate: "Fri, 15 Nov 2024, 13:20",
+    endedDate: null,
+    views: 2558,
+    clicks: 2484,
+    sent: "0 / 1",
+    bounces: 511,
+  },
+];
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "sent":
+      return { bg: "#d4edda", color: "#155724" };
+    case "scheduled":
+      return { bg: "#cce5ff", color: "#004085" };
+    case "draft":
+      return { bg: "#e8e8e8", color: "#666" };
+    default:
+      return { bg: "#f0f0f0", color: "#666" };
+  }
+};
 
 export default function AllCampaigns() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedCampaigns = mockCampaigns.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box sx={{ p: "20px" }}>
+      {/* Header */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          mb: 3,
+          mb: 2.5,
           flexWrap: "wrap",
           gap: 2,
         }}
       >
-        <Box>
-          <Typography variant="h5" fontWeight={700} color="#1a1a1a">
-            All Campaigns
-          </Typography>
-          <Typography variant="body2" color="#666" mt={0.5}>
-            View and manage all your email campaigns.
-          </Typography>
-        </Box>
+        <Typography variant="h5" fontWeight={700} color="#1a1a1a">
+          Campaigns ({mockCampaigns.length})
+        </Typography>
         <Button
           variant="contained"
-          startIcon={<Plus size={16} />}
+          startIcon={<Plus size={18} />}
           onClick={() => navigate("/home/newsletter/campaigns/create")}
           sx={{
             bgcolor: colors.primary,
             textTransform: "none",
             fontWeight: 600,
-            borderRadius: 1.5,
+            borderRadius: 0.75,
+            px: 2.5,
             "&:hover": { bgcolor: colors.primary, filter: "brightness(0.92)" },
           }}
         >
-          Create Campaign
+          New
         </Button>
       </Box>
 
-      <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 2 }}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: "#fafafa" }}>
-              {columns.map((col) => (
-                <TableCell
-                  key={col}
-                  sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "#555", borderBottom: "1px solid #e8e8e8" }}
+      {/* Search Bar */}
+      <TextField
+        placeholder="Name or subject"
+        size="small"
+        fullWidth
+        sx={{ mb: 2.5, maxWidth: 600 }}
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  sx={{
+                    bgcolor: colors.primary,
+                    color: "#fff",
+                    borderRadius: 0.5,
+                    "&:hover": { bgcolor: colors.primary, filter: "brightness(0.92)" },
+                  }}
                 >
-                  {col}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={columns.length} sx={{ textAlign: "center", py: 6 }}>
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-                  <Megaphone size={36} color="#ccc" strokeWidth={1.25} />
-                  <Typography color="#888" fontSize="0.9rem">
-                    No campaigns yet. Create your first campaign to reach your subscribers.
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Plus size={15} />}
+                  <Search size={16} />
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+
+      {/* Campaigns List */}
+      <Paper elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 1, overflow: "hidden" }}>
+        {paginatedCampaigns.map((campaign, idx) => {
+          const statusColor = getStatusColor(campaign.status);
+          return (
+            <Box
+              key={campaign.id}
+              sx={{
+                borderBottom: idx < mockCampaigns.length - 1 ? "1px solid #e8e8e8" : "none",
+                "&:hover": { bgcolor: "#fafafa" },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "stretch", minHeight: 100 }}>
+                {/* Checkbox */}
+                <Box sx={{ display: "flex", alignItems: "center", px: 1.5, bgcolor: "#fafafa" }}>
+                  <Checkbox size="small" />
+                </Box>
+
+                {/* Status */}
+                <Box sx={{ display: "flex", alignItems: "center", px: 1.5 }}>
+                  <Chip
+                    label={campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
                     size="small"
-                    onClick={() => navigate("/home/newsletter/campaigns/create")}
                     sx={{
-                      textTransform: "none",
-                      borderColor: colors.primary,
+                      bgcolor: statusColor.bg,
+                      color: statusColor.color,
+                      fontSize: "0.75rem",
+                      fontWeight: 500,
+                      height: 24,
+                      borderRadius: 0.5,
+                    }}
+                  />
+                </Box>
+
+                {/* Name & Description */}
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", px: 2 }}>
+                  <Typography
+                    component="a"
+                    href="#"
+                    sx={{
+                      fontSize: "0.9375rem",
+                      fontWeight: 500,
                       color: colors.primary,
-                      borderRadius: 1.5,
+                      textDecoration: "none",
+                      "&:hover": { textDecoration: "underline" },
                     }}
                   >
-                    Create Campaign
-                  </Button>
+                    {campaign.name}
+                  </Typography>
+                  <Typography variant="caption" color="#888" display="block" mt={0.25}>
+                    {campaign.description}
+                  </Typography>
+                  <Typography variant="caption" color="#aaa" display="block" mt={0.25}>
+                    {campaign.slug}
+                  </Typography>
                 </Box>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+
+                {/* Lists */}
+                <Box sx={{ display: "flex", alignItems: "center", px: 2, minWidth: 180 }}>
+                  <Typography variant="body2" color="#666">
+                    {campaign.lists}
+                  </Typography>
+                </Box>
+
+                {/* Timestamps */}
+                <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", px: 2, minWidth: 200 }}>
+                  <Box>
+                    <Typography variant="caption" color="#666" fontWeight={500} display="block">
+                      Created
+                    </Typography>
+                    <Typography variant="caption" color="#888">
+                      {campaign.createdDate}
+                    </Typography>
+                  </Box>
+                  {campaign.endedDate && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
+                        Ended
+                      </Typography>
+                      <Typography variant="caption" color="#888">
+                        {campaign.endedDate}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Stats */}
+                <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", px: 2, minWidth: 160 }}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+                    <Box>
+                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
+                        Views
+                      </Typography>
+                      <Typography variant="caption" color="#1a1a1a" fontWeight={600}>
+                        {campaign.views.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
+                        Clicks
+                      </Typography>
+                      <Typography variant="caption" color="#1a1a1a" fontWeight={600}>
+                        {campaign.clicks.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
+                        Sent
+                      </Typography>
+                      <Typography variant="caption" color="#1a1a1a" fontWeight={600}>
+                        {campaign.sent}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
+                        Bounces
+                      </Typography>
+                      <Typography variant="caption" color={campaign.bounces > 400 ? "#dc2626" : "#1a1a1a"} fontWeight={600}>
+                        {campaign.bounces}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Actions */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, px: 1.5 }}>
+                  <Tooltip title="View" placement="top">
+                    <IconButton size="small" sx={{ color: colors.primary }}>
+                      <LinkIcon size={16} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Analytics" placement="top">
+                    <IconButton size="small" sx={{ color: colors.primary }}>
+                      <BarChart3 size={16} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Clone" placement="top">
+                    <IconButton size="small" sx={{ color: "#666" }}>
+                      <Copy size={16} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Lock" placement="top">
+                    <IconButton size="small" sx={{ color: "#bbb" }}>
+                      <Lock size={16} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            </Box>
+          );
+        })}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={mockCampaigns.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
     </Box>
   );
 }

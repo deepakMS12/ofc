@@ -9,12 +9,19 @@ import {
   Tabs,
   TextField,
   Typography,
+  MenuItem,
+  IconButton,
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import type { Dayjs } from "dayjs";
-import { AlignLeft, Archive, Braces, Rocket } from "lucide-react";
+import { AlignLeft, Archive, Braces, Rocket, Plus } from "lucide-react";
 import EmailBuilder from "./EmailBuilder";
 import { colors } from "@/utils/customColor";
 
@@ -105,12 +112,93 @@ function CampaignTab({ format, onFormatChange }: { format: "rich" | "plain"; onF
   const [sendLater, setSendLater] = useState(false);
   const [scheduleAt, setScheduleAt] = useState<Dayjs | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [selectedFrom, setSelectedFrom] = useState("newsletter <noreply@yoursite.com>");
+  const [openSmtpDialog, setOpenSmtpDialog] = useState(false);
+  const [smtpName, setSmtpName] = useState("");
+  const [smtpEmail, setSmtpEmail] = useState("");
+  const [smtpAccounts, setSmtpAccounts] = useState(["newsletter <noreply@yoursite.com>"]);
+
+  const handleAddSmtp = () => {
+    if (smtpName && smtpEmail) {
+      const newAccount = `${smtpName} <${smtpEmail}>`;
+      setSmtpAccounts([...smtpAccounts, newAccount]);
+      setSelectedFrom(newAccount);
+      setSmtpName("");
+      setSmtpEmail("");
+      setOpenSmtpDialog(false);
+    }
+  };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, maxWidth: 680 }}>
       <TextField label="Name" placeholder="Campaign name" size="small" fullWidth InputLabelProps={{ shrink: true }} />
       <TextField label="Subject" placeholder="Email subject line" size="small" fullWidth InputLabelProps={{ shrink: true }} />
-      <TextField label="From address" defaultValue="newsletter <noreply@yoursite.com>" size="small" fullWidth InputLabelProps={{ shrink: true }} />
+
+      {/* From Address Dropdown with Add Button */}
+      <TextField
+        label="From"
+        select
+        value={selectedFrom}
+        onChange={(e) => setSelectedFrom(e.target.value)}
+        size="small"
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={() => setOpenSmtpDialog(true)}
+                  sx={{ color: colors.primary, "&:hover": { bgcolor: `${colors.primary}10` } }}
+                >
+                  <Plus size={18} />
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
+      >
+        {smtpAccounts.map((account) => (
+          <MenuItem key={account} value={account}>
+            {account}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      {/* Add SMTP Dialog */}
+      <Dialog open={openSmtpDialog} onClose={() => setOpenSmtpDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add SMTP Account</DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+          <TextField
+            label="Name"
+            placeholder="e.g., Marketing"
+            value={smtpName}
+            onChange={(e) => setSmtpName(e.target.value)}
+            fullWidth
+            size="small"
+          />
+          <TextField
+            label="Email Address"
+            placeholder="e.g., noreply@example.com"
+            value={smtpEmail}
+            onChange={(e) => setSmtpEmail(e.target.value)}
+            fullWidth
+            size="small"
+            type="email"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenSmtpDialog(false)}>Cancel</Button>
+          <Button
+            onClick={handleAddSmtp}
+            variant="contained"
+            sx={{ bgcolor: colors.primary, "&:hover": { bgcolor: colors.primary, filter: "brightness(0.92)" } }}
+          >
+            Add Account
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Lists */}
       <Box sx={{ border: "1px solid #c4c4c4", borderRadius: 1, px: 1.75, py: 1, position: "relative", "&:hover": { borderColor: "#333" } }}>

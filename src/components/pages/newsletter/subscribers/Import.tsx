@@ -64,24 +64,35 @@ export default function SubscriberImport() {
             </RadioGroup>
           </Box>
 
-          {/* Status */}
+          {/* Status - Conditional based on mode */}
           <Box>
             <Typography sx={{ fontSize: "0.8125rem", color: "#888", mb: 0.75 }}>Status</Typography>
-            <RadioGroup
-              value={status}
-              onChange={(e) => setStatus(e.target.value as typeof status)}
-            >
-              <FormControlLabel
-                value="unconfirmed"
-                control={<Radio size="small" sx={{ color: colors.primary, "&.Mui-checked": { color: colors.primary } }} />}
-                label={<Typography fontSize="0.875rem">Unconfirmed</Typography>}
-              />
-              <FormControlLabel
-                value="confirmed"
-                control={<Radio size="small" sx={{ color: colors.primary, "&.Mui-checked": { color: colors.primary } }} />}
-                label={<Typography fontSize="0.875rem">Confirmed</Typography>}
-              />
-            </RadioGroup>
+            {mode === "blocklist" ? (
+              <RadioGroup value="unsubscribed">
+                <FormControlLabel
+                  value="unsubscribed"
+                  control={<Radio size="small" sx={{ color: colors.primary, "&.Mui-checked": { color: colors.primary } }} />}
+                  label={<Typography fontSize="0.875rem">Unsubscribed</Typography>}
+                  disabled
+                />
+              </RadioGroup>
+            ) : (
+              <RadioGroup
+                value={status}
+                onChange={(e) => setStatus(e.target.value as typeof status)}
+              >
+                <FormControlLabel
+                  value="unconfirmed"
+                  control={<Radio size="small" sx={{ color: colors.primary, "&.Mui-checked": { color: colors.primary } }} />}
+                  label={<Typography fontSize="0.875rem">Unconfirmed</Typography>}
+                />
+                <FormControlLabel
+                  value="confirmed"
+                  control={<Radio size="small" sx={{ color: colors.primary, "&.Mui-checked": { color: colors.primary } }} />}
+                  label={<Typography fontSize="0.875rem">Confirmed</Typography>}
+                />
+              </RadioGroup>
+            )}
           </Box>
 
           {/* CSV delimiter */}
@@ -99,75 +110,81 @@ export default function SubscriberImport() {
           </Box>
         </Box>
 
-        <Divider sx={{ borderColor: "#f0f0f0", mb: 3 }} />
+        {mode === "subscribe" && (
+          <>
+            <Divider sx={{ borderColor: "#f0f0f0", mb: 3 }} />
 
-        {/* Row 2: Toggles */}
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, mb: 3 }}>
-          <Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-              <Switch
-                size="small"
-                checked={overwriteInfo}
-                onChange={(e) => setOverwriteInfo(e.target.checked)}
-                sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: colors.primary }, "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: colors.primary } }}
-              />
-              <Typography fontSize="0.875rem" fontWeight={500}>Overwrite user info</Typography>
+            {/* Row 2: Toggles - Only show for subscribe mode */}
+            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, mb: 3 }}>
+              <Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <Switch
+                    size="small"
+                    checked={overwriteInfo}
+                    onChange={(e) => setOverwriteInfo(e.target.checked)}
+                    sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: colors.primary }, "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: colors.primary } }}
+                  />
+                  <Typography fontSize="0.875rem" fontWeight={500}>Overwrite user info</Typography>
+                </Box>
+                <Typography fontSize="0.8rem" color="#888">
+                  Overwrite name and attributes of existing subscribers
+                </Typography>
+              </Box>
+
+              <Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <Switch
+                    size="small"
+                    checked={overwriteStatus}
+                    onChange={(e) => setOverwriteStatus(e.target.checked)}
+                    sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: colors.primary }, "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: colors.primary } }}
+                  />
+                  <Typography fontSize="0.875rem" fontWeight={500}>Overwrite subscription status</Typography>
+                </Box>
+                <Typography fontSize="0.8rem" color="#888">
+                  Overwrite status of existing list subscriptions
+                </Typography>
+              </Box>
             </Box>
-            <Typography fontSize="0.8rem" color="#888">
-              Overwrite name and attributes of existing subscribers
-            </Typography>
-          </Box>
+          </>
+        )}
 
-          <Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-              <Switch
-                size="small"
-                checked={overwriteStatus}
-                onChange={(e) => setOverwriteStatus(e.target.checked)}
-                sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: colors.primary }, "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: colors.primary } }}
-              />
-              <Typography fontSize="0.875rem" fontWeight={500}>Overwrite subscription status</Typography>
-            </Box>
-            <Typography fontSize="0.8rem" color="#888">
-              Overwrite status of existing list subscriptions
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Lists field */}
-        <Box
-          sx={{
-            border: "1px solid #d0d0d0",
-            borderRadius: 1,
-            p: 1.5,
-            mb: 3,
-            position: "relative",
-          }}
-        >
-          <Typography
+        {/* Lists field - Only show for subscribe mode */}
+        {mode === "subscribe" && (
+          <Box
             sx={{
-              position: "absolute",
-              top: -10,
-              left: 10,
-              bgcolor: "#fff",
-              px: 0.75,
-              fontSize: "0.8rem",
-              color: "#888",
+              border: "1px solid #d0d0d0",
+              borderRadius: 1,
+              p: 1.5,
+              mb: 3,
+              position: "relative",
             }}
           >
-            Lists (0)
-          </Typography>
-          <TextField
-            placeholder="Lists to subscribe to."
-            size="small"
-            fullWidth
-            variant="standard"
-            slotProps={{ input: { disableUnderline: true, style: { fontSize: "0.875rem" } } }}
-          />
-          <Typography sx={{ fontSize: "0.75rem", color: "#888", mt: 0.5 }}>
-            Lists to subscribe to.
-          </Typography>
-        </Box>
+            <Typography
+              sx={{
+                position: "absolute",
+                top: -10,
+                left: 10,
+                bgcolor: "#fff",
+                px: 0.75,
+                fontSize: "0.8rem",
+                color: "#888",
+              }}
+            >
+              Lists (0)
+            </Typography>
+            <TextField
+              placeholder="Lists to subscribe to."
+              size="small"
+              fullWidth
+              variant="standard"
+              slotProps={{ input: { disableUnderline: true, style: { fontSize: "0.875rem" } } }}
+            />
+            <Typography sx={{ fontSize: "0.75rem", color: "#888", mt: 0.5 }}>
+              Lists to subscribe to.
+            </Typography>
+          </Box>
+        )}
 
         {/* File upload zone */}
         <Box

@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Collapse,
-  Divider,
   Drawer,
   IconButton,
   List,
@@ -24,10 +23,13 @@ import {
   ChevronRight,
   Menu as MenuIcon,
   Mail,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-react";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { colors } from "@/utils/customColor";
 
 const NAV_WIDTH = 240;
+const NAV_WIDTH_COLLAPSED = 70;
 
 type NavChild = { label: string; path: string };
 type NavItem = {
@@ -93,7 +95,7 @@ const navItems: NavItem[] = [
   },
 ];
 
-function NavContent({ onClose }: { onClose?: () => void }) {
+function NavContent({ onClose, collapsed }: { onClose?: () => void; collapsed?: boolean }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -111,7 +113,18 @@ function NavContent({ onClose }: { onClose?: () => void }) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(getInitialOpen);
 
   const toggleGroup = (id: string) => {
-    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+    setOpenGroups((prev) => {
+      // If closing, just close it
+      if (prev[id]) {
+        return { ...prev, [id]: false };
+      }
+      // If opening, close all others and open this one
+      const newState: Record<string, boolean> = {};
+      navItems.forEach((item) => {
+        newState[item.id] = item.id === id;
+      });
+      return newState;
+    });
   };
 
   const handleNav = (path: string) => {
@@ -123,21 +136,23 @@ function NavContent({ onClose }: { onClose?: () => void }) {
     borderRadius: 1.5,
     mb: 0.25,
     py: 0.875,
-    px: 1.25,
+    px: collapsed ? 1 : 1.25,
     color: active ? colors.primary : "#333",
     bgcolor: active ? `${colors.primary}14` : "transparent",
     "&:hover": { bgcolor: active ? `${colors.primary}1a` : "#f5f5f5" },
+    justifyContent: collapsed ? "center" : "flex-start",
   });
 
   const childItemSx = (active: boolean) => ({
     borderRadius: 1.5,
     mb: 0.25,
     py: 0.75,
-    pl: 4.5,
+    pl: collapsed ? 1 : 4.5,
     pr: 1.25,
     color: active ? "#fff" : "#555",
     bgcolor: active ? colors.primary : "transparent",
     "&:hover": { bgcolor: active ? colors.primary : "#f5f5f5" },
+    justifyContent: collapsed ? "center" : "flex-start",
   });
 
   return (
@@ -150,35 +165,11 @@ function NavContent({ onClose }: { onClose?: () => void }) {
         borderRight: "1px solid #e8e8e8",
         overflowY: "auto",
         overflowX: "hidden",
-        px: 1.5,
+        px: collapsed ? 0.75 : 1.5,
         pt: 2,
         pb: 2,
       }}
     >
-      {/* Module header */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2, px: 0.5 }}>
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: 1,
-            bgcolor: colors.primary,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <Mail size={17} color="#fff" strokeWidth={1.75} />
-        </Box>
-        <Typography
-          sx={{ fontWeight: 700, fontSize: "1rem", color: "#1a1a1a", letterSpacing: "-0.01em" }}
-        >
-          Newsletter
-        </Typography>
-      </Box>
-
-      <Divider sx={{ borderColor: "#f0f0f0", mb: 1.5 }} />
 
       <List disablePadding>
         {navItems.map((item) => {
@@ -194,25 +185,28 @@ function NavContent({ onClose }: { onClose?: () => void }) {
                 key={item.id}
                 onClick={() => handleNav(item.path!)}
                 sx={groupHeaderSx(isGroupActive)}
+                title={collapsed ? item.label : undefined}
               >
-                <ListItemIcon sx={{ minWidth: 32 }}>
+                <ListItemIcon sx={{ minWidth: collapsed ? "auto" : 32 }}>
                   <Icon
                     size={18}
                     color={isGroupActive ? colors.primary : "#666"}
                     strokeWidth={1.75}
                   />
                 </ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  slotProps={{
-                    primary: {
-                      sx: {
-                        fontSize: "0.9rem",
-                        fontWeight: isGroupActive ? 600 : 500,
+                {!collapsed && (
+                  <ListItemText
+                    primary={item.label}
+                    slotProps={{
+                      primary: {
+                        sx: {
+                          fontSize: "0.9rem",
+                          fontWeight: isGroupActive ? 600 : 500,
+                        },
                       },
-                    },
-                  }}
-                />
+                    }}
+                  />
+                )}
               </ListItemButton>
             );
           }
@@ -224,58 +218,65 @@ function NavContent({ onClose }: { onClose?: () => void }) {
               <ListItemButton
                 onClick={() => toggleGroup(item.id)}
                 sx={groupHeaderSx(isGroupActive && !isOpen)}
+                title={collapsed ? item.label : undefined}
               >
-                <ListItemIcon sx={{ minWidth: 32 }}>
+                <ListItemIcon sx={{ minWidth: collapsed ? "auto" : 32 }}>
                   <Icon
                     size={18}
                     color={isGroupActive ? colors.primary : "#666"}
                     strokeWidth={1.75}
                   />
                 </ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  slotProps={{
-                    primary: {
-                      sx: {
-                        fontSize: "0.9rem",
-                        fontWeight: isGroupActive ? 600 : 500,
-                      },
-                    },
-                  }}
-                />
-                {isOpen ? (
-                  <ChevronDown size={15} color="#999" />
-                ) : (
-                  <ChevronRight size={15} color="#999" />
+                {!collapsed && (
+                  <>
+                    <ListItemText
+                      primary={item.label}
+                      slotProps={{
+                        primary: {
+                          sx: {
+                            fontSize: "0.9rem",
+                            fontWeight: isGroupActive ? 600 : 500,
+                          },
+                        },
+                      }}
+                    />
+                    {isOpen ? (
+                      <ChevronDown size={15} color="#999" />
+                    ) : (
+                      <ChevronRight size={15} color="#999" />
+                    )}
+                  </>
                 )}
               </ListItemButton>
 
-              <Collapse in={isOpen} timeout="auto" unmountOnExit>
-                <List disablePadding sx={{ mb: 0.5 }}>
-                  {item.children.map((child) => {
-                    const isActive = pathname === child.path;
-                    return (
-                      <ListItemButton
-                        key={child.path}
-                        onClick={() => handleNav(child.path)}
-                        sx={childItemSx(isActive)}
-                      >
-                        <ListItemText
-                          primary={child.label}
-                          slotProps={{
-                            primary: {
-                              sx: {
-                                fontSize: "0.875rem",
-                                fontWeight: isActive ? 600 : 400,
+              {!collapsed && (
+                <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                  <List disablePadding sx={{ mb: 0.5 }}>
+                    {item.children.map((child) => {
+                      const isActive = pathname === child.path;
+                      return (
+                        <ListItemButton
+                          key={child.path}
+                          onClick={() => handleNav(child.path)}
+                          sx={childItemSx(isActive)}
+                        >
+                          <ListItemText
+                            primary={child.label}
+                            slotProps={{
+                              primary: {
+                                sx: {
+                                  fontSize: "0.875rem",
+                                  fontWeight: isActive ? 600 : 400,
+                                },
                               },
-                            },
-                          }}
-                        />
-                      </ListItemButton>
-                    );
-                  })}
-                </List>
-              </Collapse>
+                            }}
+                          />
+                        </ListItemButton>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              )}
             </Box>
           );
         })}
@@ -288,6 +289,7 @@ export default function NewsletterLayout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <Box sx={{ display: "flex", height: "100%", minHeight: 0 }}>
@@ -295,14 +297,73 @@ export default function NewsletterLayout() {
       {!isMobile && (
         <Box
           sx={{
-            width: NAV_WIDTH,
+            width: sidebarCollapsed ? NAV_WIDTH_COLLAPSED : NAV_WIDTH,
             flexShrink: 0,
             height: "100%",
+            display: "flex",
+            flexDirection: "column",
             position: "sticky",
             top: 0,
+            transition: "width 0.3s ease",
           }}
         >
-          <NavContent />
+          {/* Sidebar header with collapse button */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: sidebarCollapsed ? "center" : "space-between",
+              px: sidebarCollapsed ? 0.75 : 1.5,
+              py: 1.25,
+              borderBottom: "1px solid #e8e8e8",
+              bgcolor: "#fff",
+              flexShrink: 0,
+            }}
+          >
+            {!sidebarCollapsed && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 1,
+                    bgcolor: colors.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Mail size={17} color="#fff" strokeWidth={1.75} />
+                </Box>
+                <Typography
+                  sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#1a1a1a" }}
+                >
+                  Newsletter
+                </Typography>
+              </Box>
+            )}
+            <IconButton
+              size="small"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              sx={{
+                color: "#666",
+                "&:hover": { bgcolor: "#f0f0f0" },
+              }}
+              title={sidebarCollapsed ? "Expand" : "Collapse"}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRightIcon size={16} />
+              ) : (
+                <ArrowBackIosNewIcon sx={{ fontSize: 14 }} />
+              )}
+            </IconButton>
+          </Box>
+
+          {/* Scrollable nav content */}
+          <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+            <NavContent collapsed={sidebarCollapsed} />
+          </Box>
         </Box>
       )}
 
@@ -313,12 +374,12 @@ export default function NewsletterLayout() {
           onClose={() => setDrawerOpen(false)}
           sx={{ "& .MuiDrawer-paper": { width: NAV_WIDTH } }}
         >
-          <NavContent onClose={() => setDrawerOpen(false)} />
+          <NavContent onClose={() => setDrawerOpen(false)} collapsed={false} />
         </Drawer>
       )}
 
       {/* Content area */}
-      <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "auto" }}>
+      <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {isMobile && (
           <Box
             sx={{
@@ -332,6 +393,7 @@ export default function NewsletterLayout() {
               position: "sticky",
               top: 0,
               zIndex: 10,
+              flexShrink: 0,
             }}
           >
             <IconButton size="small" onClick={() => setDrawerOpen(true)}>
@@ -343,7 +405,7 @@ export default function NewsletterLayout() {
             </Typography>
           </Box>
         )}
-        <Box sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <Outlet />
         </Box>
       </Box>

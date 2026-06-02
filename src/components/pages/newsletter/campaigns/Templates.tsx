@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -11,6 +12,7 @@ import {
   TableHead,
   TableRow,
   Tooltip,
+  TablePagination,
   Typography,
 } from "@mui/material";
 import {
@@ -73,6 +75,20 @@ const typeBadge: Record<TemplateType, { label: string; bg: string; color: string
 };
 
 export default function Templates() {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedTemplates = templates.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   return (
     <Box sx={{ p: "20px" }}>
       <Box
@@ -125,7 +141,7 @@ export default function Templates() {
           </TableHead>
 
           <TableBody>
-            {templates.map((tpl) => {
+            {paginatedTemplates.map((tpl) => {
               const badge = typeBadge[tpl.type];
               return (
                 <TableRow
@@ -231,6 +247,15 @@ export default function Templates() {
             })}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={templates.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
       </TableContainer>
     </Box>
   );

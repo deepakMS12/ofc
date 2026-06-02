@@ -21,17 +21,17 @@ export default function NewsletterSettings() {
             Sender Information
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField label="Sender Name" placeholder="Your Name or Brand" size="small" fullWidth />
+            <TextField label="Sender Name" defaultValue="TechFlow Newsletter" size="small" fullWidth />
             <TextField
               label="Sender Email"
-              placeholder="hello@yourdomain.com"
+              defaultValue="newsletter@techflow.com"
               size="small"
               fullWidth
               type="email"
             />
             <TextField
               label="Reply-To Email"
-              placeholder="reply@yourdomain.com"
+              defaultValue="support@techflow.com"
               size="small"
               fullWidth
               type="email"
@@ -49,13 +49,13 @@ export default function NewsletterSettings() {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <TextField
               label="Company Name"
-              placeholder="Your Company, Inc."
+              defaultValue="TechFlow, Inc."
               size="small"
               fullWidth
             />
             <TextField
               label="Physical Address"
-              placeholder="123 Main St, City, Country"
+              defaultValue="456 Innovation Way, San Francisco, CA 94105"
               size="small"
               fullWidth
               multiline
@@ -63,7 +63,7 @@ export default function NewsletterSettings() {
             />
             <TextField
               label="Unsubscribe Text"
-              defaultValue="You are receiving this email because you subscribed to our newsletter."
+              defaultValue="You are receiving this email because you subscribed to TechFlow Newsletter. Manage your preferences or unsubscribe."
               size="small"
               fullWidth
               multiline
