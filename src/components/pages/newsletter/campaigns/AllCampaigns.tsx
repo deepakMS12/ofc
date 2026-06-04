@@ -175,13 +175,52 @@ export default function AllCampaigns() {
 
       {/* Campaigns List */}
       <Paper elevation={0} sx={{ border: "1px solid #e8e8e8", borderRadius: 1, overflow: "hidden" }}>
+
+        {/* Table Header */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            bgcolor: "#fafafa",
+            borderBottom: "1px solid #e8e8e8",
+            minHeight: 40,
+          }}
+        >
+          <Box sx={{ px: 1.5, display: "flex", alignItems: "center" }}>
+            <Checkbox
+              size="small"
+              checked={selectedIds.length === mockCampaigns.length && mockCampaigns.length > 0}
+              indeterminate={selectedIds.length > 0 && selectedIds.length < mockCampaigns.length}
+              onChange={(e) => toggleSelectAll(e.target.checked)}
+            />
+          </Box>
+          <Box sx={{ px: 1.5, minWidth: 90 }}>
+            <Typography variant="caption" fontWeight={600} color="#555">Status</Typography>
+          </Box>
+          <Box sx={{ flex: 1, px: 2 }}>
+            <Typography variant="caption" fontWeight={600} color="#555">Campaign</Typography>
+          </Box>
+          <Box sx={{ px: 2, minWidth: 180 }}>
+            <Typography variant="caption" fontWeight={600} color="#555">Lists</Typography>
+          </Box>
+          <Box sx={{ px: 2, minWidth: 200 }}>
+            <Typography variant="caption" fontWeight={600} color="#555">Dates</Typography>
+          </Box>
+          <Box sx={{ px: 2, minWidth: 150 }}>
+            <Typography variant="caption" fontWeight={600} color="#555">Stats</Typography>
+          </Box>
+          <Box sx={{ px: 1.5, minWidth: 120 }}>
+            <Typography variant="caption" fontWeight={600} color="#555">Actions</Typography>
+          </Box>
+        </Box>
+
         {paginatedCampaigns.map((campaign, idx) => {
           const statusColor = getStatusColor(campaign.status);
           return (
             <Box
               key={campaign.id}
               sx={{
-                borderBottom: idx < mockCampaigns.length - 1 ? "1px solid #e8e8e8" : "none",
+                borderBottom: idx < paginatedCampaigns.length - 1 ? "1px solid #e8e8e8" : "none",
                 "&:hover": { bgcolor: "#fafafa" },
               }}
             >
@@ -264,41 +303,22 @@ export default function AllCampaigns() {
                 </Box>
 
                 {/* Stats */}
-                <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", px: 2, minWidth: 160 }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
-                    <Box>
-                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
-                        Views
+                <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", px: 2, minWidth: 150, gap: 0.5 }}>
+                  {[
+                    { label: "Views", value: campaign.views.toLocaleString(), color: "#1a1a1a" },
+                    { label: "Clicks", value: campaign.clicks.toLocaleString(), color: "#1a1a1a" },
+                    { label: "Sent", value: campaign.sent, color: "#1a1a1a" },
+                    { label: "Bounces", value: campaign.bounces, color: campaign.bounces > 400 ? "#dc2626" : "#1a1a1a" },
+                  ].map(({ label, value, color }) => (
+                    <Box key={label} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+                      <Typography variant="caption" color="#666" fontWeight={500}>
+                        {label}
                       </Typography>
-                      <Typography variant="caption" color="#1a1a1a" fontWeight={600}>
-                        {campaign.views.toLocaleString()}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
-                        Clicks
-                      </Typography>
-                      <Typography variant="caption" color="#1a1a1a" fontWeight={600}>
-                        {campaign.clicks.toLocaleString()}
+                      <Typography variant="caption" color={color} fontWeight={600}>
+                        {value}
                       </Typography>
                     </Box>
-                    <Box>
-                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
-                        Sent
-                      </Typography>
-                      <Typography variant="caption" color="#1a1a1a" fontWeight={600}>
-                        {campaign.sent}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="#666" fontWeight={500} display="block">
-                        Bounces
-                      </Typography>
-                      <Typography variant="caption" color={campaign.bounces > 400 ? "#dc2626" : "#1a1a1a"} fontWeight={600}>
-                        {campaign.bounces}
-                      </Typography>
-                    </Box>
-                  </Box>
+                  ))}
                 </Box>
 
                 {/* Actions */}

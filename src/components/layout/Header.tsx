@@ -105,7 +105,8 @@ export default function Header() {
           transition: `left ${SIDEBAR_TRANSITION}, width ${SIDEBAR_TRANSITION}`,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1.5, md: 3 } }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1.5, md: 3 }, position: 'relative' }}>
+          {/* Left — sidebar toggle + API usage */}
           <Box
             sx={{
               display: 'flex',
@@ -114,26 +115,6 @@ export default function Header() {
             }}
           >
             <SidebarToggle />
-            {/* <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.5,
-                bgcolor: '#e3f2fd',
-                color: colors.primary,
-                fontWeight: 600,
-              }}
-            >
-              <User size={20} />
-            </Avatar>
-            <Box>
-              <Typography variant="caption" sx={{ color: '#666', fontSize: '12px' }}>
-                Welcome,
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#333', fontWeight: 600, marginBottom: '-6px' }}>
-                {user?.name || 'User'}
-              </Typography>
-            </Box> */}
 
             {/* API Usage Progress */}
             <Tooltip
@@ -181,11 +162,23 @@ export default function Header() {
                 </Typography>
               </Box>
             </Tooltip>
+          </Box>
 
-            <Tooltip title="Search converters">
+          {/* Center — search bar, absolutely centered in the toolbar */}
+          <Box
+            sx={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            {/* Mobile icon-only */}
+            <Tooltip title="Search">
               <IconButton
                 onClick={triggerConverterSearch}
-                aria-label="Search converters"
+                aria-label="Search"
                 sx={{
                   display: { xs: 'inline-flex', md: 'none' },
                   color: '#64748b',
@@ -193,20 +186,18 @@ export default function Header() {
                   borderColor: 'hsla(215, 15%, 88%, 0.95)',
                   borderRadius: '8px',
                   backgroundColor: 'hsla(215, 15%, 97%, 0.9)',
-                  '&:hover': {
-                    backgroundColor: '#fff',
-                    borderColor: '#60a5fa',
-                  },
+                  '&:hover': { backgroundColor: '#fff', borderColor: '#60a5fa' },
                 }}
               >
                 <SearchIcon sx={{ fontSize: 20, color: '#2563eb' }} />
               </IconButton>
             </Tooltip>
 
+            {/* Desktop search bar */}
             <Box
               role="button"
               tabIndex={0}
-              aria-label="Search converters"
+              aria-label="Search"
               onClick={triggerConverterSearch}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
@@ -216,9 +207,8 @@ export default function Header() {
               }}
               sx={{
                 display: { xs: 'none', md: 'flex' },
-                ml: { md: 2, lg: 4 },
                 height: 40,
-                minWidth: 280,
+                minWidth: 320,
                 px: 1.25,
                 borderRadius: '3px',
                 border: '1px solid',
@@ -296,7 +286,7 @@ export default function Header() {
           </Box>
 
           {/* Right Side - Notifications */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 }, ml: 'auto' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 } }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 }, mr: { xs: 0, sm: 2, md: 3 } }}>
               {/* Notifications Bell — hidden on mobile */}
               <Tooltip title="Notifications">

@@ -6,6 +6,7 @@ import {
   Avatar,
   Box,
   Button,
+  Collapse,
   Divider,
   List,
   ListItemButton,
@@ -19,17 +20,17 @@ import { SIDEBAR_TRANSITION, SIDEBAR_WIDTH } from "@/contexts/SidebarContext";
 import {
   Box as BoxIcon,
   ChevronDown,
+  ChevronRight,
   CodeXml,
   LayoutDashboard,
   LogOut,
   Mail,
   Plus,
   Settings,
-  Share2
+  Share2,
 } from "lucide-react";
 import HttpsIcon from "@mui/icons-material/Https";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { ArrowLeftRight as ArrowIcon } from "lucide-react";
 import ApiDrawer from "@/components/dialogs/ApiDrawer";
 import { ConfirmDialog } from "@/components/common";
@@ -38,19 +39,14 @@ import { logout } from "@/store/slices/authSlice";
 import { clearUser } from "@/store/slices/userSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { colors } from "@/utils/customColor";
+import { SIDEBAR_MODES } from "@/config/sidebarModes";
 
 const navLinks = [
-  {
-    slug: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    lucide: true,
-  },
+  { slug: "dashboard", label: "Dashboard", icon: LayoutDashboard, lucide: true },
   { slug: "applications", label: "Applications", icon: Share2, lucide: true },
   { slug: "marketplace", label: "Marketplace", icon: BoxIcon, lucide: true },
   { slug: "ssl-manage", label: "SSL Manage", icon: HttpsIcon, mui: true },
   { slug: "doc-forge", label: "Doc forge", icon: ArrowIcon, lucide: true },
-  { slug: "newsletter", label: "Newsletter", icon: Mail, lucide: true },
 ];
 
 const bottomLinks = [
@@ -66,10 +62,28 @@ export default function Sidebar() {
   const profileLoading = useAppSelector((s) => s.user.isLoading);
 
   const [apiDrawerOpen, setApiDrawerOpen] = useState(false);
-  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
-    null,
-  );
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [moduleOpenGroups, setModuleOpenGroups] = useState<Record<string, boolean>>({});
+
+  // Detect which sidebar mode is active based on current URL
+  const activeMode = SIDEBAR_MODES.find((m) => pathname.startsWith(m.routePrefix)) ?? null;
+
+  // Sync collapsible group open states with current path whenever path or mode changes
+  useEffect(() => {
+    if (!activeMode) {
+      setModuleOpenGroups({});
+      return;
+    }
+    const derived: Record<string, boolean> = {};
+    activeMode.navItems.forEach((item) => {
+      if (item.children) {
+        derived[item.id] = item.children.some((c) => pathname.startsWith(c.path));
+      }
+    });
+    setModuleOpenGroups(derived);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, activeMode?.id]);
 
   useEffect(() => {
     if (hash === "#api") setApiDrawerOpen(true);
@@ -80,6 +94,18 @@ export default function Sidebar() {
     dispatch(clearUser());
     setLogoutConfirmOpen(false);
     navigate("/login", { replace: true });
+  };
+
+  const toggleModuleGroup = (id: string) => {
+    setModuleOpenGroups((prev) => {
+      if (prev[id]) return { ...prev, [id]: false };
+      // Close all others, open only this one
+      const next: Record<string, boolean> = {};
+      activeMode?.navItems.forEach((item) => {
+        next[item.id] = item.id === id;
+      });
+      return next;
+    });
   };
 
   const displayName =
@@ -194,7 +220,7 @@ export default function Sidebar() {
             </Typography>
           </Box>
 
-          {/* User profile */}
+          {/* User profile — unchanged in all modes */}
           <Box
             component="button"
             type="button"
@@ -252,7 +278,6 @@ export default function Sidebar() {
               },
             }}
           >
-            {/* User info header */}
             <Box
               sx={{
                 px: 2,
@@ -270,25 +295,17 @@ export default function Sidebar() {
                 <Box sx={{ minWidth: 0 }}>
                   <Typography
                     noWrap
-                    sx={{
-                      fontSize: "0.875rem",
-                      fontWeight: 600,
-                      color: "#1a1a1a",
-                    }}
+                    sx={{ fontSize: "0.875rem", fontWeight: 600, color: "#1a1a1a" }}
                   >
                     {displayName}
                   </Typography>
-                  <Typography
-                    noWrap
-                    sx={{ fontSize: "0.75rem", color: "#888" }}
-                  >
+                  <Typography noWrap sx={{ fontSize: "0.75rem", color: "#888" }}>
                     {displayHandle}
                   </Typography>
                 </Box>
               </Box>
             </Box>
 
-            {/* Menu items */}
             <Box sx={{ py: 0.5 }}>
               <MenuItem
                 component={Link}
@@ -329,7 +346,7 @@ export default function Sidebar() {
             </Box>
           </Menu>
 
-          {/* Upgrade CTA */}
+          {/* Upgrade Plan — unchanged in all modes */}
           <Button
             component={Link}
             to="/home/plans"
@@ -370,119 +387,269 @@ export default function Sidebar() {
             Upgrade Plan
           </Button>
 
-          {/* Main nav */}
-          <List disablePadding sx={{ mb: 1 }}>
-            {navLinks.map((link) => {
-              const isActive = pathname?.includes(link.slug);
-              return (
-                <ListItemButton
-                  key={link.slug}
-                  component={Link}
-                  to={`/home/${link.slug}`}
-                  sx={navItemSx(isActive)}
-                >
-                  <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
-                    {renderNavIcon(link, isActive)}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={link.label}
-                    slotProps={{
-                      primary: {
-                        sx: {
-                          fontSize: "0.9375rem",
-                          fontWeight: isActive ? 600 : 500,
-                        },
-                      },
-                    }}
-                  />
-                </ListItemButton>
-              );
-            })}
-          </List>
+          {/* ── Dynamic nav section ── */}
+          {activeMode ? (
+            // Module-specific nav with collapsible groups
+            <List disablePadding sx={{ mb: 1 }}>
+              {activeMode.navItems.map((item) => {
+                const isGroupActive = item.children
+                  ? item.children.some((c) => pathname.startsWith(c.path))
+                  : pathname === item.path ||
+                    pathname.startsWith((item.path ?? "___") + "/");
 
-          <Box sx={{ flex: 1 }} />
+                const Icon = item.icon;
 
-          {/* Bottom nav */}
-          <List disablePadding>
-            {bottomLinks.map((link) => {
-              const isApiLink = link.slug === "api";
-              const isActive = !isApiLink && pathname?.includes(link.slug);
+                if (!item.children) {
+                  return (
+                    <ListItemButton
+                      key={item.id}
+                      component={Link}
+                      to={item.path!}
+                      sx={navItemSx(isGroupActive)}
+                    >
+                      <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
+                        <Icon
+                          size={20}
+                          color={isGroupActive ? "#fff" : "#666"}
+                          strokeWidth={1.75}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.label}
+                        slotProps={{
+                          primary: {
+                            sx: {
+                              fontSize: "0.9375rem",
+                              fontWeight: isGroupActive ? 600 : 500,
+                            },
+                          },
+                        }}
+                      />
+                    </ListItemButton>
+                  );
+                }
 
-              if (isApiLink) {
+                const isOpen = !!moduleOpenGroups[item.id];
+                // Header gets active style only when collapsed with active child
+                const headerActive = isGroupActive && !isOpen;
+
+                return (
+                  <Box key={item.id}>
+                    <ListItemButton
+                      onClick={() => toggleModuleGroup(item.id)}
+                      sx={navItemSx(headerActive)}
+                    >
+                      <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
+                        <Icon
+                          size={20}
+                          color={
+                            headerActive
+                              ? "#fff"
+                              : isGroupActive
+                              ? colors.primary
+                              : "#666"
+                          }
+                          strokeWidth={1.75}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.label}
+                        slotProps={{
+                          primary: {
+                            sx: {
+                              fontSize: "0.9375rem",
+                              fontWeight: isGroupActive ? 600 : 500,
+                              color: headerActive
+                                ? "inherit"
+                                : isGroupActive
+                                ? colors.primary
+                                : "inherit",
+                            },
+                          },
+                        }}
+                      />
+                      {isOpen ? (
+                        <ChevronDown
+                          size={15}
+                          color={headerActive ? "#fff" : "#999"}
+                        />
+                      ) : (
+                        <ChevronRight
+                          size={15}
+                          color={headerActive ? "#fff" : "#999"}
+                        />
+                      )}
+                    </ListItemButton>
+
+                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                      <List disablePadding sx={{ mb: 0.5 }}>
+                        {item.children.map((child) => {
+                          const isChildActive = pathname === child.path;
+                          return (
+                            <ListItemButton
+                              key={child.path}
+                              component={Link}
+                              to={child.path}
+                              sx={{ ...navItemSx(isChildActive), pl: 5.5 }}
+                            >
+                              <ListItemText
+                                primary={child.label}
+                                slotProps={{
+                                  primary: {
+                                    sx: {
+                                      fontSize: "0.875rem",
+                                      fontWeight: isChildActive ? 600 : 400,
+                                    },
+                                  },
+                                }}
+                              />
+                            </ListItemButton>
+                          );
+                        })}
+                      </List>
+                    </Collapse>
+                  </Box>
+                );
+              })}
+            </List>
+          ) : (
+            // Default main nav
+            <List disablePadding sx={{ mb: 1 }}>
+              {navLinks.map((link) => {
+                const isActive = pathname?.includes(link.slug);
                 return (
                   <ListItemButton
                     key={link.slug}
-                    onClick={() => setApiDrawerOpen(true)}
-                    sx={{ ...navItemSx(false), display: { xs: 'none', md: 'flex' } }}
+                    component={Link}
+                    to={`/home/${link.slug}`}
+                    sx={navItemSx(isActive)}
                   >
                     <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
-                      {renderNavIcon(link, false)}
+                      {renderNavIcon(link, isActive)}
                     </ListItemIcon>
                     <ListItemText
                       primary={link.label}
                       slotProps={{
                         primary: {
-                          sx: { fontSize: "0.9375rem", fontWeight: 500 },
+                          sx: {
+                            fontSize: "0.9375rem",
+                            fontWeight: isActive ? 600 : 500,
+                          },
                         },
                       }}
                     />
                   </ListItemButton>
                 );
-              }
+              })}
+            </List>
+          )}
 
-              return (
+          <Box sx={{ flex: 1 }} />
+
+          {/* ── Dynamic bottom nav ── */}
+          {activeMode ? (
+            // Module mode: "Dev API" opens the API drawer (modal)
+            <List disablePadding>
+              <ListItemButton
+                onClick={() => setApiDrawerOpen(true)}
+                sx={{ ...navItemSx(false), display: { xs: "none", md: "flex" } }}
+              >
+                <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
+                  <CodeXml size={20} color="#666" strokeWidth={1.75} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Dev API"
+                  slotProps={{
+                    primary: { sx: { fontSize: "0.9375rem", fontWeight: 500 } },
+                  }}
+                />
+              </ListItemButton>
+            </List>
+          ) : (
+            // Default mode: "Dev API" opens the API drawer
+            <List disablePadding>
+              {bottomLinks.map((link) => (
                 <ListItemButton
                   key={link.slug}
-                  component={Link}
-                  to={`/home/${link.slug}`}
-                  sx={navItemSx(isActive)}
+                  onClick={() => setApiDrawerOpen(true)}
+                  sx={{ ...navItemSx(false), display: { xs: "none", md: "flex" } }}
                 >
                   <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
-                    {renderNavIcon(link, isActive)}
+                    {renderNavIcon(link, false)}
                   </ListItemIcon>
                   <ListItemText
                     primary={link.label}
                     slotProps={{
-                      primary: {
-                        sx: {
-                          fontSize: "0.9375rem",
-                          fontWeight: isActive ? 600 : 500,
-                        },
-                      },
+                      primary: { sx: { fontSize: "0.9375rem", fontWeight: 500 } },
                     }}
                   />
                 </ListItemButton>
-              );
-            })}
-          </List>
+              ))}
+            </List>
+          )}
 
           <Divider sx={{ borderColor: "#e0e0e0", my: 2 }} />
 
-          <Box
-            component="a"
-            href="https://wa.ajaxter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              color: "#666",
-              textDecoration: "none",
-              fontSize: "0.875rem",
-              px: 0.5,
-              "&:hover": { color: colors.primary },
-            }}
-          >
-            <WhatsAppIcon sx={{ fontSize: 18, color: "#25D366" }} />
-            <Typography
-              variant="body2"
-              sx={{ color: "inherit", fontSize: "0.875rem" }}
+          {/* ── Dynamic footer link ── */}
+          {activeMode ? (
+            // Module mode: "Main API" navigates back to the main dashboard
+            <Box
+              component="button"
+              onClick={() => navigate(activeMode.backPath)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#666",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "0.875rem",
+                px: 0.5,
+                width: "100%",
+                textAlign: "left",
+                "&:hover": { color: colors.primary },
+              }}
             >
-              @Free Whatsapp API
-            </Typography>
-            <OpenInNewIcon sx={{ fontSize: 14, color: "inherit", ml: "auto" }} />
-          </Box>
+              <CodeXml size={18} color={colors.primary} strokeWidth={1.75} />
+              <Typography
+                variant="body2"
+                sx={{ color: "inherit", fontSize: "0.875rem" }}
+              >
+                Main API
+              </Typography>
+              <OpenInNewIcon
+                sx={{ fontSize: 14, color: "inherit", ml: "auto" }}
+              />
+            </Box>
+          ) : (
+            // Default mode: Newsletter link
+            <Box
+              component={Link}
+              to="/home/newsletter"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#666",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                px: 0.5,
+                "&:hover": { color: colors.primary },
+              }}
+            >
+              <Mail size={18} color={colors.primary} strokeWidth={1.75} />
+              <Typography
+                variant="body2"
+                sx={{ color: "inherit", fontSize: "0.875rem" }}
+              >
+                Newsletter
+              </Typography>
+              <OpenInNewIcon
+                sx={{ fontSize: 14, color: "inherit", ml: "auto" }}
+              />
+            </Box>
+          )}
         </Box>
       </Box>
 
