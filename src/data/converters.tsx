@@ -14,6 +14,7 @@ import InsertDriveFileOutlined from "@mui/icons-material/InsertDriveFileOutlined
 import MergeType from "@mui/icons-material/MergeType";
 
 import CompressOutlined from "@mui/icons-material/CompressOutlined";
+import HealingOutlined from "@mui/icons-material/HealingOutlined";
 import { PictureAsPdfOutlined } from "@mui/icons-material";
 
 
@@ -211,6 +212,17 @@ export const converters = [
     layout: "to-pdf",
     SourceIcon: CompressOutlined,
     sourceColor: "#7c3aed",
+  },
+  {
+    slug: "repair-pdf",
+    title: "Repair PDF",
+    description:
+      "Recover a damaged or corrupt PDF — broken xref tables, truncated trailers, and bad object offsets are rebuilt. Optional PDF password, custom output name, and download or preview response.",
+    layout: "to-pdf",
+    SourceIcon: HealingOutlined,
+    sourceColor: "#0f766e",
+    TargetIcon: PictureAsPdfOutlined,
+    targetColor: "#d32f2f",
   },
   {
     slug: "pdf-to-docx",

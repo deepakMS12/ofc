@@ -24,7 +24,6 @@ import {
   CodeXml,
   LayoutDashboard,
   LogOut,
-  Mail,
   Plus,
   Settings,
   Share2,
@@ -588,67 +587,41 @@ export default function Sidebar() {
             </List>
           )}
 
-          <Divider sx={{ borderColor: "#e0e0e0", my: 2 }} />
+          {activeMode && (
+            <>
+              <Divider sx={{ borderColor: "#e0e0e0", my: 2 }} />
 
-          {/* ── Dynamic footer link ── */}
-          {activeMode ? (
-            // Module mode: "Main API" navigates back to the main dashboard
-            <Box
-              component="button"
-              onClick={() => navigate(activeMode.backPath)}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                color: "#666",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "0.875rem",
-                px: 0.5,
-                width: "100%",
-                textAlign: "left",
-                "&:hover": { color: colors.primary },
-              }}
-            >
-              <CodeXml size={18} color={colors.primary} strokeWidth={1.75} />
-              <Typography
-                variant="body2"
-                sx={{ color: "inherit", fontSize: "0.875rem" }}
+              {/* Module mode: "Main API" navigates back to the main dashboard */}
+              <Box
+                component="button"
+                onClick={() => navigate(activeMode.backPath)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  color: "#666",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  px: 0.5,
+                  width: "100%",
+                  textAlign: "left",
+                  "&:hover": { color: colors.primary },
+                }}
               >
-                Main API
-              </Typography>
-              <OpenInNewIcon
-                sx={{ fontSize: 14, color: "inherit", ml: "auto" }}
-              />
-            </Box>
-          ) : (
-            // Default mode: Newsletter link
-            <Box
-              component={Link}
-              to="/home/newsletter"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                color: "#666",
-                textDecoration: "none",
-                fontSize: "0.875rem",
-                px: 0.5,
-                "&:hover": { color: colors.primary },
-              }}
-            >
-              <Mail size={18} color={colors.primary} strokeWidth={1.75} />
-              <Typography
-                variant="body2"
-                sx={{ color: "inherit", fontSize: "0.875rem" }}
-              >
-                Newsletter
-              </Typography>
-              <OpenInNewIcon
-                sx={{ fontSize: 14, color: "inherit", ml: "auto" }}
-              />
-            </Box>
+                <CodeXml size={18} color={colors.primary} strokeWidth={1.75} />
+                <Typography
+                  variant="body2"
+                  sx={{ color: "inherit", fontSize: "0.875rem" }}
+                >
+                  Main API
+                </Typography>
+                <OpenInNewIcon
+                  sx={{ fontSize: 14, color: "inherit", ml: "auto" }}
+                />
+              </Box>
+            </>
           )}
         </Box>
       </Box>

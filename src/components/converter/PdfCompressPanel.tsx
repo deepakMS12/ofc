@@ -28,10 +28,15 @@ type PdfCompressPanelProps = {
   selectedFileName?: string | null;
   onValidityChange: (ok: boolean) => void;
   onFieldsDirty: () => void;
+  /** Fallback output file name when the user leaves the field empty (e.g. "smaller", "repaired"). */
+  defaultOutputName?: string;
 };
 
 const PdfCompressPanel = forwardRef<PdfCompressHandle, PdfCompressPanelProps>(
-  function PdfCompressPanel({ selectedFileName, onValidityChange, onFieldsDirty }, ref) {
+  function PdfCompressPanel(
+    { selectedFileName, onValidityChange, onFieldsDirty, defaultOutputName = "smaller" },
+    ref,
+  ) {
     const [pdfPassword, setPdfPassword] = useState("");
     const [outputName, setOutputName] = useState("");
     const [responseMode, setResponseMode] = useState<"download" | "preview">(
@@ -41,7 +46,7 @@ const PdfCompressPanel = forwardRef<PdfCompressHandle, PdfCompressPanelProps>(
     useImperativeHandle(
       ref,
       () => ({
-        getOutputFileName: () => outputName.trim() || "smaller",
+        getOutputFileName: () => outputName.trim() || defaultOutputName,
         getIsPreview: () => responseMode === "preview",
         getPayload: (files: File[]) => {
           const file = files[0];
@@ -51,7 +56,7 @@ const PdfCompressPanel = forwardRef<PdfCompressHandle, PdfCompressPanelProps>(
           return buildPdfCompressFormData(file, outputName, pdfPassword, responseMode);
         },
       }),
-      [outputName, pdfPassword, responseMode],
+      [outputName, pdfPassword, responseMode, defaultOutputName],
     );
 
     useEffect(() => {
@@ -94,7 +99,7 @@ const PdfCompressPanel = forwardRef<PdfCompressHandle, PdfCompressPanelProps>(
                 </Typography>
                 <SettingsOutlinedField
                   id="pdf-compress-output-name"
-                  placeholder="smaller"
+                  placeholder={defaultOutputName}
                   value={outputName}
                   onChange={(e) => setOutputName(e.target.value)}
                   sx={{ mt: 0.5, "& .MuiOutlinedInput-root": { bgcolor: PANEL_BG } }}

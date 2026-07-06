@@ -25,24 +25,7 @@ import {
   SslManage,
   Marketplace,
   Applications,
-  NewsletterLayout,
 } from '@/components/pages';
-import {
-  NewsletterDashboard,
-  AllLists,
-  Forms,
-  AllSubscribers,
-  SubscriberImport,
-  Bounce,
-  AllCampaigns,
-  CreateNew,
-  Media,
-  Templates,
-  CampaignAnalytics,
-  NewsletterSettings,
-  Maintenance,
-  Logs,
-} from '@/components/pages/newsletter';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from '@/pages/SignUpPage';
 import ConverterPage from '@/pages/ConverterPage';
@@ -88,23 +71,6 @@ export default function App() {
               <Route path="settings" element={<Settings />} />
               <Route path="api" element={<ApiPortal />} />
               <Route path="plans" element={<Plans />} />
-              <Route path="newsletter" element={<NewsletterLayout />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<NewsletterDashboard />} />
-                <Route path="lists" element={<AllLists />} />
-                <Route path="lists/forms" element={<Forms />} />
-                <Route path="subscribers" element={<AllSubscribers />} />
-                <Route path="subscribers/import" element={<SubscriberImport />} />
-                <Route path="subscribers/bounce" element={<Bounce />} />
-                <Route path="campaigns" element={<AllCampaigns />} />
-                <Route path="campaigns/create" element={<CreateNew />} />
-                <Route path="campaigns/media" element={<Media />} />
-                <Route path="campaigns/templates" element={<Templates />} />
-                <Route path="campaigns/analytics" element={<CampaignAnalytics />} />
-                <Route path="settings" element={<NewsletterSettings />} />
-                <Route path="settings/maintenance" element={<Maintenance />} />
-                <Route path="settings/logs" element={<Logs />} />
-              </Route>
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

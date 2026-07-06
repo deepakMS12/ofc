@@ -393,6 +393,20 @@
         "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
         "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
       }
+    },
+    "0029": {
+      "txnType": "repair_pdf",
+      "paths": ["/convert/repair-pdf"],
+      "endpoint": "POST /convert/repair-pdf",
+      "uiHint": "Repair damaged PDF",
+      "output": "pdf",
+      "plan": {
+        "free": { "maxUpload": 1, "perPage": "0.50", "rateLimit": 5 },
+        "bronze": { "maxUpload": 2, "perPage": "0.50", "rateLimit": 10 },
+        "silver": { "maxUpload": 5, "perPage": "0.10", "rateLimit": 25 },
+        "gold": { "maxUpload": 10, "perPage": "0.10", "rateLimit": 35 },
+        "enterprise": { "maxUpload": 100, "perPage": "0.10", "rateLimit": 45 }
+      }
     }
   }
 }

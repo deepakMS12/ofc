@@ -250,12 +250,13 @@ const WorkspaceSidebar = memo(
           {getTitle(toolSlug)}
         </Typography> */}
 
-        {toolSlug === "pdf-compressor" && pdfCompress && (
+        {(toolSlug === "pdf-compressor" || toolSlug === "repair-pdf") && pdfCompress && (
           <PdfCompressPanel
             ref={pdfCompress.ref}
             selectedFileName={pdfCompress.selectedFileName}
             onValidityChange={pdfCompress.onValidityChange}
             onFieldsDirty={pdfCompress.onFieldsDirty}
+            defaultOutputName={toolSlug === "repair-pdf" ? "repaired" : "smaller"}
           />
         )}
         {toolSlug === "pdf-merge" && mergePdf && (

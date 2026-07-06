@@ -146,7 +146,10 @@ const ConverterTool = () => {
   }, [tool?.title]);
   const isPdfMergeTool = tool?.slug === "pdf-merge";
   const isPdfToImageTool = tool?.slug === "pdf-to-image";
-  const isPdfCompressTool = tool?.slug === "pdf-compressor";
+  const isPdfRepairTool = tool?.slug === "repair-pdf";
+  // Repair PDF reuses the entire Compress PDF flow (same inputs: PDF + optional
+  // password + output name); only the endpoint/txn code differs at dispatch time.
+  const isPdfCompressTool = tool?.slug === "pdf-compressor" || isPdfRepairTool;
   const isUrlToPdfTool = tool?.slug === "url-to-pdf";
   const isHtmlCodeToPdfTool =
     tool?.slug === "html-code-to-pdf" ||
@@ -704,14 +707,15 @@ const ConverterTool = () => {
       return;
     }
     const queryType = handle.getIsPreview() ? "d" : "p";
-    const downloadFileName = handle.getOutputFileName().trim() || "smaller";
+    const downloadFileName =
+      handle.getOutputFileName().trim() || (isPdfRepairTool ? "repaired" : "smaller");
     try {
       const result = await dispatch(
         convertUrlToPdf({
           queryType,
           body,
           downloadFileName,
-          sourceType: "pdf-compress",
+          sourceType: isPdfRepairTool ? "pdf-repair" : "pdf-compress",
         }),
       ).unwrap();
 
@@ -724,14 +728,16 @@ const ConverterTool = () => {
       showToast(
         queryType === "d"
           ? "Preview download started."
-          : "Your compressed PDF download has started.",
+          : isPdfRepairTool
+            ? "Your repaired PDF download has started."
+            : "Your compressed PDF download has started.",
         "success",
       );
       setUrlToPdfDownloadComplete(true);
     } catch (e: unknown) {
       showToast(typeof e === "string" ? e : "Conversion failed.", "error");
     }
-  }, [dispatch, files, isPdfCompressTool, showToast, tool]);
+  }, [dispatch, files, isPdfCompressTool, isPdfRepairTool, showToast, tool]);
 
   const handleExcelToPdfConvert = useCallback(async () => {
     if (!tool || !isExcelToPdfTool) return;

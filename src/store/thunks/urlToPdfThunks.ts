@@ -22,6 +22,7 @@ export type ConvertUrlToPdfArg = {
     | "merge-pdf"
     | "pdf-to-image"
     | "pdf-compress"
+    | "pdf-repair"
     | "wkhtml-url"
     | "wkhtml-html-code"
     | "wkhtml-html-file"
@@ -122,6 +123,7 @@ const SOURCE_ENDPOINT_MAP: Partial<Record<SourceType, string>> = {
     "merge-pdf": "/convert/merge-pdf",
     "pdf-to-image": "/convert/pdf-jpg",
     "pdf-compress": "/convert/compress-pdf",
+    "pdf-repair": "/convert/repair-pdf",
     "wkhtml-url": "/wkhtmltopdf/url_pdf",
     "wkhtml-html-code": "/wkhtmltopdf/html_pdf",
     "wkhtml-html-file": "/wkhtmltopdf/htmlfile_pdf",
@@ -170,6 +172,7 @@ const SOURCE_QUERY_R_MAP: Partial<Record<SourceType, string>> = {
     "scan-qr-barcode-upload": "0027",
     "scan-qr-barcode-url": "0027",
     "pdf-compress": "0019",
+    "pdf-repair": "0029",
     "lock-excel": "0020",
     "unlock-excel": "0021",
 };
@@ -178,6 +181,7 @@ const SOURCE_FIXED_EXT_MAP: Partial<Record<SourceType, OutputFileExt>> = {
   "html-to-word": ".docx",
   "pdf-to-docx": ".docx",
   "pdf-compress": ".pdf",
+  "pdf-repair": ".pdf",
   "excel-to-pdf": ".pdf",
   "lock-excel": ".xlsx",
   "unlock-excel": ".xlsx",
